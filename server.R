@@ -605,7 +605,7 @@ server <- function(input, output, session){
     for (i in 1:length(samples))
     {
       sampleNames = c(sampleNames,rep(samples[i],nrow(data.expr)))
-      logs = c(logs,log2(data.expr[,samples[i]]))
+      logs = c(logs,data.expr[,samples[i]])
     }
     
     logData = data.frame(logInt=logs,sampleName=sampleNames)
