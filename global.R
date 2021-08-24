@@ -16,7 +16,13 @@ s_requiredpackages =
     "biomaRt",
     "GEOquery",
     "ArrayExpress",
-    "limma"
+    "limma",
+    "makecdfenv",
+    "topGO",
+    "hugene10stprobeset.db",
+    "bioDist",
+    "gcrma",
+    "plier"
   )
 
 if (!requireNamespace("BiocManager", quietly = TRUE))
@@ -43,8 +49,12 @@ if(!("plotly" %in% pkg)){
   install.packages("plotly")
 }
 
-if(!("makecdfenv" %in% pkg)){
-  install.packages("makecdfenv")
+if(!("gplots" %in% pkg)){
+  install.packages("gplots")
+}
+
+if(!("readxl" %in% pkg)){
+  install.packages("readxl")
 }
 
 
@@ -73,13 +83,106 @@ library(limma)
 library(fuzzyjoin)
 library(tidyverse)
 library(plotly)
-library(makecdfenv)
 library(shiny)
 library(shinyWidgets)
 library(shinycssloaders)
-library("ggvenn")
+library(ggvenn)
+library(makecdfenv)
+library(topGO)
+library(bioDist)
+library(gplots)
+library(readxl)
+library(gcrma)
+library(plier)
 
+###################################################################################################################################
 
+#uploadcdfenv
+
+###################################################################################################################################
+
+uploadcdfenv <- function(Data,cdf_path){
+  #initial value
+  CDFenv <- 0
+  
+  # recall which cdfName was added, in case no updated one is found (set back
+  # even if it does not exist)
+  presetCDF <- Data@cdfName
+  
+  #try to load cdf file
+  try(CDFenv <- make.cdf.env(filename = basename(cdf_path),cdf.path=dirname(cdf_path)),TRUE)
+  
+  if ((class(CDFenv)!="environment")) {
+    Data@cdfName <- presetCDF
+    warning("Could not load custom CDF environment for this chip type - object kept as is")
+  }
+  
+  cat("current cdf environment loaded:",Data@cdfName,"\n")
+  return(Data)
+}
+
+###################################################################################################################################
+
+#addUpdatedCDFenv
+
+###################################################################################################################################
+
+addUpdatedCDFenv <- function(Data, species=NULL, type="ENSG") {
+  # note: this function will add an updated cdf environment to the data object
+  # and will overwrite a possible already loaded environment, unless no updated
+  # cdf environment is found
+  
+  # developer's note: it may be of interest to find out whether available
+  # species and types can be retrieved automatically from the brainarray website
+  
+  # Match the species to two letter symbols  
+  spp <- c("Ag","At","Bt","Ce","Cf","Dr","Dm","Gg","Hs","MAmu","Mm","Os","Rn",
+           "Sc","Sp","Ss")
+  names(spp) <- c("Anopheles gambiae","Arabidopsis thaliana","Bos taurus",
+                  "Caenorhabditis elegans","Canis familiaris", "Danio rerio",
+                  "Drosophila melanogaster","Gallus gallus","Homo sapiens",
+                  "Macaca mulatta","Mus musculus", "Oryza sativa","Rattus norvegicus",
+                  "Saccharomyces cerevisiae","Schizosaccharomyces pombe","Sus scrofa")
+  
+  species <- spp[tolower(names(spp))==tolower(species)]
+  
+  
+  #initial value
+  CDFenv <- 0
+  
+  # recall which cdfName was added, in case no updated one is found (set back
+  # even if it does not exist)
+  presetCDF <- Data@cdfName
+  
+  #try to find updated cdf file of choice
+  print(Data@cdfName<-paste(Data@annotation,species,type,sep="_"))
+  suppressWarnings(try(CDFenv <- getCdfInfo(Data),TRUE))
+  #try without a version number
+  print(Data@cdfName<-paste(gsub("v[0-9]$","",Data@annotation),species,type,sep="_"))
+  suppressWarnings(try(CDFenv <- getCdfInfo(Data),TRUE)) 
+  
+  #if it hasn't loaded, try to download
+  if ((class(CDFenv)!="environment")) {
+    install.packages(tolower(paste(Data@annotation,species,type,"cdf",sep="")),
+                     repos="http://brainarray.mbni.med.umich.edu/bioc")
+    suppressWarnings(try(CDFenv <- getCdfInfo(Data),TRUE))
+  }
+  
+  #if it hasn't loaded, try to download without version number
+  if ((class(CDFenv)!="environment")) {
+    install.packages(tolower(paste(gsub("v[0-9]$","",Data@annotation),species,type,"cdf",sep="")),
+                     repos="http://brainarray.mbni.med.umich.edu/bioc")
+    suppressWarnings(try(CDFenv <- getCdfInfo(Data),TRUE))
+  }
+  
+  if ((class(CDFenv)!="environment")) {
+    Data@cdfName <- presetCDF
+    warning("Could not automatically retrieve CDF environment for this chip type - object kept as is")
+  }
+  
+  cat("current cdf environment loaded:",Data@cdfName,"\n")
+  return(Data)
+}
 
 
 ###################################################################################################################################
@@ -354,46 +457,41 @@ get_meta <- function(gset, grouping_column, pairing_column = NULL, file_name = N
 ###################################################################################################################################
 
 
-pca.plot <- function(data.PC, meta, hpc = 1, vpc = 2) {
+pca.plot <- function(data.PC, meta1, hpc = 1, vpc = 2) {
   
-  #Make colours
-  meta1 <- arrange(meta, Grouping)
-  meta1$Grouping <- factor(meta1$Grouping, levels = unique(meta1$Grouping))
-  meta1$Sample.ID <- factor(meta1$Sample.ID, levels = unique(meta1$Sample.ID))
-  
-  myPalette <- colorsByFactor(experimentFactor = meta1[,2])
-  samplecolours <- cbind(meta1, myPalette$plotColors)
-  legendcolours <- inner_join(samplecolours, as.data.frame(myPalette$legendColors), by = c("myPalette$plotColors" = "myPalette$legendColors"))
-  
-  
-  #Get PCs
+  #get PCs
   PC <- cbind.data.frame(rownames(data.PC$x), data.PC$x)
   colnames(PC) <- c("cel_names", colnames(PC[,2:ncol(PC)]))
   rownames(PC) <- NULL
   
-  
   #Match samples with grouping using meta
-  PC <- PC %>% fuzzyjoin::fuzzy_inner_join(meta, by = c("cel_names" = "Sample.ID"), match_fun = str_detect)
+  PC <- meta1 %>% inner_join(PC, by = c("names" = "cel_names"))
   
-  PC <- arrange(PC, Grouping)
   PC$Grouping <- factor(PC$Grouping, levels = unique(PC$Grouping))
   PC$Sample.ID <- factor(PC$Sample.ID, levels = unique(PC$Sample.ID))
   
+  
+  #Make colours
+  experimentFactor <- factor(meta1$Grouping, levels = unique(meta1$Grouping))
+  
+  myPalette <- colorsByFactor(experimentFactor)
+  samplecolours <- cbind(meta1, myPalette$plotColors)
+  legendcolours <- inner_join(samplecolours, as.data.frame(myPalette$legendColors), by = c("myPalette$plotColors" = "myPalette$legendColors"))
+  legendcolours <- inner_join(as.data.frame(unique(PC$Grouping)), legendcolours, by = c("unique(PC$Grouping)" = "Grouping"))
   
   #calculate explained variance
   perc_expl1 <- round(((data.PC$sdev^2)/sum(data.PC$sdev^2))*100,2)
   
   
-  
   #Make plot
-  X = PC[,(1+hpc)]
-  Y = PC[,(1+vpc)]
+  X = PC[,(3+hpc)]
+  Y = PC[,(3+vpc)]
   
   
   pcaplot <-
-    ggplot(data = PC, aes(x = X, y = Y, colour = Grouping, shape = Grouping, label = Sample.ID, text = paste("Sample:", Sample.ID))) +
+    ggplot(data = PC, aes(x = X, y = Y, colour = Grouping, shape = Grouping, text = paste("Sample:", Sample.ID))) +
     geom_point(size = 2) +
-    scale_colour_manual(values = legendcolours[,3]) +
+    scale_colour_manual(values = legendcolours[,4]) +
     labs(title = "PCA plot",
          subtitle = "Similar samples are clustered together") +
     xlab(paste0("PC",hpc, " (", perc_expl1[hpc], "%)")) +
@@ -414,40 +512,34 @@ pca.plot <- function(data.PC, meta, hpc = 1, vpc = 2) {
 
 ###################################################################################################################################
 
-pca3d <- function(data.PC, meta, x = 1, y = 2, z = 3) {
-  
-  #Make colours
-  meta1 <- arrange(meta, Grouping)
-  meta1$Grouping <- factor(meta1$Grouping, levels = unique(meta1$Grouping))
-  meta1$Sample.ID <- factor(meta1$Sample.ID, levels = unique(meta1$Sample.ID))
-  
-  myPalette <- colorsByFactor(experimentFactor = meta1[,2])
-  samplecolours <- cbind(meta1, myPalette$plotColors)
-  legendcolours <- inner_join(samplecolours, as.data.frame(myPalette$legendColors), by = c("myPalette$plotColors" = "myPalette$legendColors"))
-  
+pca3d <- function(data.PC, meta1, x = 1, y = 2, z = 3) {
+
   #get PCs
   PC <- cbind.data.frame(rownames(data.PC$x), data.PC$x)
   colnames(PC) <- c("cel_names", colnames(PC[,2:ncol(PC)]))
   rownames(PC) <- NULL
   
-  
   #Match samples with grouping using meta
-  PC <- PC %>% fuzzyjoin::fuzzy_inner_join(meta, by = c("cel_names" = "Sample.ID"), match_fun = str_detect)
+  PC <- meta1 %>% inner_join(PC, by = c("names" = "cel_names"))
   
-  PC <- arrange(PC, Grouping)
-  PC$Grouping <- factor(PC$Grouping, levels = unique(PC$Grouping))
-  PC$Sample.ID <- factor(PC$Sample.ID, levels = unique(PC$Sample.ID))
+  PC$Grouping <- factor(PC$Grouping, levels = unique(meta1$Grouping))
+  PC$Sample.ID <- factor(PC$Sample.ID, levels = unique(meta1$Sample.ID))
+  
+  #Make colours
+  experimentFactor <- factor(meta1$Grouping, levels = unique(meta1$Grouping))
+  
+  myPalette <- colorsByFactor(experimentFactor)
+  samplecolours <- cbind(meta1, myPalette$plotColors)
+  legendcolours <- inner_join(samplecolours, as.data.frame(myPalette$legendColors), by = c("myPalette$plotColors" = "myPalette$legendColors"))
   
   
   #calculate explained variance
   perc_expl1 <- round(((data.PC$sdev^2)/sum(data.PC$sdev^2))*100,2)
   
-  
-  
   #Make plot
-  X = PC[,(1+x)]
-  Y = PC[,(1+y)]
-  Z = PC[,(1+z)]
+  X = PC[,(3+x)]
+  Y = PC[,(3+y)]
+  Z = PC[,(3+z)]
   
   pca3d <- plot_ly(x=X, 
                    y=Y, 
@@ -455,7 +547,7 @@ pca3d <- function(data.PC, meta, x = 1, y = 2, z = 3) {
                    type="scatter3d", 
                    mode="markers", 
                    color=PC$Grouping,
-                   colors = legendcolours[,3],
+                   colors = legendcolours[,4],
                    text = paste('Sample:', PC$Sample.ID, '<br>Grouping:', PC$Grouping))
   
   pca3d <- pca3d %>% layout(scene = list(xaxis = list(title = paste0('PC', x, " (", perc_expl1[x], "%)")),
@@ -517,7 +609,7 @@ PCvariances <- function(data.PC, x = 1, y = 2, z= NULL) {
 
 get_contrasts <- function(meta) {
   
-  levels1 <- unique(meta[,2])
+  levels1 <- unique(meta$Grouping)
   
   contrast <- paste(make.names(levels1)[2], make.names(levels1)[1], sep = " - ")
   
@@ -546,7 +638,7 @@ get_contrasts <- function(meta) {
 
 auto_contrasts <- function(meta) {
   
-  levels1 <- unique(meta[,2])
+  levels1 <- unique(meta$Grouping)
   
   contrast <- paste(make.names(levels1)[2], make.names(levels1)[1], sep = " - ")
   
@@ -645,7 +737,7 @@ diff_expr <- function(data.expr, meta, comparisons) {
   ph = as.data.frame(colnames(data.expr))
   colnames(ph) <- "cel_names"
   
-  ph1 <- ph %>% fuzzyjoin::fuzzy_inner_join(meta, by = c("cel_names" = "Sample.ID"), match_fun = str_detect)
+  ph1 <- ph %>% inner_join(meta, by = c("cel_names" = "names"), match_fun = str_detect)
   
   
   #model design
