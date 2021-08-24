@@ -5,9 +5,10 @@
 #SERVER
 
 ###############################################################################################################################
-
+Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
 
 server <- function(input, output, session){
+  options(shiny.maxRequestSize=50*1024^2)
   
   ################################################################################################################################
   #data accession
@@ -26,13 +27,24 @@ server <- function(input, output, session){
   sendSweetAlert(
     session = session,
     title = "ArrayAnalysis",
-    text = "Welcome to the ArrayAnalysis app! 
-    Get started by entering a database accession number or selecting your own CEL files."
+    text = "Welcome to the ArrayAnalysis app!",
+    btn_labels = "Click here to start"
   )
   
   
-  #Select data access (i.e., GEO/ArrayExpress database or upload own CELs)
+  #Info panel
+  observeEvent(input$infopanel1, {
+    sendSweetAlert(
+      session = session,
+      title = "Information",
+      text = "ArrayAnalysis has been developed for the user-friendly analysis of microarray data. 
+      Click on the documentation tab for more information.",
+      type = "info"
+    )
+  })
   
+  
+  #Select data access (i.e., GEO/ArrayExpress database or upload own CELs)
   output$getdatabaseout <- renderUI({
     req(input$database)
     if (input$database != "Upload CELs"){
@@ -55,8 +67,19 @@ server <- function(input, output, session){
   })
   
   
-  #Example dataset
+  #Get accession and database
+  database <- eventReactive(input$downloaddata, {
+    input$database
+   
+  })
   
+  
+  accession <- eventReactive(input$downloaddata, {
+    input$getGEO
+  })
+  
+
+  #Example
   observeEvent(input$example, {
     
     if (input$database == "GEO"){
@@ -76,78 +99,107 @@ server <- function(input, output, session){
   })
   
   
-  #Info panel
-  
-  observeEvent(input$infopanel1, {
-    sendSweetAlert(
-      session = session,
-      title = "Information",
-      text = "Enter the database accession number. Find your accession number at GEO or ArrayExpress. 
-      If you select 'upload CELs', you can also perform the analysis on your own CEL files.",
-      type = "info"
-    )
-  })
-  
-  
-  #Load data from database
-  
-  database <- eventReactive(input$downloadGEO, {
-    input$database
-  })
-  
-  
-  accession <- eventReactive(input$downloadGEO, {
-    input$getGEO
-  })
-  
-  gset <- eventReactive(input$downloadGEO, {
+  #Download data for retrieval of meta data
+  gset <- eventReactive(input$downloaddata, {
     if (database() == "GEO"){
       gset <- getGEO(accession(), GSEMatrix =TRUE, getGPL = FALSE)
+      
     }
     if (database() == "ArrayExpress"){
       gset <- ArrayExpress(accession())
+      
     }
+    
+    if (database() == "Upload CELs"){
+      gset <- NULL
+      
+    }
+    
     return(gset)
   })
   
   
-  
   #Loading message
-  
-  observeEvent(input$downloadGEO, {
-    showModal(modalDialog("This might take a while. Please be patient.", 
-                          title = "Dataset is being loaded....", 
-                          footer=NULL))
-    get_grouping(gset(), database = database())
-    removeModal()
-  })
-  
-  
-  
-  #go to next tab
-  
-  observeEvent(input$downloadGEO, {
-    showTab("navbar", target = "panel2")
-  })
-  
-  
-  observeEvent(if ((length(get_grouping(gset(), database = database())) > 0) | (length(get_grouping(gset(), database = database())) > 0)) TRUE,  {
-    updateNavbarPage(session, "navbar",
-                     selected = "panel2")
+  observeEvent(input$downloaddata, {
+    
+    if (database() != "Upload CELs"){
+      showModal(modalDialog(
+        title = h4(paste0(accession(), " dataset from the ", database(), " database is being loaded...."), align = "center"), 
+        footer = NULL,
+        h5("Please be patient. This might take a while.", align = "center")
+      ))
+        
+                           
+      if(!is.null(gset())) {
+        get_grouping(gset(), database())
+        
+      }
+      removeModal()
+      
+    }
     
   })
   
   
+  #Get data path
+  zzip <- eventReactive(input$downloaddata, {
+    input$uploadcelsin$datapath
+  })
   
   
+  #Check cel files
+  celfiles <- eventReactive(input$downloaddata, {
+    
+    database = database()
+    
+    if (database == "GEO"){
+      
+      accession = accession()
+      exdir = paste0("data_", accession)
+      
+      if (!file.exists(exdir)){
+        
+        getGEOSuppFiles(accession)
+        tarfile = paste0(accession, "/", accession, "_RAW.tar")
+        untar(tarfile, exdir = exdir)
+        
+      }
+      
+      
+      celfiles = list.files(paste0(exdir, "/"), pattern = "CEL", full.names = TRUE)
+      
+    }
+    
+    if (database == "ArrayExpress"){
+      
+      accession = accession()
+      exdir = paste0("data_", accession)
+      
+      if (!file.exists(exdir)) {
+        getAE(accession, type = "raw", extract = FALSE)
+        unzip(paste0(accession, ".raw.1.zip"), exdir = exdir)
+      }
+      
+      
+      celfiles = list.files(paste0(exdir, "/"), pattern = "CEL", full.names = TRUE)
+      
+    }
+    
+    if (database == "Upload CELs") {
+      zzip <- zzip()
+      celfiles <- unzip(zzip)
+     
+    }
+    
+    
+    return(celfiles)
+    
+  })
   
-  ################################################################################################################################
-  #get meta
-  ################################################################################################################################
-  
+
+
   #Data successfully downloaded
-  
-  observeEvent(if ((length(get_grouping(gset(), database = database())) > 0) | (length(get_grouping(gset(), database = database())) > 0)) TRUE,  {
+  observeEvent(if (length(celfiles()) > 0) TRUE, {
     sendSweetAlert(
       session = session,
       title = "Success!!",
@@ -158,8 +210,7 @@ server <- function(input, output, session){
   
   
   #Incorrect dataset selected
-  
-  observeEvent(if ((length(get_grouping(gset(), database = database())) == 0) | (length(get_grouping(gset(), database = database())) == 0)) TRUE, {
+  observeEvent(if (length(celfiles()) <= 0) TRUE, {
     sendSweetAlert(
       session = session,
       title = "Error!",
@@ -169,18 +220,112 @@ server <- function(input, output, session){
   })
   
   
-  #Info panel
-  
-  observeEvent(input$infopanel2, {
-    sendSweetAlert(
-      session = session,
-      title = "Information",
-      text = "In this panel, you can classify the samples into groups. 
-      These groups are required for the differential expression analysis.",
-      type = "info"
-    )
+  #go to next tab
+  observeEvent(if (length(celfiles()) > 0) TRUE, {
+    showTab("navbar", target = "panel2")
   })
   
+  
+  observeEvent(if (length(celfiles()) > 0) TRUE,  {
+    updateNavbarPage(session, "navbar",
+                     selected = "panel2")
+    
+  })
+  
+
+  
+  #Enter ID to retrieve saved data
+  observeEvent(input$continue, {
+    inputSweetAlert(
+      session = session,
+      inputId = "idcontinue",
+      title = "Enter ID",
+      text = "After you saved the data, you received an ID. This ID is required to retrieve the saved data.",
+      input = "text",
+      inputPlaceholder = "e.g. aa123456789",
+      btn_labels = c("Continue", "Cancel")
+    )
+    
+  })
+  
+  #Success/Error message
+  observe({
+    req(input$idcontinue)
+    
+    if (file.exists(paste0("meta1", input$idcontinue))){
+      showTab("navbar", target = "panel3")
+      
+      updateNavbarPage(session, "navbar",
+                       selected = "panel3")
+      
+    }
+    
+    if (!file.exists(paste0("meta1", input$idcontinue))){
+      sendSweetAlert(
+        session = session,
+        title = "Error!!",
+        text = "Invalid ID. Please try again.",
+        type = "error")
+      
+    }
+    
+  })
+  
+
+  
+  #get saved data
+  meta1.saved <- reactive({
+    meta1 <- NULL
+    
+    if(length(input$idcontinue) > 0){
+      if (file.exists(paste0("meta1", input$idcontinue))){
+        meta1 <- readRDS(paste0("meta1", input$idcontinue))
+      }
+    }
+    return(meta1)
+  })
+  
+  normData.saved <- reactive({
+    normData <- NULL
+    
+    if(length(input$idcontinue) > 0){
+      if (file.exists(paste0("normData", input$idcontinue))){
+        normData <- readRDS(paste0("normData", input$idcontinue))
+      }
+      
+    }
+    return(normData)
+  })
+  
+  
+  
+  ################################################################################################################################
+  #get meta
+  ################################################################################################################################
+  
+
+  
+  output$makegroupsui <- renderUI({
+    
+    if (!is.null(gset())){
+      choices = c("Dataset", "Description file", "Manual grouping")
+      selected = "Dataset"
+    }
+     
+    if (is.null(gset())){
+      choices = c("Description file", "Manual grouping")
+      selected = "Description file"
+    }   
+    
+    radioGroupButtons(
+      inputId = "makegroups",
+      label = "Make sample groups from:", 
+      choices = choices,
+      selected = selected,
+      status = "danger")
+  
+  })
+ 
   
   #select Grouping variable(s)
   
@@ -210,6 +355,12 @@ server <- function(input, output, session){
     if(database() == "ArrayExpress"){
       
       samplelist <- rownames(gset@phenoData@data)
+      
+    }
+    
+    if (database() == "Upload CELs"){ 
+      
+      samplelist <- gsub(".*/","",celfiles())
       
     }
     
@@ -262,6 +413,7 @@ server <- function(input, output, session){
   })
   
   
+  
   output$uitextdescription <- renderUI({
     if (length(input$makegroups) > 0){
       
@@ -274,8 +426,30 @@ server <- function(input, output, session){
 
   })
   
+  output$downloadtemplate <- downloadHandler(
+    filename = "template.xlsx",
+    content = function(file) {
+      file.copy("template.xlsx", file)
+    }
+  )
+  
+  output$uidownloadtemplate <- renderUI({
+    if (length(input$makegroups) > 0){
+      
+      if (input$makegroups == "Description file") {
+        
+        downloadButton("downloadtemplate", "Download template")
+        
+      }
+    }
+    
+  })
+  
+  
   #Make "meta" dataframe
   meta <- reactive({
+    
+    meta <- NULL
     
     if (length(input$makegroups) > 0){
       
@@ -284,7 +458,6 @@ server <- function(input, output, session){
         if (length(input$groupselect) > 0){
           groups <- get_grouping(gset(), database = database())
           meta <- get_meta(gset = gset(), grouping_column = groups[,input$groupselect], database = database())
-          return(meta)
         }
       }
       
@@ -298,12 +471,20 @@ server <- function(input, output, session){
         meta <- as.data.frame(rbind(group1, group2))
         rownames(meta) <- NULL
         colnames(meta) <- c("Sample.ID", "Grouping")
-        
-        return(meta)
+      }
+      
+      if (input$makegroups == "Description file"){
+        if (length(input$descriptionfile$datapath) > 0){
+          meta <- read_excel(input$descriptionfile$datapath)
+          rownames(meta) <- NULL
+          colnames(meta) <- c("Sample.ID", "Grouping")
+        }
       }
     }
     
+    return(meta)
   })
+  
   
   
   #make table of meta data
@@ -314,6 +495,39 @@ server <- function(input, output, session){
   })
   
   
+  #Error and success message
+  observeEvent(input$meta.ok, {
+    samplelist <- gsub(".*/","",celfiles())
+    samplelist <- as.data.frame(samplelist)
+    colnames(samplelist) <- "names"
+    
+    test <- samplelist %>% 
+      fuzzyjoin::fuzzy_inner_join(meta(), by = c("names" = "Sample.ID"), match_fun = str_detect)
+    
+    
+    if (nrow(test) < length(samplelist)){
+      sendSweetAlert(
+        session = session,
+        title = "Error!!",
+        text = "Something went wrong. Please try again.",
+        type = "error"
+      )
+    } else{
+      sendSweetAlert(
+        session = session,
+        title = "Success!!",
+        text = "Samples are successfully grouped! Now you can start pre-processing the data.",
+        type = "success"
+      )
+      
+      updateNavbarPage(session, "navbar",
+                       selected = "panel3")
+      
+      showTab("navbar", target = "panel3")
+    }
+
+  })
+  
   #download table of meta data
   output$downloadmeta <- downloadHandler(
     filename = "meta data",
@@ -322,17 +536,12 @@ server <- function(input, output, session){
     }
   )
   
-  
-  observeEvent(input$meta.ok, {
+  #Go to previous tab
+  observeEvent(input$meta.back, {
     updateNavbarPage(session, "navbar",
-                     selected = "panel3")
+                     selected = "panel1")
     
     
-  })
-  
-  
-  observeEvent(input$meta.ok, {
-    showTab("navbar", target = "panel3")
   })
   
   
@@ -340,16 +549,7 @@ server <- function(input, output, session){
   #Pre-processing
   ################################################################################################################################
   
-  #Success message
-  
-  observeEvent(input$meta.ok, {
-    sendSweetAlert(
-      session = session,
-      title = "success!!",
-      text = "Meta data successfully selected! Now you can choose between pre-processing options.",
-      type = "success"
-    )
-  })
+
   
   
   #Remove outliers
@@ -370,7 +570,7 @@ server <- function(input, output, session){
   })
 
   
-  outliers <- eventReactive(input$ann.ok, {
+  outliers <- eventReactive(input$preprocessing, {
     if (input$outlier == TRUE){
       outliers = NULL
     }
@@ -391,263 +591,505 @@ server <- function(input, output, session){
   })
   
   
-  
-  #Read CEL files
-  data1 <- eventReactive(input$ann.ok, {
+  #rawData
+  rawData <- eventReactive(input$preprocessing, {
     
-    accession = accession()
-    database = database()
+    showModal(modalDialog(title = h4("Dataset is being pre-processed....", align = "center"), 
+                          footer = NULL,
+                          h5("Please be patient. This might take a while.", align = "center"),
+                          br()))
+   
     outliers = outliers()
+    celfiles = celfiles()
     
-    exdir = paste0("data_", accession)
-    
-    if (database == "GEO"){
+    if (!is.null(outliers)){
       
-      #Download data
-      if (!file.exists(exdir)){
-        
-        getGEOSuppFiles(accession)
-        tarfile = paste0(accession, "/", accession, "_RAW.tar")
-        untar(tarfile, exdir = exdir)
-        
-      }
+      outliers_select <- outliers[1]
       
-      
-      celfiles = list.files(paste0(exdir, "/"), pattern = "CEL", full.names = TRUE)
-      
-      if (!is.null(outliers)){
-        
-        outliers_select <- outliers[1]
-        
-        if (length(outliers) > 1){
-          for (i in 1:(length(outliers)-1)){
-            outliers_select <- paste(outliers_select, outliers[1+i], sep = "|")
-          }
-          
+      if (length(outliers) > 1){
+        for (i in 1:(length(outliers)-1)){
+          outliers_select <- paste(outliers_select, outliers[1+i], sep = "|")
         }
         
-        celfiles = celfiles[-grep(outliers_select, celfiles)]
       }
       
+      celfiles = celfiles[-grep(outliers_select, celfiles)]
     }
     
-    if (database == "ArrayExpress"){
-      if (!file.exists(exdir)) {
-        getAE(accession, type = "raw", extract = FALSE)
-        unzip(paste0(accession, ".raw.1.zip"), exdir = exdir)
-      }
-      
-      
-      
-      celfiles = list.files(paste0(exdir, "/"), pattern = "CEL", full.names = TRUE)
-      
-      if (!is.null(outliers)){
-        
-        outliers_select <- outliers[1]
-        
-        if (length(outliers) > 1){
-          for (i in 1:(length(outliers)-1)){
-            outliers_select <- paste(outliers_select, outliers[1+i], sep = "|")
-          }
-          
-        }
-        
-        celfiles = celfiles[-grep(outliers_select, celfiles)]
-      }
-      
-    }
+    rawData = ReadAffy(filenames=celfiles)
     
-    if (database == "Upload CELs") {
-      celfiles = unzip(input$uploadcelsin$datapath)
-      
-      if (!is.null(outliers)){
-        
-        outliers_select <- outliers[1]
-        
-        if (length(outliers) > 1){
-          for (i in 1:(length(outliers)-1)){
-            outliers_select <- paste(outliers_select, outliers[1+i], sep = "|")
-          }
-          
-        }
-        
-        celfiles = celfiles[-grep(outliers_select, celfiles)]
-      }
-    }
-    
-    data1 = ReadAffy(filenames=celfiles)
-    
-    return(data1)
+    return(rawData)
     
   })
   
-  #RMA settings
   
-  output$uibg <- renderUI({
-    if(input$rma == "RMA"){
-      awesomeCheckbox(
-        inputId = "bg",
-        label = "Background correction", 
-        value = TRUE)
+  #meta1
+  meta1 <- reactive({
+    
+    if (is.null(meta1.saved())){
+      meta <- meta()
+      rawData <- rawData()
+      
+      
+      #add CEL names to meta
+      names <- as.data.frame(sampleNames(rawData))
+      colnames(names) <- "names"
+      
+      meta1 <- names %>% 
+        fuzzyjoin::fuzzy_inner_join(meta, by = c("names" = "Sample.ID"), match_fun = str_detect)
     }
-  })
-  
-  output$uinorm <- renderUI({
-    if(input$rma == "RMA"){
-      awesomeCheckbox(
-        inputId = "norm",
-        label = "Quantile normalization", 
-        value = TRUE)
+    
+    if (!is.null(meta1.saved())){
+      meta1 <- meta1.saved()
     }
-  })
-  
-  
-  #Advanced settings
-  
-  output$uibgcorrectmethod <- renderUI({
-    if(input$rma == "Advanced"){
-      prettyRadioButtons(
-        inputId = "bgcorrectmethod",
-        label = "Background correction", 
-        choices = c("rma", "mas", "none"),
-        selected = "rma",
-        status = "primary")
-    }
-  })
-  
-  output$uinormmethod <- renderUI({
-    if(input$rma == "Advanced"){
-      prettyRadioButtons(
-        inputId = "normmethod",
-        label = "Normalization", 
-        choices = c("quantiles", "loess", "constant"),
-        selected = "quantiles",
-        status = "primary")
-    }
-  })
-  
-  output$uipmcorrectmethod <- renderUI({
-    if(input$rma == "Advanced"){
-      prettyRadioButtons(
-        inputId = "pmcorrectmethod",
-        label = "PM correction", 
-        choices = c("pmonly", "mas", "substractmm"),
-        selected = "pmonly",
-        status = "primary")
-    }
-  })
-  
-  output$uisummarymethod <- renderUI({
-    if(input$rma == "Advanced"){
-      prettyRadioButtons(
-        inputId = "summarymethod",
-        label = "Summarization", 
-        choices = c("medianpolish", "mas", "avgdiff"),
-        selected = "medianpolish",
-        status = "primary")
-    }
-  })
-  
 
+    return(meta1)
+    
+  })
   
-  #RMA background correction, normalization, and summarization
-  data.expr <- eventReactive(input$ann.ok, {
+  experimentFactor <- reactive({
+    meta1 <- meta1()
+    experimentFactor <- factor(meta1$Grouping, levels = unique(meta1$Grouping))
+    return(experimentFactor)
+  })
+  
+  
+  aType <- reactive({
+    Data <- rawData()
+    aType <- "PMMM"  
     
-    showModal(modalDialog("This might take a while. Please be patient.", 
-                          title = "Data is being pre-processed....", 
-                          footer=NULL))
+    # Test whether the dataset is of aType "PM-only"
+    mismatches <- mm(Data[,1])  
     
-    req(input$rma)
+    if(is.null(mismatches)) {
+      # mm does not exist
+      aType <- "PMonly"
+    } else {
+      if(sum(is.na(mismatches))>=length(mismatches)/2){ 
+        # mm is always NA or there are more NA values in the mm probes than 
+        # defined values (assuming these would just be controls)
+        aType <- "PMonly"
+      } else {
+        matches <- pm(Data[,1])
+        notNA <- !is.na(mismatches) & !is.na(matches)
+        if(sum(mismatches[notNA]!=matches[notNA])==0){
+          # MM contains a copy of PM, which indicates a PMonly array
+          aType <- "PMonly"
+        }
+      }
+    }
+    return(aType)
+  })
+  
+  
+  # Normalize data
+  normData <- eventReactive((if(!is.null(normData.saved())) TRUE) | input$preprocessing, {
     
-    if(input$rma == "RMA"){
-    
-      data.norm = rma(data1(), background = input$bg, normalize = input$norm)
+    if (is.null(normData.saved())){
+      normMeth <- input$normMeth
+      CDFtype <- input$CDFtype
+      species <- input$species
+      
+      experimentFactor <- experimentFactor()
+      
+      ifelse(input$annotations=="Custom annotations",customCDF<-TRUE,customCDF<-FALSE)
+      ifelse(input$annotations=="Upload annotation file",uploadCDF<-TRUE,uploadCDF<-FALSE)
+      ifelse(input$perGroup == "Use all arrays",perGroup<-FALSE,perGroup<-TRUE)
+      
+      normMeth <- toupper(normMeth)
+      #if customCDF option is chosen, apply to copy of Data, in order not to change the original data object
+      Data.copy <- rawData()
+      if(customCDF){
+        print ("Changing CDF before pre-processing")
+        Data.copy <- addUpdatedCDFenv(Data.copy, species, CDFtype)
+      }
+      
+      if(uploadCDF){
+        print ("Changing CDF before pre-processing")
+        Data.copy <- uploadcdfenv(Data.copy, input$annot_file$datapath)
+      }
+      
+      print ("Pre-processing is running")
+      
+      nGroups <- 1
+      if(perGroup) {
+        nGroups <- max(1,length(levels(experimentFactor)))
+        if(nGroups==1) warning("normalization per group requested, but no groups indicated in data set")
+      }
+      
+      #if per group normalization required, or a method selected that does not return an ExpressionSet object,
+      #make a model of class ExpressionSet to paste real values in, use the relatively fast RMA method
+      #note that binding of ExpressionSet objects is NOT possible
+      if((nGroups>1)) { # || (normMeth=="MAS5")) {
+        normData <- affy::rma(Data.copy)
+        exprs(normData)[] <- NA
+      }
+      
+      for(group in 1:nGroups) {
+        if(nGroups==1) {
+          Data.tmp <- Data.copy
+        } else {
+          Data.tmp <- Data.copy[,experimentFactor==(levels(experimentFactor)[group])]
+        }
+        switch(normMeth, 
+               "MAS5" = {
+                 #doesn't work
+                 normData.tmp <- mas5(Data.tmp) 
+               },
+               "GCRMA" = {
+                 if(customCDF) {
+                   #probe library needed, first try whether this has been intalled, otherwise do so
+                   probeLibrary <- tolower(paste(Data@annotation,species,CDFtype,"probe",sep=""))
+                   loaded <- suppressWarnings(try(eval(parse("",-1,paste("library(",probeLibrary,")", sep=""))),TRUE))
+                   if(class(loaded)=="try-error") {
+                     install.packages(probeLibrary, repos="http://brainarray.mbni.med.umich.edu/bioc")
+                   }
+                 }
+                 if(aType() == "PMMM") ntype = "fullmodel"
+                 if(aType() == "PMonly") ntype = "affinities" # good results if most of the genes are not expressed
+                 normData.tmp <- gcrma(Data.tmp, type=ntype, fast = FALSE)
+               },
+               "RMA" = {
+                 normData.tmp <- affy::rma(Data.tmp)
+               },
+               "PLIER" = {
+                 if(aType() == "PMMM") ntype = "together"
+                 if(aType() == "PMonly") ntype = "pmonly"
+                 normData.tmp <- justPlier(Data.tmp, normalize=TRUE, norm.type = ntype)
+               }
+        )
+        if(nGroups==1) {
+          normData <- normData.tmp
+          if(normMeth=="MAS5") exprs(normData)<-log2(exprs(normData))
+        } else {
+          try(
+            if(normMeth=="MAS5"){
+              exprs(normData)[,match(sampleNames(normData.tmp), sampleNames(normData))] <- log2(exprs(normData.tmp))
+            }else{
+              exprs(normData)[,match(sampleNames(normData.tmp), sampleNames(normData))] <- exprs(normData.tmp)
+            },TRUE)
+        }
+        rm(normData.tmp, Data.tmp)
+      }
+      
+      rm(Data.copy) 
     }
     
-    if(input$rma == "Advanced"){
-      req(input$bgcorrectmethod)
-      req(input$normmethod)
-      req(input$pmcorrectmethod)
-      req(input$summarymethod)
-      
-      data.norm <- expresso(data1(), 
-                            bgcorrect.method = input$bgcorrectmethod,
-                            normalize.method = input$normmethod,
-                            pmcorrect.method = input$pmcorrectmethod,
-                            summary.method = input$summarymethod)
+    
+    if (!is.null(normData.saved())){
+      normData <- normData.saved()
     }
+
+    return(normData)
+  })
+  
+  
+  data.expr <- eventReactive(if (length(normData()) > 0) TRUE, {
     
-    
-    #Expression values
-    data.expr <- exprs(data.norm)
-    data.expr <- data.expr[rownames(data.expr) != "nonsense",]
-      
+    data.expr <- exprs(normData())
+    removeModal()
     
     return(data.expr)
+    
   })
   
   
   
-  #logData
-
   
-  normlogData <- eventReactive(input$ann.ok, {
+  output$boxplotNorm <- renderImage({
+    outfile <- tempfile(fileext = '.png')
     
-    #Get raw expression data
-    data.expr <- data.expr()
+    # Generate the PNG
+    png(outfile, width = 400, height = 300)
+    NULL
+    dev.off()
     
-    #Get samples
-    samples <- colnames(data.expr)
-    
-    #make dataframe with samples + intensities
-    sampleNames = vector()
-    logs = vector()
-    for (i in 1:length(samples))
-    {
-      sampleNames = c(sampleNames,rep(samples[i],nrow(data.expr)))
-      logs = c(logs,data.expr[,samples[i]])
-    }
-    
-    logData = data.frame(logInt=logs,sampleName=sampleNames)
-    
-    
-    logData <- logData %>% fuzzyjoin::fuzzy_inner_join(meta(), by = c("sampleName" = "Sample.ID"), match_fun = str_detect)
-    
-    logData <- arrange(logData, Grouping)
-    logData$Grouping <- factor(logData$Grouping, levels = unique(logData$Grouping))
-    logData$Sample.ID <- factor(logData$Sample.ID, levels = unique(logData$Sample.ID))
-    
-    return(logData)
-  })
+    # Return a list containing the filename
+    list(src = outfile,
+         contentType = 'image/png',
+         width = 400,
+         height = 300,
+         alt = "This is alternate text")
+  }, deleteFile = TRUE)
   
-  output$normboxplot <- renderPlot(NULL)
+  output$boxplotRaw <- renderImage({
+    outfile <- tempfile(fileext = '.png')
+    
+    # Generate the PNG
+    png(outfile, width = 400, height = 300)
+    NULL
+    dev.off()
+    
+    # Return a list containing the filename
+    list(src = outfile,
+         contentType = 'image/png',
+         width = 400,
+         height = 300,
+         alt = "This is alternate text")
+  }, deleteFile = TRUE)
+  
+  
+  
+  output$correlNorm <- renderImage({
+    outfile <- tempfile(fileext = '.png')
+    
+    # Generate the PNG
+    png(outfile, width = 400, height = 300)
+    NULL
+    dev.off()
+    
+    # Return a list containing the filename
+    list(src = outfile,
+         contentType = 'image/png',
+         width = 400,
+         height = 300,
+         alt = "This is alternate text")
+  }, deleteFile = TRUE)
+  
+  
   output$normhist <- renderPlot(NULL)
   
-  observeEvent(if (length(normlogData()) > 0) TRUE, {
-    #Normalized boxplot
+  
+  
+  
+  observeEvent(if (length(data.expr()) > 0) TRUE, {
+    
+    #########################
+    ###Norm boxplot###
+    #########################
+    
+    output$boxplotNorm<-renderImage({
+      
+      # Width of all the plots
+      WIDTH <- 1000
+      
+      # Height of all the plots
+      HEIGHT <- 1414
+      
+      # Point sizes for the plots
+      POINTSIZE <- 24
+      
+      # Maximum number of arrays that can be computed
+      MAXARRAY <- 41 
+      
+      
+      myPalette <- colorsByFactor(experimentFactor())
+      
+      plotColors <- myPalette$plotColors
+      
+      # Legend colros
+      legendColors <- myPalette$legendColors
+      
+      # Plot symbols
+      plotSymbols <- 18-as.numeric(experimentFactor())
+      
+      # Legend symbols
+      legendSymbols <- sort(plotSymbols, decreasing=TRUE)
+      
+      Type <- "Norm"
+      tmain <- "Boxplot of normalized intensities"
+      tmtext2 <- "Normalized log intensity\n\n\n"
+      
+      DataBoxplot<- tempfile(fileext='.png')
+      png(file = DataBoxplot,width=WIDTH,height=HEIGHT, pointsize=POINTSIZE)  
+      par(oma=c(17,0,0,0), cex.axis=1) 
+      suppressWarnings(boxplot(normData(), col=plotColors ,main=tmain, axes=FALSE, pch = 20, cex=0.7))
+      if(length(levels(experimentFactor()))>1){ 
+        legend("topright", levels(experimentFactor()),
+               col=legendColors,fill=legendColors, cex = 0.7, bg = "white", bty = "o")
+      }
+      if(length(sampleNames(normData()))<MAXARRAY){
+        cexval <- 0.65
+      }else{
+        cexval <- 0.45
+      }  
+      axis(1,at=1:length(sampleNames(normData())),las=2,labels=sampleNames(normData()), cex.axis=cexval)        
+      axis(2, cex.axis=0.7)  
+      mtext(tmtext2, side=2, cex=0.8)  	   
+      mtext("Distributions should be comparable between arrays\n", side=3, font=1, 
+            cex=0.7)
+      dev.off()
+      
+      list(src = DataBoxplot,width = WIDTH,height = HEIGHT,alt = "This is alternate text")
+    },deleteFile = TRUE)
+    
+    
+    #########################
+    ###Raw boxplot###
+    #########################
+    
+    output$boxplotRaw<-renderImage({
+      
+      rawData <- rawData()
+      
+      # Width of all the plots
+      WIDTH <- 1000
+      
+      # Height of all the plots
+      HEIGHT <- 1414
+      
+      # Point sizes for the plots
+      POINTSIZE <- 24
+      
+      # Maximum number of arrays that can be computed
+      MAXARRAY <- 41 
+      
+      
+      myPalette <- colorsByFactor(experimentFactor())
+      
+      plotColors <- myPalette$plotColors
+      
+      # Legend colros
+      legendColors <- myPalette$legendColors
+      
+      # Plot symbols
+      plotSymbols <- 18-as.numeric(experimentFactor())
+      
+      # Legend symbols
+      legendSymbols <- sort(plotSymbols, decreasing=TRUE)
+      
+      Type <- "Raw"
+      tmain <- "Boxplot of raw intensities"
+      tmtext2 <- "Raw log intensity\n\n\n"
+      
+      DataBoxplot<- tempfile(fileext='.png')
+      png(file = DataBoxplot,width=WIDTH,height=HEIGHT, pointsize=POINTSIZE)  
+      par(oma=c(17,0,0,0), cex.axis=1) 
+      suppressWarnings(boxplot(rawData, col=plotColors ,main=tmain, axes=FALSE, pch = 20, cex=0.7))
+      if(length(levels(experimentFactor()))>1){ 
+        legend("topright", levels(experimentFactor()),
+               col=legendColors,fill=legendColors, cex = 0.7, bg = "white", bty = "o")
+      }
+      if(length(sampleNames(rawData))<MAXARRAY){
+        cexval <- 0.65
+      }else{
+        cexval <- 0.45
+      }  
+      axis(1,at=1:length(sampleNames(rawData)),las=2,labels=sampleNames(rawData), cex.axis=cexval)        
+      axis(2, cex.axis=0.7)  
+      mtext(tmtext2, side=2, cex=0.8)  	   
+      mtext("Distributions should be comparable between arrays\n", side=3, font=1, 
+            cex=0.7)
+      dev.off()
+      
+      list(src = DataBoxplot,width = WIDTH,height = HEIGHT,alt = "This is alternate text")
+    },deleteFile = TRUE)
+    
+    
+    #########################
+    ###Heatmap
+    #########################
+    
+    output$correlNorm <- renderImage({
+      
+      # Width of all the plots
+      WIDTH <- 1000
+      
+      # Height of all the plots
+      HEIGHT <- 1414
+      
+      # Point sizes for the plots
+      POINTSIZE <- 24
+      
+      # Maximum number of arrays that can be computed
+      MAXARRAY <- 41 
+      
+      
+      myPalette <- colorsByFactor(experimentFactor())
+      
+      plotColors <- myPalette$plotColors
+      
+      # Legend colros
+      legendColors <- myPalette$legendColors
+      
+      # Plot symbols
+      plotSymbols <- 18-as.numeric(experimentFactor())
+      
+      # Legend symbols
+      legendSymbols <- sort(plotSymbols, decreasing=TRUE)
+      clusterOption1 <- input$clusteroption1
+      clusterOption2 <- input$clusteroption2 
+      normMeth <- input$normMeth
+      
+      
+      Type <- "Norm"
+      text1 <- paste("Array correlation plot\nafter",normMeth,"normalization")
+      
+      if(length(sampleNames(normData()))<2) {
+        warning("Only one array in dataset, no correlation plot made")
+      } else {
+        normdataCorrelation <- tempfile(fileext = ".png")
+        png(file = normdataCorrelation,width=WIDTH,height=HEIGHT,pointsize=POINTSIZE)
+        if(length(sampleNames(normData()))<MAXARRAY) {
+          par(oma=c(17,0,0,0),cex.axis=0.7,cex.main=0.8)
+          #subval <- 10
+        } else {
+          par(oma=c(17,0,0,0),srt=90,las=2,cex.axis=0.5,cex.main=0.8)
+          #subval <- 16
+        }        
+        
+        #note: for computing array correlation, euclidean would not make sense
+        #only use euclidean distance to compute the similarity of the correlation vectors for the arrays
+        COpt1 <- "pearson"
+        if (tolower(clusterOption1) == "spearman") COpt1 <- "spearman"
+        crp <- cor(data.expr(), use="complete.obs", method=COpt1)
+        
+        text1 <- paste(text1,"\ncorrelation method:",COpt1,"\ncluster method:",clusterOption2)
+        
+        switch(tolower(clusterOption1), 
+               "pearson" = {
+                 my.dist <- function(x) cor.dist(x, abs=FALSE)
+               },
+               "spearman" = {
+                 my.dist <- function(x) spearman.dist(x, abs=FALSE)
+               },
+               "euclidean" = {
+                 my.dist <- function(x) euc(x)
+               }
+        )
+        
+        my.hclust <- function(d) hclust(d, method=clusterOption2)
+        
+        sideColors <- legendColors[as.numeric(experimentFactor())]
+        
+        heatmap.2(crp, distfun=my.dist, hclustfun=my.hclust, trace="none", symm=TRUE, density.info="density",
+                  main=text1, dendrogram="row", ColSideColors=sideColors)
+        
+        dev.off()
+        list(src = normdataCorrelation,
+             width = WIDTH,
+             height = HEIGHT,
+             alt = "This is alternate text")
+      }
+    }, deleteFile = TRUE)
+    
+    
+    #########################
+    ###Normalized boxplot### GGPLOT
+    #########################
     output$normboxplot <- renderPlot({
       
-      logData <- normlogData()
-      meta <- meta()
+      
+      data.expr <- data.expr()
+      meta1 <- meta1()
+      
+      #make dataframe with samples + intensities
+      logData <- cbind.data.frame(as.vector(data.expr), rep(colnames(data.expr), each = nrow(data.expr)))
+      colnames(logData) <- c("logInt", "sampleName")
+      
+      logData <- logData %>% inner_join(meta1, by = c("sampleName" = "names"))
+      
+      logData$Grouping <- factor(logData$Grouping, levels = unique(meta1$Grouping))
+      logData$Sample.ID <- factor(logData$Sample.ID, levels = unique(meta1$Sample.ID))
       
       #Make colours
-      meta1 <- arrange(meta, Grouping)
-      meta1$Grouping <- factor(meta1$Grouping, levels = unique(meta1$Grouping))
-      meta1$Sample.ID <- factor(meta1$Sample.ID, levels = unique(meta1$Sample.ID))
-      
-      myPalette <- colorsByFactor(experimentFactor = meta1[,2])
-      
-      samplecolours <- cbind(meta1, myPalette$plotColors)
-      legendcolours <- inner_join(samplecolours, as.data.frame(myPalette$legendColors), by = c("myPalette$plotColors" = "myPalette$legendColors"))
-      
-      
+      myPalette <- colorsByFactor(experimentFactor())
+
       #Make Boxplot
       
-      ggplot(logData, aes(x = Sample.ID, y = logInt, fill = Sample.ID)) +
+      ggplot(logData, aes(x = Sample.ID, y = logInt, fill = Sample.ID, shape = Grouping)) +
         geom_boxplot() +
-        scale_fill_manual(breaks = legendcolours[,1], 
-                          label = legendcolours[,2],
-                          values = samplecolours[,3]) +
+        scale_fill_manual(values = myPalette$plotColors) +
         labs(title = "Boxplot of normalized intensities",
              subtitle = "Distributions should be comparable between arrays") +
         xlab(NULL) +
@@ -658,38 +1100,37 @@ server <- function(input, output, session){
               plot.subtitle = element_text(hjust = 0.5),
               legend.background = element_rect(fill="#d3d3d3", colour = "black"),
               legend.title = element_text(face = "bold", hjust = 0.5)) +
-        guides(fill=guide_legend(title="Grouping"))
-      
+        guides(shape=guide_legend(title="Grouping", override.aes = list(fill = myPalette$legendColors)), fill = "none")
     })
+      
 
     
-    
-    
-    
     #Normalized histogram
-    output$normhist <- renderPlot({
+    output$normhist <- renderPlotly({
       
-      logData <- normlogData()
-      meta <- meta()
+      data.expr <- data.expr()
+      meta1 <- meta1()
       
+      #make dataframe with samples + intensities
+      logData <- cbind.data.frame(as.vector(data.expr), rep(colnames(data.expr), each = nrow(data.expr)))
+      colnames(logData) <- c("logInt", "sampleName")
+      
+      logData <- logData %>% inner_join(meta1, by = c("sampleName" = "names"))
+      
+      logData$Grouping <- factor(logData$Grouping, levels = unique(meta1$Grouping))
+      logData$Sample.ID <- factor(logData$Sample.ID, levels = unique(meta1$Sample.ID))
+
       #Make colours
-      meta1 <- arrange(meta, Grouping)
-      meta1$Grouping <- factor(meta1$Grouping, levels = unique(meta1$Grouping))
-      meta1$Sample.ID <- factor(meta1$Sample.ID, levels = unique(meta1$Sample.ID))
       
-      myPalette <- colorsByFactor(experimentFactor = meta1[,2])
-      
-      samplecolours <- cbind(meta1, myPalette$plotColors)
-      legendcolours <- inner_join(samplecolours, as.data.frame(myPalette$legendColors), by = c("myPalette$plotColors" = "myPalette$legendColors"))
-      
-      
+      myPalette <- colorsByFactor(experimentFactor())
+
+
       #Make density plot
       
-      ggplot(logData, aes(x = logInt, colour = Sample.ID)) +
+      plot <- 
+      ggplot(logData, aes(x = logInt, colour = Sample.ID, shape = Grouping)) +
         geom_density(size = 1) +
-        scale_colour_manual(breaks = legendcolours[,1], 
-                            label = legendcolours[,2],
-                            values = samplecolours[,3]) +
+        scale_colour_manual(values = myPalette$plotColors) +
         labs(title = "Density plot of normalized intensities",
              subtitle = "Distributions should be comparable between arrays") +
         xlab("Normalized log intensity") +
@@ -697,25 +1138,22 @@ server <- function(input, output, session){
         theme_classic() +
         theme(plot.title = element_text(face = "bold", hjust = 0.5),
               plot.subtitle = element_text(hjust = 0.5),
-              legend.background = element_rect(fill="#d3d3d3", colour = "black"),
-              legend.title = element_text(face = "bold", hjust = 0.5)) +
-        guides(colour=guide_legend(title="Grouping"))
+              legend.title = element_blank()) +
+        guides(shape=guide_legend(title="Grouping", override.aes = list(colour = myPalette$legendColors)), colour = "none")
+      
+      
+      return(ggplotly(plot))
       
     })
   })
   
+  
+  
+  
   #After normalization....
   
-  observeEvent(if (length(normlogData()) > 0) TRUE, {
+  observeEvent(if (length(data.expr()) > 0) TRUE, {
     
-    
-    #get proceed button
-    output$proceedann <- renderUI({
-      actionBttn(inputId = "ann.proceed",
-                 label = "Next",
-                 style = "jelly",
-                 color = "primary")
-    })
     
     #Download data expr
     output$downloadexpr <- downloadHandler(
@@ -728,22 +1166,69 @@ server <- function(input, output, session){
     
     sendSweetAlert(
       session = session,
-      title = "success!!",
+      title = "Success!!",
       text = "Data successfully pre-processed! Please wait for the QC plots to be rendered.",
       type = "success"
     )
   })
   
+  observeEvent(input$ann.back, {
+    if (length(meta()) > 0) {
+      updateNavbarPage(session, "navbar",
+                       selected = "panel2")
+    }
+
+  })
   
-  observeEvent(input$ann.proceed, {
-    updateNavbarPage(session, "navbar",
-                     selected = "panel4")
+  
+  observeEvent((input$ann.proceed), {
+    if (length(data.expr()) > 0){
+      updateNavbarPage(session, "navbar",
+                       selected = "panel4")
+    }
     
   })
   
   observeEvent(input$ann.proceed, {
-    showTab("navbar", target = "panel4")
+    if (length(data.expr()) > 0){
+      showTab("navbar", target = "panel4")
+    }
   })
+  
+  
+  observeEvent(input$save, {
+    
+    if (length(data.expr()) > 0){
+      id <- str_remove_all(Sys.time(), "-")
+      id <- str_remove_all(id, " ")
+      id <- str_remove_all(id, ":")
+      id <- paste0("aa", id)
+      
+      id.normData <- paste0("normData", id)
+      id.meta1 <- paste0("meta1", id)
+      
+      saveRDS(normData(), id.normData)
+      saveRDS(meta1(), id.meta1)
+      
+      sendSweetAlert(
+        session = session,
+        title = "Data successfully saved!!",
+        text = paste0("Please use the following ID to access your data: ", id),
+        type = "success"
+      )
+    }
+    
+    if (length(normData()) == 0){
+      sendSweetAlert(
+        session = session,
+        title = "Error!!",
+        text = "Data needs to be pre-processed first!!",
+        type = "Error"
+      )
+    }
+    
+  })
+
   
   
   ################################################################################################################################
@@ -820,7 +1305,7 @@ server <- function(input, output, session){
   output$pca <- renderPlotly({
     if (length(input$plot3d) > 0){
       if (input$plot3d == FALSE){
-        pca.plot(data.PC(), meta(), pc.x(), pc.y())
+        pca.plot(data.PC(), meta1(), pc.x(), pc.y())
       }
     }
   })
@@ -836,7 +1321,7 @@ server <- function(input, output, session){
   output$pca3d <- renderPlotly({
     if (length(input$plot3d) > 0){
       if (input$plot3d == TRUE){
-        pca3d(data.PC(), meta(), x = pc.x(), y = pc.y(), z = pc.z())
+        pca3d(data.PC(), meta1(), x = pc.x(), y = pc.y(), z = pc.z())
       }
     }
   })
@@ -857,12 +1342,19 @@ server <- function(input, output, session){
   observeEvent(input$pca.ok, {
     sendSweetAlert(
       session = session,
-      title = "success!!",
-      text = "Now you can perform various statistical analyses",
+      title = "Success!!",
+      text = "Now you can perform various statistical analyses!",
       type = "success")
     
   })
+  
+  observeEvent(input$pca.back, {
+    updateNavbarPage(session, "navbar",
+                     selected = "panel3")
     
+    
+  })
+  
   observeEvent(input$pca.ok, {
     updateNavbarPage(session, "navbar",
                      selected = "panel5")
@@ -874,7 +1366,7 @@ server <- function(input, output, session){
   })
   
   ################################################################################################################################
-  #differential expression analysis
+  #Statistical analysis
   ################################################################################################################################
   
   
@@ -882,7 +1374,7 @@ server <- function(input, output, session){
   
   top.table <- reactive({
     
-    top.table <- diff_expr(data.expr(), meta(), comparisons = get_contrasts(meta()))
+    top.table <- diff_expr(data.expr(), meta1(), comparisons = get_contrasts(meta1()))
     
     return(top.table)
   })
@@ -898,7 +1390,7 @@ server <- function(input, output, session){
     pickerInput(
       inputId = "toptablecomp",
       label = "Comparison",
-      choices = get_contrasts(meta()),
+      choices = get_contrasts(meta1()),
       options = list(
         style = "btn-primary")
     )
@@ -969,6 +1461,7 @@ server <- function(input, output, session){
   )
   
   
+ 
   ################################################################################################################################
   #P-value analysis
   ################################################################################################################################
@@ -979,7 +1472,7 @@ server <- function(input, output, session){
     pickerInput(
       inputId = "pcomp",
       label = "Comparison",
-      choices = get_contrasts(meta()),
+      choices = get_contrasts(meta1()),
       options = list(
         style = "btn-primary")
     )
@@ -1001,7 +1494,39 @@ server <- function(input, output, session){
     
   })
  
- 
+  ################################################################################################################################
+  #FC analysis
+  ################################################################################################################################
+  
+  
+  #Select comparison
+  output$uilogfccomp <- renderUI({
+    pickerInput(
+      inputId = "logfccomp",
+      label = "Comparison",
+      choices = get_contrasts(meta1()),
+      options = list(
+        style = "btn-primary")
+    )
+  })
+  
+  
+  output$logfchist <- renderPlotly({
+    req(input$logfccomp)
+    logfchist <- 
+      ggplot(data = top.table()[[input$logfccomp]], aes(x = logFC)) +
+      geom_histogram(bins = 100, colour = "#696969", fill = "#d3d3d3") +
+      labs(title = "logFC histogram") +
+      xlab("logFC") +
+      ylab("Count") +
+      theme_classic() +
+      theme(plot.title = element_text(face = "bold", hjust = 0.5))
+    
+    return(ggplotly(logfchist))
+    
+  })
+  
+  
   ################################################################################################################################
   #volcano plot
   ################################################################################################################################
@@ -1011,7 +1536,7 @@ server <- function(input, output, session){
     pickerInput(
       inputId = "volcanocomp",
       label = "Comparison",
-      choices = get_contrasts(meta()),
+      choices = get_contrasts(meta1()),
       options = list(
         style = "btn-primary")
     )
@@ -1155,8 +1680,10 @@ server <- function(input, output, session){
     pickerInput(
       inputId = "contrastselection",
       label = "Select between 2 and 4 comparisons", 
-      choices = get_contrasts(meta()),
-      multiple = TRUE
+      choices = get_contrasts(meta1()),
+      multiple = TRUE,
+      options = list(
+        style = "btn-primary")
     )
   })
   
@@ -1174,19 +1701,151 @@ server <- function(input, output, session){
       
       genelist <- NULL
       for (i in names(toptableselection)) {
-        genes <- toptableselection[[i]] %>% 
-          filter(P.Value <= 0.05) %>%
-          filter(logFC > 1 | logFC < -1)
+        if (input$raworadjvenn == "raw") {
+          genes <- toptableselection[[i]] %>% 
+            filter(P.Value <= input$pthresholdvenn) %>%
+            filter(logFC > input$logfcthresholdvenn | logFC < (-1 * input$logfcthresholdvenn))
+        }
+        
+        if (input$raworadjvenn == "adj") {
+          genes <- toptableselection[[i]] %>% 
+            filter(adj.P.Val <= input$pthresholdvenn) %>%
+            filter(logFC > input$logfcthresholdvenn | logFC < (-1 * input$logfcthresholdvenn))
+        }
+        
         
         genelist[[i]] <- genes$Probeset.ID
       }
       
+      names(genelist) <- c("A", "B", "C", "D")[1:length(contrasts)]
       
       ggvenn(genelist, set_name_size = 4, text_size = 3, stroke_size = 0.7)
       
     }
     
   })
+  
+  
+  output$legendvenn <- renderText({
+    if (length(input$contrastselection) == 2) {
+      text <- paste0("<p> <b> A: </b> ", input$contrastselection[1], "<br /> <p> <b> B: </b> ", input$contrastselection[2])
+    }
+    
+    if (length(input$contrastselection) == 3) {
+      text <- paste0("<p> <b> A: </b> ", input$contrastselection[1], "<br /> <p> <b> B: </b> ", input$contrastselection[2], "<br /> <p> <b> C: </b> ", input$contrastselection[3])
+    }
+    
+    if (length(input$contrastselection) == 4) {
+      text <- paste0("<p> <b> A: </b> ", input$contrastselection[1], "<br /> <p> <b> B: </b> ", input$contrastselection[2], "<br /> <p> <b> C: </b> ", input$contrastselection[3], "<br /> <p> <b> D: </b> ", input$contrastselection[4])
+    }
+   
+    if ((length(input$contrastselection) > 4)){
+      text <- "More than four comparisons selected. Please select between two and four comparisons."
+    }
+    
+    if (length(input$contrastselection) < 2){
+      text <- "Less than two comparisons selected. Please select between two and four comparisons."
+    }
+    
+    return(text)
+  })
+  
+  
+  ################################################################################################################################
+  #GO analysis
+  ################################################################################################################################
+  
+  
+  output$uigoacomp <- renderUI({
+    pickerInput(
+      inputId = "goacomp",
+      label = "Comparison",
+      choices = get_contrasts(meta1()),
+      options = list(
+        style = "btn-primary")
+    )
+  })
+  
+  
+  affyLib <- reactive({
+    req(normData())
+    annotation <- annotation(normData())
+    
+    if (annotation == "hugene10stv1"){
+      affyLib <- "hugene10stprobeset.db"
+    } else {
+      affyLib <- paste(annotation, "db", sep = ".")
+    }
+    
+    #install annotation package from bioconductor
+    
+  })
+  
+  sampleGOdata <- eventReactive(input$goa.ok, {
+    
+    top.table <- top.table()[[input$goacomp]]
+    
+    if(input$raworadjgoa == "raw"){
+      geneList <- ifelse((top.table$P.Value < input$pthresholdgoa) & (abs(top.table$logFC) > input$logFCthresholdgoa), 1, 0)
+    }
+    
+    if(input$raworadjgoa == "adj"){
+      geneList <- ifelse((top.table$adj.P.Val < input$pthresholdgoa)  & (abs(top.table$logFC) > input$logFCthresholdgoa), 1, 0)
+    }
+    
+    names(geneList) <- top.table$Probeset.ID
+    
+    
+    sampleGOdata <- new("topGOdata",
+                        description = "Simple session", ontology = input$ontology,
+                        allGenes = geneList, geneSelectionFun = function(x)(x == 1),
+                        nodeSize = 10,
+                        annot = annFUN.db, affyLib = affyLib())
+    
+    return(sampleGOdata)
+  })
+  
+  
+  resultFisher <- eventReactive(input$goa.ok, {
+    resultFisher <- runTest(sampleGOdata(), algorithm = "classic", statistic = "fisher")
+    return(resultFisher)
+  })
+  
+  output$goa <- renderDataTable(NULL)
+  
+  observeEvent(input$goa.ok, {
+    output$goa <- renderDataTable({
+      
+      allRes <- GenTable(sampleGOdata(), classicFisher = resultFisher(), orderBy = "classicFisher", ranksOf = "classicFisher", topNodes = 30)
+      return(allRes)
+      
+    }, options = list(lengthMenu = c(5, 10, 20, 30), pageLength = 5))
+    
+    
+    output$GOplot <-renderImage({
+      
+      # Width of all the plots
+      WIDTH <- 1000
+      
+      # Height of all the plots
+      HEIGHT <- 1414
+      
+      # Point sizes for the plots
+      POINTSIZE <- 24
+      
+      GOplot <- tempfile(fileext='.png')
+      png(file = GOplot,width=WIDTH,height=HEIGHT, pointsize=POINTSIZE)  
+      par(cex = 0.3) 
+      showSigOfNodes(sampleGOdata(), score(resultFisher()), firstSigNodes = 3, useInfo = 'all')
+      dev.off()
+      
+      list(src = GOplot,width = WIDTH,height = HEIGHT,alt = "This is alternate text")
+    },deleteFile = TRUE)
+    
+  })
+  
+  
+  
   
 }
 
