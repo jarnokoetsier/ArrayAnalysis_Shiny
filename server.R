@@ -307,23 +307,37 @@ server <- function(input, output, session){
   
   output$makegroupsui <- renderUI({
     
-    if (!is.null(gset())){
-      choices = c("Dataset", "Description file", "Manual grouping")
-      selected = "Dataset"
+    if (length(input$paired) > 0){
+      
+      if ((!is.null(gset())) & (!input$paired)){
+        choices = c("Dataset", "Description file", "Manual grouping")
+        selected = "Dataset"
+      }
+      
+      if ((is.null(gset())) & (!input$paired)){
+        choices = c("Description file", "Manual grouping")
+        selected = "Description file"
+      } 
+      
+      if ((!is.null(gset())) & (input$paired)){
+        choices = c("Dataset", "Description file")
+        selected = "Dataset"
+      }
+      
+      if ((is.null(gset())) & (input$paired)){
+        choices = "Description file"
+        selected = "Description file"
+      }   
+      
+      radioGroupButtons(
+        inputId = "makegroups",
+        label = "Make sample groups from:", 
+        choices = choices,
+        selected = selected,
+        status = "danger")
+      
     }
-     
-    if (is.null(gset())){
-      choices = c("Description file", "Manual grouping")
-      selected = "Description file"
-    }   
-    
-    radioGroupButtons(
-      inputId = "makegroups",
-      label = "Make sample groups from:", 
-      choices = choices,
-      selected = selected,
-      status = "danger")
-  
+
   })
  
   
@@ -341,6 +355,22 @@ server <- function(input, output, session){
     }
    
   })
+  
+  output$pairs <- renderUI({
+    
+    if (length(input$makegroups) > 0){
+      if (input$makegroups == "Dataset"){
+        if (input$paired) {
+          checkboxGroupInput(inputId = "pairselect", 
+                             label = "Select pairing variable(s):", 
+                             choices = colnames(get_grouping(gset(), database = database())),
+                             selected = auto_group(get_grouping(gset(), database = database())))
+        }
+      }
+    }
+    
+  })
+  
   
   
   #Make own sample groups
@@ -367,6 +397,7 @@ server <- function(input, output, session){
     return(samplelist)
   })
   
+  
   output$owngroupsout <- renderUI({
     
     if (length(input$makegroups) > 0){
@@ -380,13 +411,13 @@ server <- function(input, output, session){
           options = list(
             enable_search = TRUE,
             non_selected_header = "Group 1",
-            selected_header = "Group 2"
-            
-          )
-        )
+            selected_header = "Group 2"))
+        
+        
       }
     }
   })
+  
   
   
   output$uidescriptionfile <- renderUI({
@@ -456,8 +487,18 @@ server <- function(input, output, session){
       if (input$makegroups == "Dataset"){
         
         if (length(input$groupselect) > 0){
-          groups <- get_grouping(gset(), database = database())
-          meta <- get_meta(gset = gset(), grouping_column = groups[,input$groupselect], database = database())
+          
+          if (!input$paired){
+            groups <- get_grouping(gset(), database = database())
+            meta <- get_meta(gset = gset(), grouping_column = groups[,input$groupselect], database = database())
+          }
+          
+          if (input$paired){
+            groups <- get_grouping(gset(), database = database())
+            meta <- get_meta(gset = gset(), grouping_column = groups[,input$groupselect], 
+                             pairing_column = groups[, input$pairselect], database = database())
+          }
+
         }
       }
       
@@ -477,7 +518,15 @@ server <- function(input, output, session){
         if (length(input$descriptionfile$datapath) > 0){
           meta <- read_excel(input$descriptionfile$datapath)
           rownames(meta) <- NULL
-          colnames(meta) <- c("Sample.ID", "Grouping")
+          
+          if (ncol(meta) == 2) {
+            colnames(meta) <- c("Sample.ID", "Grouping")
+          }
+          
+          if (ncol(meta) == 3) {
+            colnames(meta) <- c("Sample.ID", "Grouping", "Pairing")
+          }
+          
         }
       }
     }
@@ -830,23 +879,7 @@ server <- function(input, output, session){
   
   
   
-  output$correlNorm <- renderImage({
-    outfile <- tempfile(fileext = '.png')
-    
-    # Generate the PNG
-    png(outfile, width = 400, height = 300)
-    NULL
-    dev.off()
-    
-    # Return a list containing the filename
-    list(src = outfile,
-         contentType = 'image/png',
-         width = 400,
-         height = 300,
-         alt = "This is alternate text")
-  }, deleteFile = TRUE)
-  
-  
+  output$correlNormInt <- renderPlotly(NULL)
   output$normhist <- renderPlot(NULL)
   
   
@@ -976,6 +1009,105 @@ server <- function(input, output, session){
     },deleteFile = TRUE)
     
     
+  
+    
+    #########################
+    ###Interactive heatmap
+    #########################
+    
+    output$correlNormInt <- renderPlotly({
+      myPalette <- colorsByFactor(experimentFactor())
+      
+      plotColors <- myPalette$plotColors
+      
+      # Legend colros
+      legendColors <- myPalette$legendColors
+      
+      # Plot symbols
+      plotSymbols <- 18-as.numeric(experimentFactor())
+      
+      # Legend symbols
+      legendSymbols <- sort(plotSymbols, decreasing=TRUE)
+      clusterOption1 <- input$clusteroption1
+      clusterOption2 <- input$clusteroption2 
+      normMeth <- input$normMeth
+      
+      
+      Type <- "Norm"
+      
+      #note: for computing array correlation, euclidean would not make sense
+      #only use euclidean distance to compute the similarity of the correlation vectors for the arrays
+      COpt1 <- "pearson"
+      if (tolower(clusterOption1) == "spearman") COpt1 <- "spearman"
+      crp <- cor(data.expr(), use="complete.obs", method=COpt1)
+      
+      switch(tolower(clusterOption1), 
+             "pearson" = {
+               my.dist <- function(x) cor.dist(x, abs=FALSE)
+             },
+             "spearman" = {
+               my.dist <- function(x) spearman.dist(x, abs=FALSE)
+             },
+             "euclidean" = {
+               my.dist <- function(x) euc(x)
+             }
+      )
+      
+      my.hclust <- function(d) hclust(d, method=clusterOption2)
+
+      
+      names(legendColors) <- levels(experimentFactor())
+      sidecolors <- data.frame(experimentFactor())
+      colnames(sidecolors) <- "Grouping"
+      
+      
+      heatmaply(crp, plot_method = "plotly", distfun = my.dist, hclustfun = my.hclust, symm = TRUE, 
+                seriate = "mean", titleX = FALSE, titleY = FALSE, key.title = NULL, show_dendrogram = c(TRUE, FALSE),  
+                col_side_colors = sidecolors, col_side_palette = legendColors, column_text_angle = 90)
+    })
+
+    
+    #Normalized histogram
+    output$normhist <- renderPlotly({
+      
+      data.expr <- data.expr()
+      meta1 <- meta1()
+      
+      #make dataframe with samples + intensities
+      logData <- cbind.data.frame(as.vector(data.expr), rep(colnames(data.expr), each = nrow(data.expr)))
+      colnames(logData) <- c("logInt", "sampleName")
+      
+      logData <- logData %>% inner_join(meta1, by = c("sampleName" = "names"))
+      
+      logData$Grouping <- factor(logData$Grouping, levels = unique(meta1$Grouping))
+      logData$Sample.ID <- factor(logData$Sample.ID, levels = unique(meta1$Sample.ID))
+
+      #Make colours
+      
+      myPalette <- colorsByFactor(experimentFactor())
+
+
+      #Make density plot
+      
+      plot <- 
+      ggplot(logData, aes(x = logInt, colour = Sample.ID, shape = Grouping)) +
+        geom_density(size = 1) +
+        scale_colour_manual(values = myPalette$plotColors) +
+        labs(title = "Density plot of normalized intensities",
+             subtitle = "Distributions should be comparable between arrays") +
+        xlab("Normalized log intensity") +
+        ylab("Density") +
+        theme_classic() +
+        theme(plot.title = element_text(face = "bold", hjust = 0.5),
+              plot.subtitle = element_text(hjust = 0.5),
+              legend.title = element_blank()) +
+        guides(shape=guide_legend(title="Grouping", override.aes = list(colour = myPalette$legendColors)), colour = "none")
+      
+      
+      return(ggplotly(plot))
+      
+    })
+    
     #########################
     ###Heatmap
     #########################
@@ -1026,7 +1158,7 @@ server <- function(input, output, session){
         } else {
           par(oma=c(17,0,0,0),srt=90,las=2,cex.axis=0.5,cex.main=0.8)
           #subval <- 16
-        }        
+        }
         
         #note: for computing array correlation, euclidean would not make sense
         #only use euclidean distance to compute the similarity of the correlation vectors for the arrays
@@ -1054,6 +1186,7 @@ server <- function(input, output, session){
         
         heatmap.2(crp, distfun=my.dist, hclustfun=my.hclust, trace="none", symm=TRUE, density.info="density",
                   main=text1, dendrogram="row", ColSideColors=sideColors)
+        
         
         dev.off()
         list(src = normdataCorrelation,
@@ -1084,7 +1217,7 @@ server <- function(input, output, session){
       
       #Make colours
       myPalette <- colorsByFactor(experimentFactor())
-
+      
       #Make Boxplot
       
       ggplot(logData, aes(x = Sample.ID, y = logInt, fill = Sample.ID, shape = Grouping)) +
@@ -1102,49 +1235,7 @@ server <- function(input, output, session){
               legend.title = element_text(face = "bold", hjust = 0.5)) +
         guides(shape=guide_legend(title="Grouping", override.aes = list(fill = myPalette$legendColors)), fill = "none")
     })
-      
-
     
-    #Normalized histogram
-    output$normhist <- renderPlotly({
-      
-      data.expr <- data.expr()
-      meta1 <- meta1()
-      
-      #make dataframe with samples + intensities
-      logData <- cbind.data.frame(as.vector(data.expr), rep(colnames(data.expr), each = nrow(data.expr)))
-      colnames(logData) <- c("logInt", "sampleName")
-      
-      logData <- logData %>% inner_join(meta1, by = c("sampleName" = "names"))
-      
-      logData$Grouping <- factor(logData$Grouping, levels = unique(meta1$Grouping))
-      logData$Sample.ID <- factor(logData$Sample.ID, levels = unique(meta1$Sample.ID))
-
-      #Make colours
-      
-      myPalette <- colorsByFactor(experimentFactor())
-
-
-      #Make density plot
-      
-      plot <- 
-      ggplot(logData, aes(x = logInt, colour = Sample.ID, shape = Grouping)) +
-        geom_density(size = 1) +
-        scale_colour_manual(values = myPalette$plotColors) +
-        labs(title = "Density plot of normalized intensities",
-             subtitle = "Distributions should be comparable between arrays") +
-        xlab("Normalized log intensity") +
-        ylab("Density") +
-        theme_classic() +
-        theme(plot.title = element_text(face = "bold", hjust = 0.5),
-              plot.subtitle = element_text(hjust = 0.5),
-              legend.title = element_blank()) +
-        guides(shape=guide_legend(title="Grouping", override.aes = list(colour = myPalette$legendColors)), colour = "none")
-      
-      
-      return(ggplotly(plot))
-      
-    })
   })
   
   
@@ -1773,8 +1864,11 @@ server <- function(input, output, session){
     
     if (annotation == "hugene10stv1"){
       affyLib <- "hugene10stprobeset.db"
+      return(affyLib)
     } else {
-      affyLib <- paste(annotation, "db", sep = ".")
+      affyLib <- NULL
+      return(affyLib)
+      #affyLib <- paste(annotation, "db", sep = ".")
     }
     
     #install annotation package from bioconductor
@@ -1782,67 +1876,148 @@ server <- function(input, output, session){
   })
   
   sampleGOdata <- eventReactive(input$goa.ok, {
-    
-    top.table <- top.table()[[input$goacomp]]
-    
-    if(input$raworadjgoa == "raw"){
-      geneList <- ifelse((top.table$P.Value < input$pthresholdgoa) & (abs(top.table$logFC) > input$logFCthresholdgoa), 1, 0)
+    if (!is.null(affyLib())){
+      top.table <- top.table()[[input$goacomp]]
+      
+      if(input$raworadjgoa == "raw"){
+        geneList <- ifelse((top.table$P.Value < input$pthresholdgoa) & (abs(top.table$logFC) > input$logFCthresholdgoa), 1, 0)
+      }
+      
+      if(input$raworadjgoa == "adj"){
+        geneList <- ifelse((top.table$adj.P.Val < input$pthresholdgoa)  & (abs(top.table$logFC) > input$logFCthresholdgoa), 1, 0)
+      }
+      
+      names(geneList) <- top.table$Probeset.ID
+      
+      
+      sampleGOdata <- new("topGOdata",
+                          description = "Simple session", ontology = input$ontology,
+                          allGenes = geneList, geneSelectionFun = function(x)(x == 1),
+                          nodeSize = 10,
+                          annot = annFUN.db, affyLib = affyLib())
+      
+      return(sampleGOdata)
     }
-    
-    if(input$raworadjgoa == "adj"){
-      geneList <- ifelse((top.table$adj.P.Val < input$pthresholdgoa)  & (abs(top.table$logFC) > input$logFCthresholdgoa), 1, 0)
-    }
-    
-    names(geneList) <- top.table$Probeset.ID
-    
-    
-    sampleGOdata <- new("topGOdata",
-                        description = "Simple session", ontology = input$ontology,
-                        allGenes = geneList, geneSelectionFun = function(x)(x == 1),
-                        nodeSize = 10,
-                        annot = annFUN.db, affyLib = affyLib())
-    
-    return(sampleGOdata)
   })
   
   
   resultFisher <- eventReactive(input$goa.ok, {
-    resultFisher <- runTest(sampleGOdata(), algorithm = "classic", statistic = "fisher")
-    return(resultFisher)
+    if (!is.null(affyLib())){
+      resultFisher <- runTest(sampleGOdata(), algorithm = "classic", statistic = "fisher")
+      return(resultFisher)
+    }
   })
   
   output$goa <- renderDataTable(NULL)
+  output$errorgoa <- renderText(NULL)
   
   observeEvent(input$goa.ok, {
-    output$goa <- renderDataTable({
-      
-      allRes <- GenTable(sampleGOdata(), classicFisher = resultFisher(), orderBy = "classicFisher", ranksOf = "classicFisher", topNodes = 30)
-      return(allRes)
-      
-    }, options = list(lengthMenu = c(5, 10, 20, 30), pageLength = 5))
     
+    if (is.null(affyLib())){
+      output$errorgoa <- renderText({
+        "GO enrichment analysis is currently not possible using the current probeset annotation."
+      })
+    }
     
-    output$GOplot <-renderImage({
+    if (!is.null(affyLib())){
+      output$goa <- renderDataTable({
+        
+        allRes <- GenTable(sampleGOdata(), classicFisher = resultFisher(), orderBy = "classicFisher", ranksOf = "classicFisher", topNodes = 30)
+        return(allRes)
+        
+      }, options = list(lengthMenu = c(5, 10, 20, 30), pageLength = 5))
       
-      # Width of all the plots
-      WIDTH <- 1000
       
-      # Height of all the plots
-      HEIGHT <- 1414
-      
-      # Point sizes for the plots
-      POINTSIZE <- 24
-      
-      GOplot <- tempfile(fileext='.png')
-      png(file = GOplot,width=WIDTH,height=HEIGHT, pointsize=POINTSIZE)  
-      par(cex = 0.3) 
-      showSigOfNodes(sampleGOdata(), score(resultFisher()), firstSigNodes = 3, useInfo = 'all')
-      dev.off()
-      
-      list(src = GOplot,width = WIDTH,height = HEIGHT,alt = "This is alternate text")
-    },deleteFile = TRUE)
-    
+      output$GOplot <-renderImage({
+        
+        # Width of all the plots
+        WIDTH <- 1000
+        
+        # Height of all the plots
+        HEIGHT <- 1414
+        
+        # Point sizes for the plots
+        POINTSIZE <- 24
+        
+        GOplot <- tempfile(fileext='.png')
+        png(file = GOplot,width=WIDTH,height=HEIGHT, pointsize=POINTSIZE)  
+        par(cex = 0.3) 
+        showSigOfNodes(sampleGOdata(), score(resultFisher()), firstSigNodes = 3, useInfo = 'all')
+        title(main = list("Subgraph of the top 3 GO terms", cex = 3, font = 2), line = -1)
+        dev.off()
+        
+        list(src = GOplot,width = WIDTH,height = HEIGHT,alt = "This is alternate text")
+      },deleteFile = TRUE)
+    }
+
   })
+  
+  ################################################################################################################################
+  #Heatmap
+  ################################################################################################################################
+  
+  
+  output$uiheatmapcomp <- renderUI({
+    pickerInput(
+      inputId = "heatmapcomp",
+      label = "Comparison",
+      choices = get_contrasts(meta1()),
+      options = list(
+        style = "btn-primary")
+    )
+  })
+  
+  
+  output$topfeatureheatmap <- renderPlotly({
+   
+    req(input$heatmapcomp)
+    
+    comparison <- input$heatmapcomp
+    comparison <- strsplit(comparison, " - ")[[1]]
+    
+    meta2 <- meta1()
+    meta2$Grouping <- make.names(meta2$Grouping)
+    
+    samples <- meta2 %>%
+      filter(Grouping == comparison[1] | Grouping == comparison[2])
+    
+    
+    topfeatures <- head(top.table()[[input$heatmapcomp]], 25L)
+    data.expr1 <- data.expr()[topfeatures$Probeset.ID,]
+    data.expr1 <- data.expr1[,samples$names]
+    
+    
+    clusterOption1 <- input$clusteroption3
+    clusterOption2 <- input$clusteroption4 
+    
+    switch(tolower(clusterOption1), 
+           "pearson" = {
+             my.dist <- function(x) cor.dist(x, abs=FALSE)
+           },
+           "spearman" = {
+             my.dist <- function(x) spearman.dist(x, abs=FALSE)
+           },
+           "euclidean" = {
+             my.dist <- function(x) euc(x)
+           }
+    )
+    
+    my.hclust <- function(d) hclust(d, method=clusterOption2)
+    
+    experimentFactor <- factor(samples$Grouping)
+    myPalette <- colorsByFactor(experimentFactor)
+    legendColors <- myPalette$legendColors
+    names(legendColors) <- levels(experimentFactor)
+    sidecolors <- data.frame(experimentFactor)
+    colnames(sidecolors) <- "Grouping"
+    
+    
+    
+    heatmaply(data.expr1, plot_method = "plotly", distfun = my.dist, hclustfun = my.hclust, seriate = "mean", 
+              titleX = TRUE, titleY = TRUE, xlab = "Samples", ylab = "Features", main = "Heatmap of the top 25 features", 
+              key.title = "Expression", column_text_angle = 90, col_side_colors = sidecolors, col_side_palette = legendColors)
+  })
+  
   
   
   
