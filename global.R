@@ -57,6 +57,11 @@ if(!("readxl" %in% pkg)){
   install.packages("readxl")
 }
 
+if(!("heatmaply" %in% pkg)){
+  install.packages("heatmaply")
+}
+
+
 
 #Shiny packages
 
@@ -94,6 +99,7 @@ library(gplots)
 library(readxl)
 library(gcrma)
 library(plier)
+library(heatmaply)
 
 ###################################################################################################################################
 
@@ -377,7 +383,7 @@ get_meta <- function(gset, grouping_column, pairing_column = NULL, file_name = N
     GEO_accession <- str_remove(names(gset), "_series_matrix.txt.gz")
     
     participants <- rownames(gset[[paste0(GEO_accession,"_series_matrix.txt.gz")]]@phenoData@data)
-    
+  
   }
   
   if(database == "ArrayExpress"){
@@ -475,23 +481,28 @@ pca.plot <- function(data.PC, meta1, hpc = 1, vpc = 2) {
   experimentFactor <- factor(meta1$Grouping, levels = unique(meta1$Grouping))
   
   myPalette <- colorsByFactor(experimentFactor)
-  samplecolours <- cbind(meta1, myPalette$plotColors)
-  legendcolours <- inner_join(samplecolours, as.data.frame(myPalette$legendColors), by = c("myPalette$plotColors" = "myPalette$legendColors"))
-  legendcolours <- inner_join(as.data.frame(unique(PC$Grouping)), legendcolours, by = c("unique(PC$Grouping)" = "Grouping"))
-  
+
   #calculate explained variance
   perc_expl1 <- round(((data.PC$sdev^2)/sum(data.PC$sdev^2))*100,2)
   
   
   #Make plot
-  X = PC[,(3+hpc)]
-  Y = PC[,(3+vpc)]
+  if (is.null(meta1$Pairing)){
+    X = PC[,(3+hpc)]
+    Y = PC[,(3+vpc)]
+  }
+  
+  if (!is.null(meta1$Pairing)){
+    X = PC[,(4+hpc)]
+    Y = PC[,(4+vpc)]
+  }
+
   
   
   pcaplot <-
     ggplot(data = PC, aes(x = X, y = Y, colour = Grouping, shape = Grouping, text = paste("Sample:", Sample.ID))) +
     geom_point(size = 2) +
-    scale_colour_manual(values = legendcolours[,4]) +
+    scale_colour_manual(values = myPalette$legendColors) +
     labs(title = "PCA plot",
          subtitle = "Similar samples are clustered together") +
     xlab(paste0("PC",hpc, " (", perc_expl1[hpc], "%)")) +
@@ -529,17 +540,25 @@ pca3d <- function(data.PC, meta1, x = 1, y = 2, z = 3) {
   experimentFactor <- factor(meta1$Grouping, levels = unique(meta1$Grouping))
   
   myPalette <- colorsByFactor(experimentFactor)
-  samplecolours <- cbind(meta1, myPalette$plotColors)
-  legendcolours <- inner_join(samplecolours, as.data.frame(myPalette$legendColors), by = c("myPalette$plotColors" = "myPalette$legendColors"))
-  
+
   
   #calculate explained variance
   perc_expl1 <- round(((data.PC$sdev^2)/sum(data.PC$sdev^2))*100,2)
   
   #Make plot
-  X = PC[,(3+x)]
-  Y = PC[,(3+y)]
-  Z = PC[,(3+z)]
+  
+  if (is.null(meta1$Pairing)){
+    X = PC[,(3+x)]
+    Y = PC[,(3+y)]
+    Z = PC[,(3+z)]
+  }
+  
+  if (!is.null(meta1$Pairing)){
+    X = PC[,(4+x)]
+    Y = PC[,(4+y)]
+    Z = PC[,(4+z)]
+  }
+  
   
   pca3d <- plot_ly(x=X, 
                    y=Y, 
@@ -547,7 +566,7 @@ pca3d <- function(data.PC, meta1, x = 1, y = 2, z = 3) {
                    type="scatter3d", 
                    mode="markers", 
                    color=PC$Grouping,
-                   colors = legendcolours[,4],
+                   colors = myPalette$legendColors,
                    text = paste('Sample:', PC$Sample.ID, '<br>Grouping:', PC$Grouping))
   
   pca3d <- pca3d %>% layout(scene = list(xaxis = list(title = paste0('PC', x, " (", perc_expl1[x], "%)")),
@@ -611,22 +630,35 @@ get_contrasts <- function(meta) {
   
   levels1 <- unique(meta$Grouping)
   
-  contrast <- paste(make.names(levels1)[2], make.names(levels1)[1], sep = " - ")
-  
-  for (m in 1:(length(levels1)-1)){
-    for (n in (m+1):length(levels1)) {
-      
-      if (grepl("non|healthy|control", levels1[m])) {
-        contrast <- c(contrast, paste(make.names(levels1)[n], make.names(levels1)[m], sep = " - "))
-      }
-      
-      if (!grepl("non|healthy|control", levels1[m])){
-        contrast <- c(contrast, paste(make.names(levels1)[m], make.names(levels1)[n], sep = " - "))
+  if (is.null(meta$Pairing)){
+    contrast <- paste(make.names(levels1)[2], make.names(levels1)[1], sep = " - ")
+    
+    for (m in 1:(length(levels1)-1)){
+      for (n in (m+1):length(levels1)) {
+        
+        if (grepl("non|healthy|control", levels1[m])) {
+          contrast <- c(contrast, paste(make.names(levels1)[n], make.names(levels1)[m], sep = " - "))
+        }
+        
+        if (!grepl("non|healthy|control", levels1[m])){
+          contrast <- c(contrast, paste(make.names(levels1)[m], make.names(levels1)[n], sep = " - "))
+        }
       }
     }
+    return(sort(contrast[-1]))
   }
   
-  return(sort(contrast[-1]))
+  if (!is.null(meta$Pairing)){
+    contrast <- NULL
+    for (m in 1:(length(levels1)-1)){
+      contrast <- c(contrast, paste(make.names(levels1)[m+1], make.names(levels1)[m], sep = " - "))
+    }
+    return(contrast)
+  }
+
+  
+  
+  
   
 }
 
@@ -739,47 +771,83 @@ diff_expr <- function(data.expr, meta, comparisons) {
   
   ph1 <- ph %>% inner_join(meta, by = c("cel_names" = "names"), match_fun = str_detect)
   
-  
-  #model design
-  
-  source <- ph1[,3]
-  levels <- unique(ph1[,3])
-  
-  f <- factor(source,levels=levels)
-  
-  design <- model.matrix(~ 0 + f)
-  colnames(design) <- make.names(levels)
-  
-  
-  #fit linear model
-  
-  data.fit <- lmFit(data.expr,design)
-  
-  
-  #get contrasts
-  contrast <- comparisons
-  
-  
-  
-  #make top table for each comparison
-  top.table <- list()
-  
-  for (i in contrast) {
-    contrast.matrix <- makeContrasts(contrasts = i,levels=design)
+  if (is.null(ph1$Pairing)){
+    #model design
     
-    data.fit.con <- contrasts.fit(data.fit,contrast.matrix)
+    groups <- ph1$Grouping
+    levels <- unique(ph1$Grouping)
     
-    data.fit.eb <- eBayes(data.fit.con)
+    f <- factor(groups,levels=levels)
     
-    top.table[[i]] <- topTable(data.fit.eb, sort.by = "P", n = Inf)
+    design <- model.matrix(~ 0 + f)
+    colnames(design) <- make.names(levels)
     
-    top.table[[i]] <- cbind(rownames(top.table[[i]]), top.table[[i]])
     
-    rownames(top.table[[1]]) <- NULL
+    #fit linear model
     
-    colnames(top.table[[i]]) <- c("Probeset.ID", colnames(top.table[[i]])[-1])
+    data.fit <- lmFit(data.expr,design)
+    
+    
+    #get contrasts
+    contrast <- comparisons
+    
+    
+    
+    #make top table for each comparison
+    top.table <- list()
+    
+    for (i in contrast) {
+      contrast.matrix <- makeContrasts(contrasts = i,levels=design)
+      
+      data.fit.con <- contrasts.fit(data.fit,contrast.matrix)
+      
+      data.fit.eb <- eBayes(data.fit.con)
+      
+      top.table[[i]] <- topTable(data.fit.eb, sort.by = "P", n = Inf)
+      
+      top.table[[i]] <- cbind(rownames(top.table[[i]]), top.table[[i]])
+      
+      rownames(top.table[[1]]) <- NULL
+      
+      colnames(top.table[[i]]) <- c("Probeset.ID", colnames(top.table[[i]])[-1])
+      
+    }
+  }
+  
+  if (!is.null(ph1$Pairing)){
+    fg <- factor(ph1$Grouping)
+    fp <- factor(ph1$Pairing)
+    
+    length(levels(fg))
+    
+    paired.design = model.matrix(~ fg + fp)
+    
+    levels1 <- levels(fg)
+    
+    contrast <- NULL
+    
+    for (m in 1:(length(levels1)-1)){
+      contrast <- c(contrast, paste(make.names(levels1)[m+1], make.names(levels1)[m], sep = " - "))
+    }
+    
+    remainder <- seq(1,(ncol(paired.design) - length(contrast) - 1))
+    colnames(paired.design) <- c("Intercept", contrast, remainder)
+    
+    data.fit = lmFit(data.expr,paired.design)
+    data.fit.eb = eBayes(data.fit)
+    
+    top.table <- list()
+    for (i in contrast) {
+      top.table[[i]] <- topTable(data.fit.eb, coef=i, sort.by = "P", n = Inf)
+      top.table[[i]] <- cbind(rownames(top.table[[i]]), top.table[[i]])
+      rownames(top.table[[1]]) <- NULL
+      colnames(top.table[[i]]) <- c("Probeset.ID", colnames(top.table[[i]])[-1])
+    }
+      
+    
     
   }
+
   
   return(top.table)
 }
