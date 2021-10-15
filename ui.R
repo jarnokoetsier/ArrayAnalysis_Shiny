@@ -128,6 +128,13 @@ ui <- tagList(
                         
                         hr(),
                         
+                        awesomeCheckbox(
+                          inputId = "paired",
+                          label = "Paired design", 
+                          value = FALSE,
+                          status = "danger"
+                        ),
+                        
                         uiOutput("makegroupsui"),
                         
                         uiOutput("uidescriptionfile"),
@@ -137,6 +144,8 @@ ui <- tagList(
                         uiOutput("uidownloadtemplate"),
 
                         uiOutput("groups"),
+                        
+                        uiOutput("pairs"),
                         
                         uiOutput("owngroupsout"),
                         
@@ -312,7 +321,7 @@ ui <- tagList(
                                    ),
                           
                               
-                          tabPanel("Correlation plot", icon = icon("fas fa-file"),
+                          tabPanel("Correlation plot", icon = icon("fas fa-mouse-pointer"),
                                    
                                    br(),
                                    
@@ -336,11 +345,9 @@ ui <- tagList(
                                      )),
                                    
                                    hr(),
-                                     
-                                   plotOutput("correlNorm",
-                                              height = "100%",
-                                              width = "100%") %>% withSpinner(color="#0dc5c1", proxy.height = "400px")
                                    
+                                   plotlyOutput("correlNormInt", width = "1200px", height="1000px") %>% withSpinner(color="#0dc5c1", proxy.height = "400px"),
+
                                    )                                   
                         )
                       
@@ -584,7 +591,7 @@ ui <- tagList(
                                  ),
                         
                         #GO analysis
-                        tabPanel("GO analysis", value = "panel11",
+                        tabPanel("GO enrichment analysis", value = "panel11",
                                  
                                  h1(strong(span(style = "color:#3A3B3C", "GO enrichment analysis"))),
                                  
@@ -642,13 +649,59 @@ ui <- tagList(
                                  
                                  hr(),
                                  
+                                 textOutput("errorgoa"),
+                                 
                                  dataTableOutput("goa" )%>% withSpinner(color="#0dc5c1"),
                                  
                                  plotOutput("GOplot",
                                             height = "100%",
                                             width = "100%")
                                  
+                        ),
+                        
+                        
+                        #Heatmap
+                        tabPanel("Heatmap", value = "panel12",
+                                 
+                                 h1(strong(span(style = "color:#3A3B3C", "Heatmap"))),
+                                 
+                                 hr(),
+                                 
+                                 fluidRow(
+                                   column(4,
+                                          pickerInput(
+                                            inputId = "clusteroption3",
+                                            label = "Distance calculation method",
+                                            choices = c("Pearson","Spearman","Euclidean"),
+                                            options = list(
+                                              style = "btn-primary"))
+                                   ),
+                                   
+                                   column(4,
+                                          pickerInput(
+                                            inputId = "clusteroption4",
+                                            label = "Clustering method",
+                                            choices = c("ward.D2","single","complete","average","mcquitty","median","centroid"),
+                                            options = list(
+                                              style = "btn-info"))
+                                      
+                                   ),
+                                   
+                                   column(4, uiOutput("uiheatmapcomp"))
+                                   
+                                   ),
+                                 
+                                 hr(),
+                                 
+                                 plotlyOutput("topfeatureheatmap",
+                                            height = "1000px",
+                                            width = "1200px") %>% withSpinner(color="#0dc5c1")
+                                 
                         )
+                        
+                        
+                        
+                        
                         
                       )
                       
@@ -659,7 +712,7 @@ ui <- tagList(
              #Help
              ################################################################################################################################
              
-             tabPanel("Documentation", value = "panel12", icon = icon("far fa-question-circle"),
+             tabPanel("Documentation", value = "panel13", icon = icon("far fa-question-circle"),
                       
                       
                       
