@@ -22,7 +22,9 @@ s_requiredpackages =
     "hugene10stprobeset.db",
     "bioDist",
     "gcrma",
-    "plier"
+    "plier",
+    "clusterProfiler",
+    "pathview"
   )
 
 if (!requireNamespace("BiocManager", quietly = TRUE))
@@ -61,7 +63,9 @@ if(!("heatmaply" %in% pkg)){
   install.packages("heatmaply")
 }
 
-
+if(!("DT" %in% pkg)){
+  install.packages("DT")
+}
 
 #Shiny packages
 
@@ -100,6 +104,7 @@ library(readxl)
 library(gcrma)
 library(plier)
 library(heatmaply)
+library(DT)
 
 ###################################################################################################################################
 
@@ -253,6 +258,8 @@ get_grouping <- function(gset, database = "GEO") {
     }
     
     grouping <- as.data.frame(grouping[,-1])
+    #Get character columns only
+    grouping[, sapply(grouping, class) == 'character']
     
     grouping <- grouping %>%
       mutate(across(everything(), as.character))
@@ -303,7 +310,13 @@ get_grouping <- function(gset, database = "GEO") {
   
   uni <- unique(uni[-1])
   grouping <- grouping[, -uni]
-  rownames(grouping) <- NULL
+  #rownames(grouping) <- NULL
+  
+  
+  colnames(grouping) <- str_remove_all(colnames(grouping), ":ch1")
+  colnames(grouping) <- str_remove_all(colnames(grouping), "_ch1")
+  colnames(grouping) <- str_replace_all(colnames(grouping), "_", " ")
+  colnames(grouping) <- str_to_title(colnames(grouping))
   
   return(grouping)
   
@@ -619,7 +632,6 @@ PCvariances <- function(data.PC, x = 1, y = 2, z= NULL) {
   
 }
 
-
 ###################################################################################################################################
 
 #get_contrasts
@@ -627,6 +639,35 @@ PCvariances <- function(data.PC, x = 1, y = 2, z= NULL) {
 ###################################################################################################################################
 
 get_contrasts <- function(meta) {
+  
+  levels1 <- unique(meta$Grouping)
+  
+    contrast <- paste(make.names(levels1)[2], make.names(levels1)[1], sep = " - ")
+    
+    for (m in 1:(length(levels1)-1)){
+      for (n in (m+1):length(levels1)) {
+        
+        if (grepl("non|healthy|control", levels1[m])) {
+          contrast <- c(contrast, paste(make.names(levels1)[n], make.names(levels1)[m], sep = " - "))
+        }
+        
+        if (!grepl("non|healthy|control", levels1[m])){
+          contrast <- c(contrast, paste(make.names(levels1)[m], make.names(levels1)[n], sep = " - "))
+        }
+      }
+    }
+    return(sort(contrast[-1]))
+  
+}
+  
+  
+###################################################################################################################################
+
+#get_contrasts1
+
+###################################################################################################################################
+
+get_contrasts1 <- function(meta) {
   
   levels1 <- unique(meta$Grouping)
   
@@ -753,7 +794,6 @@ auto_contrasts <- function(meta) {
   
 }
 
-
 ###################################################################################################################################
 
 #diff_expr
@@ -772,8 +812,99 @@ diff_expr <- function(data.expr, meta, comparisons) {
   ph1 <- ph %>% inner_join(meta, by = c("cel_names" = "names"), match_fun = str_detect)
   
   if (is.null(ph1$Pairing)){
-    #model design
     
+    #model design
+    groups <- ph1$Grouping
+    levels <- unique(ph1$Grouping)
+    
+    f <- factor(groups,levels=levels)
+    
+    design <- model.matrix(~ 0 + f)
+    colnames(design) <- make.names(levels)
+    
+    
+    #fit linear model
+    
+    data.fit <- lmFit(data.expr,design)
+    
+    
+    #get contrasts
+    contrast <- comparisons
+  }
+    
+  
+  if (!is.null(ph1$Pairing)){
+    
+    #Model design
+    fg <- factor(ph1$Grouping)
+    fp <- factor(ph1$Pairing)
+    
+    length(levels(fg))
+    
+    design = model.matrix(~ 0 + fg + fp)
+    
+    levels1 <- levels(fg)
+    
+    remainder <- paste0("a",seq(1,(ncol(design) - length(comparisons) - 1)))
+    colnames(design) <- make.names(c(levels1, remainder))
+    
+    
+    #Fit linear model
+    data.fit = lmFit(data.expr, design)
+    
+    #get contrasts
+    contrast <- comparisons
+    
+  }
+  
+
+    #make top table for each comparison
+    top.table <- list()
+    
+    for (i in contrast) {
+      contrast.matrix <- makeContrasts(contrasts = i,levels=design)
+      
+      data.fit.con <- contrasts.fit(data.fit,contrast.matrix)
+      
+      data.fit.eb <- eBayes(data.fit.con)
+      
+      top.table[[i]] <- topTable(data.fit.eb, sort.by = "P", n = Inf)
+      
+      top.table[[i]] <- cbind(rownames(top.table[[i]]), top.table[[i]])
+      
+      rownames(top.table[[1]]) <- NULL
+      
+      colnames(top.table[[i]]) <- c("Probeset.ID", colnames(top.table[[i]])[-1])
+      
+    }
+  
+  
+  
+  
+  return(top.table)
+}
+
+
+###################################################################################################################################
+
+#diff_expr1
+
+###################################################################################################################################
+
+
+diff_expr1 <- function(data.expr, meta, comparisons) {
+  
+  
+  #get grouping variable in correct order
+  
+  ph = as.data.frame(colnames(data.expr))
+  colnames(ph) <- "cel_names"
+  
+  ph1 <- ph %>% inner_join(meta, by = c("cel_names" = "names"), match_fun = str_detect)
+  
+  if (is.null(ph1$Pairing)){
+   
+     #model design
     groups <- ph1$Grouping
     levels <- unique(ph1$Grouping)
     
@@ -815,6 +946,8 @@ diff_expr <- function(data.expr, meta, comparisons) {
   }
   
   if (!is.null(ph1$Pairing)){
+    
+    #Model design
     fg <- factor(ph1$Grouping)
     fp <- factor(ph1$Pairing)
     
@@ -833,7 +966,12 @@ diff_expr <- function(data.expr, meta, comparisons) {
     remainder <- seq(1,(ncol(paired.design) - length(contrast) - 1))
     colnames(paired.design) <- c("Intercept", contrast, remainder)
     
+    #Fit linear model
     data.fit = lmFit(data.expr,paired.design)
+    
+    
+    
+    
     data.fit.eb = eBayes(data.fit)
     
     top.table <- list()
