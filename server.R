@@ -280,6 +280,10 @@ server <- function(input, output, session){
         error=function(cond) {
           return(NULL)
         })
+        
+        if (!is.null(gset)){
+          gset <- rma(gset)
+        }
       }
     }
     
@@ -309,8 +313,8 @@ server <- function(input, output, session){
     celfiles <- NULL
     database <- database()
     
-    if (rawornormalized() == "Raw"){
-      if ((database == "GEO") & (!is.null(gset()))){
+    if ((rawornormalized() == "Raw") & (!is.null(gset()))){
+      if (database == "GEO"){
         
         accession <- accession()
         exdir <- paste0("data_", accession)
@@ -329,7 +333,7 @@ server <- function(input, output, session){
         
       }
       
-      if ((database == "ArrayExpress") & (!is.null(gset()))){
+      if (database == "ArrayExpress"){
         
         accession <- accession()
         exdir <- paste0("data_", accession)
@@ -351,6 +355,10 @@ server <- function(input, output, session){
       }
     }
     
+    if ((rawornormalized() == "Normalized") & (!is.null(gset()))){
+      celfiles <- "empty"
+    }
+    
     return(celfiles)
     
   })
@@ -361,7 +369,7 @@ server <- function(input, output, session){
   #****************************************************************************#
 
   #Success message
-  observeEvent(if (!is.null(gset())){input$startAnalysis}, {
+  observeEvent(if (length(celfiles())>0){input$startAnalysis}, {
     
     removeModal()
     
@@ -375,12 +383,12 @@ server <- function(input, output, session){
   
   
   #go to next tab
-  observeEvent(if (!is.null(gset())){input$startAnalysis}, {
+  observeEvent(if (length(celfiles())>0){input$startAnalysis}, {
     showTab("navbar", target = "panel2")
   })
   
   
-  observeEvent(if (!is.null(gset())){input$startAnalysis}, {
+  observeEvent(if (length(celfiles())>0){input$startAnalysis}, {
     updateNavbarPage(session, "navbar",
                      selected = "panel2")
     
@@ -393,7 +401,7 @@ server <- function(input, output, session){
   #****************************************************************************#
   
   #Error message
-  observeEvent(if (is.null(gset())){input$startAnalysis}, {
+  observeEvent(if (length(celfiles())==0){input$startAnalysis}, {
       
     removeModal()
     
@@ -755,13 +763,13 @@ server <- function(input, output, session){
   })
   
   
-  #Meta data heatmap
+  #Metadata heatmap
   output$sampleheatmap <- renderPlotly(NULL)
   
   output$sampleheatmap <- renderPlotly({
     if (input$makegroups != "Manual grouping"){
       if (input$makegroups == "Dataset") {
-        groups <- get_grouping(gset())
+        groups <- get_grouping(gset(), database = database())
       }
       
       if (input$makegroups == "Description file") {
@@ -789,6 +797,134 @@ server <- function(input, output, session){
     }
   })
   
+  
+  
+  #Bar charts of metadata
+  
+  #If dataset: 
+  
+  # provide possible grouping variable(s)
+  output$uimetaBar1 <- renderUI({
+    
+    if (length(input$makegroups) > 0){
+      if (input$makegroups == "Dataset"){
+        pickerInput(
+          inputId = "xselect",
+          label = "Bars",
+          choices = colnames(
+            get_grouping(gset(), database = database())),
+          selected = auto_group(
+            get_grouping(gset(), database = database())),
+          options = list(
+            style = "btn-primary"))
+      }
+    }
+
+  })
+  
+  # provide possible colour variable(s)
+  output$uimetaBar2 <- renderUI({
+    
+    if (length(input$makegroups) > 0){
+      if (input$makegroups == "Dataset"){
+        pickerInput(
+          inputId = "fillselect",
+          label = "Colour",
+          choices = colnames(
+            get_grouping(gset(), database = database())),
+          selected = auto_group(
+            get_grouping(gset(), database = database())),
+          options = list(
+            style = "btn-info"))
+      }
+    }
+    
+  })
+  
+  #If description file: 
+  
+  # provide possible grouping variable(s)
+  output$uimetaBar3 <- renderUI({
+    
+    if (length(input$makegroups) > 0){
+      if (input$makegroups == "Description file"){
+        req(input$descriptionfile)
+        
+        pickerInput(
+          inputId = "xselect",
+          label = "Bars",
+          choices = colnames(
+            read.table(input$descriptionfile$datapath, 
+                       header = TRUE))[-1],
+          selected = colnames(
+            read.table(input$descriptionfile$datapath, 
+                       header = TRUE))[2],
+          options = list(
+            style = "btn-primary"))
+
+      }
+    }
+    
+  })
+  
+  # provide possible colour variable(s)
+  output$uimetaBar4 <- renderUI({
+    
+    if (length(input$makegroups) > 0){
+      if (input$makegroups == "Description file"){
+        req(input$descriptionfile)
+        
+        pickerInput(
+          inputId = "fillselect",
+          label = "Colour",
+          choices = colnames(
+            read.table(input$descriptionfile$datapath, 
+                       header = TRUE))[-1],
+          selected = colnames(
+            read.table(input$descriptionfile$datapath, 
+                       header = TRUE))[2],
+          options = list(
+            style = "btn-info"))
+        
+      }
+    }
+    
+  })
+
+    
+  output$metaBar <- renderPlot(NULL)
+  
+  output$metaBar <- renderPlot({
+    req(input$xselect)
+    req(input$fillselect)
+    
+    if (input$makegroups != "Manual grouping"){
+      if (input$makegroups == "Dataset") {
+        groups <- get_grouping(gset(), database = database())
+      }
+      
+      if (input$makegroups == "Description file") {
+        groups <- read.table(input$descriptionfile$datapath, 
+                             header = TRUE, row.names = 1)
+      }
+      
+      barPlot <- ggplot(data = groups, aes(x = groups[,input$xselect],
+                                           fill = groups[,input$fillselect])) +
+        geom_bar(color = "black") +
+        ylab("Count") +
+        xlab(NULL) +
+        labs(fill = " ") +
+        theme_classic() +
+        theme(legend.position="bottom") + 
+        scale_fill_brewer(palette="Dark2")
+      
+      return(barPlot)
+      
+      
+    }
+    
+    
+  })
   
   
   #****************************************************************************#
@@ -1716,7 +1852,15 @@ server <- function(input, output, session){
   
   #Calculate PCs
   data.PC <- eventReactive(input$ann.proceed, {
-    prcomp(t(data.expr()),scale.=TRUE)
+    
+    data.expr <- data.expr()
+    
+    #Remove rows with constant values
+    rowVar <- apply(data.expr, 1, var)
+    data.expr <- data.expr[(rowVar != 0),]
+    
+    #Perform PCA
+    prcomp(t(data.expr),scale.=TRUE)
   })
   
   #Selection z-axis for 3D plot
@@ -1942,7 +2086,7 @@ server <- function(input, output, session){
     
     toptable <- toptable()
     
-    if (PSannotation() == "Custom annotations"){
+    if ((PSannotation() == "Custom annotations") & ((rawornormalized() == "Raw") | (!is.null(normData.saved())))){
       if(CDFtype() == "ENTREZG"){
         
         toptable$Probeset.ID = paste0(
@@ -2193,7 +2337,7 @@ server <- function(input, output, session){
   
   
   
-  #Significant genes
+  #Top table of significant genes
   voltable <- eventReactive(input$volcano.ok, {
     
     if (length(volcanodir()) > 0){
@@ -2226,6 +2370,7 @@ server <- function(input, output, session){
   }, ignoreNULL = FALSE)
   
     
+  #Render top table with significant genes only
   output$voltable <- renderDataTable({
     voltable()
   })
@@ -2244,7 +2389,7 @@ server <- function(input, output, session){
   ##############################################################################
   
   
-  
+  #Select comparisons (between 2 and 4)
   output$uicontrast <- renderUI({
     pickerInput(
       inputId = "contrastselection",
@@ -2257,6 +2402,7 @@ server <- function(input, output, session){
   })
   
   
+  #Plot venn diagram
   output$venndiagram <- renderPlot({
     req(input$contrastselection)
     
@@ -2295,17 +2441,33 @@ server <- function(input, output, session){
   })
   
   
+  #Plot legend of venn diagram
   output$legendvenn <- renderText({
     if (length(input$contrastselection) == 2) {
-      text <- paste0("<p> <b> A: </b> ", input$contrastselection[1], "<br /> <p> <b> B: </b> ", input$contrastselection[2])
+      text <- paste0("<p> <b> A: </b> ", 
+                     input$contrastselection[1], 
+                     "<br /> <p> <b> B: </b> ", 
+                     input$contrastselection[2])
     }
     
     if (length(input$contrastselection) == 3) {
-      text <- paste0("<p> <b> A: </b> ", input$contrastselection[1], "<br /> <p> <b> B: </b> ", input$contrastselection[2], "<br /> <p> <b> C: </b> ", input$contrastselection[3])
+      text <- paste0("<p> <b> A: </b> ", 
+                     input$contrastselection[1], 
+                     "<br /> <p> <b> B: </b> ", 
+                     input$contrastselection[2], 
+                     "<br /> <p> <b> C: </b> ", 
+                     input$contrastselection[3])
     }
     
     if (length(input$contrastselection) == 4) {
-      text <- paste0("<p> <b> A: </b> ", input$contrastselection[1], "<br /> <p> <b> B: </b> ", input$contrastselection[2], "<br /> <p> <b> C: </b> ", input$contrastselection[3], "<br /> <p> <b> D: </b> ", input$contrastselection[4])
+      text <- paste0("<p> <b> A: </b> ", 
+                     input$contrastselection[1], 
+                     "<br /> <p> <b> B: </b> ", 
+                     input$contrastselection[2], 
+                     "<br /> <p> <b> C: </b> ", 
+                     input$contrastselection[3], 
+                     "<br /> <p> <b> D: </b> ", 
+                     input$contrastselection[4])
     }
    
     if ((length(input$contrastselection) > 4)){
@@ -2323,7 +2485,7 @@ server <- function(input, output, session){
   #Heatmap
   ##############################################################################
   
-  
+  #Select comparison
   output$uiheatmapcomp <- renderUI({
     pickerInput(
       inputId = "heatmapcomp",
@@ -2335,6 +2497,7 @@ server <- function(input, output, session){
   })
   
   
+  #Plot heatmap
   output$topfeatureheatmap <- renderPlotly({
     
     req(input$heatmapcomp)
@@ -2438,7 +2601,7 @@ server <- function(input, output, session){
     sampleGOdata <- NULL
     
     #No custom annotation
-    if (PSannotation() == "No annotations"){
+    if ((PSannotation() == "No annotations") & (rawornormalized() == "Raw")){
 
       if (annotation(normData()) == "hugene10stv1"){
         affyLib <- "hugene10stprobeset.db"
@@ -2451,10 +2614,10 @@ server <- function(input, output, session){
       #install annotation package from bioconductor
       if (!requireNamespace(affyLib, quietly = TRUE))
         BiocManager::install(affyLib, ask = FALSE)
-      require(as.character(affyLib), character.only = TRUE)
+      
 
       #If installation successful
-      if(affyLib %in% installed.packages()[, "Package"]){
+      if(require(as.character(affyLib), character.only = TRUE)){
         
         #Make topGOdata object
         sampleGOdata <- new("topGOdata",
@@ -2467,7 +2630,7 @@ server <- function(input, output, session){
     
     
     #Custom annotation
-    if (PSannotation() == "Custom annotations"){
+    if ((PSannotation() == "Custom annotations") & (rawornormalized() == "Raw")){
       if((CDFtype() == "ENTREZG") & (species() == "Homo sapiens")){
         sampleGOdata <- new("topGOdata",
                             description = "Simple session", ontology = input$ontology,
@@ -2555,6 +2718,7 @@ server <- function(input, output, session){
   #   clusterProfiler
   #****************************************************************************#
   
+  
   #Select comparison
   output$uigoacomp1 <- renderUI({
     pickerInput(
@@ -2567,6 +2731,7 @@ server <- function(input, output, session){
   })
   
   output$goa1 <- renderDataTable(NULL)
+  output$GOplot1 <- renderPlot(NULL)
   output$errorgoa1 <- renderText(NULL)
   
 
@@ -2575,7 +2740,7 @@ server <- function(input, output, session){
   observeEvent(input$goa.ok1, {
     
     #Show loading message
-    showModal(modalDialog(title = h4("GO enrichment analysis is being performed....", 
+    showModal(modalDialog(title = h4("GO analysis is being performed....", 
                                      align = "center"), 
                           footer = NULL,
                           h5("Please be patient. This might take a while.", 
@@ -2586,34 +2751,55 @@ server <- function(input, output, session){
     genelist <- eventReactive(input$goa.ok1,{
       
       genelist <- NULL
-      
-      #No annotation
-      if (PSannotation() == "No annotations"){
-        genelist <- NULL
-      }
+    
       
       #Custom annoation
-      if (PSannotation() == "Custom annotations"){
+      if ((PSannotation() == "Custom annotations") & ((rawornormalized() == "Raw") | (!is.null(normData.saved())))){
         top.table <- top.table()[[input$goacomp1]]
         
-        bgenelist <- top.table$Probeset.ID
         
-        if(input$raworadjgoa1 == "raw"){
-          siggenelist <- top.table %>%
-            filter(P.Value < input$pthresholdgoa1) %>%
-            filter(abs(logFC) > input$logFCthresholdgoa1)
+        #ORA
+        if(input$oraGO == "ora"){
+          bgenelist <- top.table$Probeset.ID
+          
+          if(input$raworadjgoa1 == "raw"){
+            siggenelist <- top.table %>%
+              filter(P.Value < input$pthresholdgoa1) %>%
+              filter(abs(logFC) > input$logFCthresholdgoa1)
+          }
+          
+          if(input$raworadjgoa1 == "adj"){
+            siggenelist <- top.table %>%
+              filter(adj.P.Val < input$pthresholdgoa1) %>%
+              filter(abs(logFC) > input$logFCthresholdgoa1)
+          }
+          
+          siggenelist <- siggenelist$Probeset.ID
+          
+          
+          genelist <- list(bgenelist, siggenelist)
+          
         }
+
         
-        if(input$raworadjgoa1 == "adj"){
-          siggenelist <- top.table %>%
-            filter(adj.P.Val < input$pthresholdgoa1) %>%
-            filter(abs(logFC) > input$logFCthresholdgoa1)
+        #GSEA
+        if(input$oraGO == "gsea"){
+          if (input$rankingGO == "logFC") {
+            genelist <- top.table$logFC
+          }
+          if (input$rankingGO == "-log(P-value)") {
+            genelist <- -log10(top.table$P.Value)
+          }
+          
+          # name the vector
+          names(genelist) <- top.table$Probeset.ID
+          
+          # omit any NA values 
+          genelist <-na.omit(genelist)
+          
+          # sort the list in decreasing order (required for clusterProfiler)
+          genelist <- sort(genelist, decreasing = TRUE)
         }
-        
-        siggenelist <- siggenelist$Probeset.ID
-        
-        
-        genelist <- list(bgenelist, siggenelist)
         
       } 
       
@@ -2627,15 +2813,29 @@ server <- function(input, output, session){
       
       if (!is.null((genelist()))){
         if ((CDFtype() == "ENTREZG") & (species() == "Homo sapiens")){
-          GOresults <- enrichGO(
-            gene = genelist()[[2]], 
-            universe = genelist()[[1]], 
-            keyType = "ENTREZID",
-            OrgDb = org.Hs.eg.db,
-            ont = input$ontology1,
-            pAdjustMethod = "fdr",
-            pvalueCutoff = 1,
-            qvalueCutoff = 1)
+          
+          if(input$oraGO == "ora"){
+            GOresults <- enrichGO(
+              gene = genelist()[[2]], 
+              universe = genelist()[[1]], 
+              keyType = "ENTREZID",
+              OrgDb = org.Hs.eg.db,
+              ont = input$ontology1,
+              pAdjustMethod = "fdr",
+              pvalueCutoff = 1,
+              qvalueCutoff = 1)
+          }
+          
+          if(input$oraGO == "gsea"){
+            GOresults <- gseGO(
+              geneList = genelist(),
+              keyType = "ENTREZID",
+              OrgDb = org.Hs.eg.db,
+              ont = input$ontology1,
+              pAdjustMethod = "fdr",
+              pvalueCutoff = 1)
+          }
+
         }
       }
       return(GOresults)
@@ -2647,7 +2847,7 @@ server <- function(input, output, session){
       
       #Error
       output$errorgoa1 <- renderText({
-        "GO enrichment analysis is unfortunately not possible using the current probeset annotation."
+        "GO analysis is unfortunately not possible using the current probeset annotation."
       })
     }
     
@@ -2662,7 +2862,8 @@ server <- function(input, output, session){
         
         return(allRes)
         
-      }, options = list(lengthMenu = c(5, 10, 20, 30), pageLength = 5))
+      }, options = list(lengthMenu = c(5, 10, 20, 30), pageLength = 5),
+      selection = list(mode = "single", selected = 1))
       
       
       #Dotplot
@@ -2670,6 +2871,15 @@ server <- function(input, output, session){
         
         dotplot(GOresults(), showCategory = 20, orderBy = "x")
 
+      })
+      
+      #GSEA plot
+      output$GOplotgsea1 <- renderPlot({
+        req(input$oraGO)
+        if(input$oraGO == "gsea"){
+          gseaplot2(GOresults(), geneSetID = input$goa1_rows_selected, 
+                    title = GOresults()$Description[input$goa1_rows_selected])
+        }
       })
     }
     
@@ -2679,9 +2889,15 @@ server <- function(input, output, session){
   
  
   ##############################################################################
-  #KEGG analysis
+  #Pathway enrichment analysis
   ##############################################################################
   
+  
+  #****************************************************************************#
+  #   KEGG
+  #****************************************************************************#
+  
+  #Selecy comparison
   output$uikeggcomp <- renderUI({
     pickerInput(
       inputId = "keggcomp",
@@ -2693,6 +2909,7 @@ server <- function(input, output, session){
   })
   
   output$kegg <- renderDataTable(NULL)
+  output$KEGGplot <- renderPlot(NULL)
   output$errorkegg <- renderText(NULL)
   
   
@@ -2700,7 +2917,7 @@ server <- function(input, output, session){
   observeEvent(input$kegg.ok, {
     
     #Show loading message
-    showModal(modalDialog(title = h4("KEGG enrichment analysis is being performed....", 
+    showModal(modalDialog(title = h4("Pathway analysis is being performed....", 
                                      align = "center"), 
                           footer = NULL,
                           h5("Please be patient. This might take a while.", 
@@ -2711,34 +2928,55 @@ server <- function(input, output, session){
       
       genelist <- NULL
       
-      #No annotation:
-      if (PSannotation() == "No annotations"){
-        genelist <- NULL
-      }
       
       #Custom annotation
-      if (PSannotation() == "Custom annotations"){
+      if ((PSannotation() == "Custom annotations") & ((rawornormalized() == "Raw") | (!is.null(normData.saved())))){
         if(CDFtype() == "ENTREZG"){
           top.table <- top.table()[[input$keggcomp]]
+        
           
-          bgenelist <- top.table$Probeset.ID
-          
-          if(input$raworadjkegg == "raw"){
-            siggenelist <- top.table %>%
-              filter(P.Value < input$pthresholdkegg) %>%
-              filter(abs(logFC) > input$logFCthresholdkegg)
+          #ORA
+          if(input$oraPathway == "ora"){
+            bgenelist <- top.table$Probeset.ID
+            
+            if(input$raworadjkegg == "raw"){
+              siggenelist <- top.table %>%
+                filter(P.Value < input$pthresholdkegg) %>%
+                filter(abs(logFC) > input$logFCthresholdkegg)
+            }
+            
+            if(input$raworadjkegg == "adj"){
+              siggenelist <- top.table %>%
+                filter(adj.P.Val < input$pthresholdkegg) %>%
+                filter(abs(logFC) > input$logFCthresholdkegg)
+            }
+            
+            siggenelist <- siggenelist$Probeset.ID
+            
+            
+            genelist <- list(bgenelist, siggenelist)
           }
+
           
-          if(input$raworadjkegg == "adj"){
-            siggenelist <- top.table %>%
-              filter(adj.P.Val < input$pthresholdkegg) %>%
-              filter(abs(logFC) > input$logFCthresholdkegg)
+          #GSEA
+          if(input$oraPathway == "gsea"){
+            if (input$rankingKEGG == "logFC") {
+              genelist <- top.table$logFC
+            }
+            if (input$rankingKEGG == "-log(P-value)") {
+              genelist <- -log10(top.table$P.Value)
+            }
+            
+            
+            # name the vector
+            names(genelist) <- top.table$Probeset.ID
+            
+            # omit any NA values 
+            genelist <-na.omit(genelist)
+            
+            # sort the list in decreasing order (required for clusterProfiler)
+            genelist <- sort(genelist, decreasing = TRUE)
           }
-          
-          siggenelist <- siggenelist$Probeset.ID
-          
-          
-          genelist <- list(bgenelist, siggenelist)
           
         }
       } 
@@ -2749,17 +2987,26 @@ server <- function(input, output, session){
 
     
     
-      
-      KEGGresults <-eventReactive(input$kegg.ok, {
+      #Results of enrichment analysis
+      KEGGresults <- eventReactive(input$kegg.ok, {
         
         KEGGresults <- NULL
         
         if (!is.null((kegggenelist()))){
           if (species() == "Homo sapiens"){
-            KEGGresults <- enrichKEGG(gene = kegggenelist()[[2]],
-                                      organism = 'hsa',
-                                      pvalueCutoff = 1,
-                                      qvalueCutoff = 1)
+            
+            if(input$oraPathway == "ora"){
+              KEGGresults <- enrichKEGG(gene = kegggenelist()[[2]],
+                                        organism = 'hsa',
+                                        pvalueCutoff = 1,
+                                        qvalueCutoff = 1)
+            }
+            
+            if(input$oraPathway == "gsea"){
+              KEGGresults <- gseKEGG(geneList = kegggenelist(),
+                                        organism = 'hsa',
+                                        pvalueCutoff = 1)
+            }
           }
         }
 
@@ -2768,39 +3015,235 @@ server <- function(input, output, session){
       })
       
       
+      #Error message
       if (is.null(KEGGresults())){
         removeModal()
         output$errorkegg <- renderText({
-          "KEGG enrichment analysis is unfortunately not possible using the current probeset annotation."
+          "Pathway analysis is unfortunately not possible using the current probeset annotation."
         })
       }
       
       
       if (!is.null(KEGGresults())){
         removeModal()
+        
+        #Output table
         output$kegg <- renderDataTable({
           
           allRes <- KEGGresults()@result
-          rownames(allRes) <- NULL
+          
+          allRes$ID = paste0(
+            '<a ',
+            'href=',
+            paste(
+              "https://www.genome.jp/pathway/",
+              allRes$ID,
+              sep = ''
+            ),
+            '>',
+            allRes$ID,
+            '</a>'
+          )
+          
           return(allRes)
           
-        }, options = list(lengthMenu = c(5, 10, 20, 30), pageLength = 5))
+        }, options = list(lengthMenu = c(5, 10, 20, 30), pageLength = 5),
+        selection = list(mode = "single", selected = 1), rownames = FALSE, 
+        escape = FALSE)
         
         
+        #Dot plot
         output$KEGGplot <- renderPlot({
           dotplot(KEGGresults(), showCategory = 20, orderBy = "x")
+        })
+        
+        #GSEA plot
+        output$KEGGplotgsea <- renderPlot({
+          req(input$oraPathway)
+          if(input$oraPathway == "gsea"){
+            gseaplot2(KEGGresults(), geneSetID = input$kegg_rows_selected, 
+                      title = KEGGresults()$Description[input$kegg_rows_selected])
+          }
         })
       }
   })
   
+  #****************************************************************************#
+  #   Wikipathways
+  #****************************************************************************#
   
+  #Select comparison
+  output$uiwpcomp <- renderUI({
+    pickerInput(
+      inputId = "wpcomp",
+      label = "Comparison",
+      choices = get_contrasts(meta1()),
+      options = list(
+        style = "btn-primary")
+    )
+  })
+  
+  output$wp <- renderDataTable(NULL)
+  output$WPplot <- renderPlot(NULL)
+  output$errorwp <- renderText(NULL)
+  
+  
+  
+  observeEvent(input$wp.ok, {
+    
+    #Show loading message
+    showModal(modalDialog(title = h4("Pathway analysis is being performed....", 
+                                     align = "center"), 
+                          footer = NULL,
+                          h5("Please be patient. This might take a while.", 
+                             align = "center"),
+                          br()))
+    
+    wpgenelist <- eventReactive(input$wp.ok,{
+      
+      genelist <- NULL
+      
+      #Custom annotation
+      if ((PSannotation() == "Custom annotations") & ((rawornormalized() == "Raw") | (!is.null(normData.saved())))){
+        if(CDFtype() == "ENTREZG"){
+          top.table <- top.table()[[input$wpcomp]]
+          
+          
+          #ORA
+          if(input$oraPathway == "ora"){
+            bgenelist <- top.table$Probeset.ID
+            
+            if(input$raworadjwp == "raw"){
+              siggenelist <- top.table %>%
+                filter(P.Value < input$pthresholdwp) %>%
+                filter(abs(logFC) > input$logFCthresholdwp)
+            }
+            
+            if(input$raworadjwp == "adj"){
+              siggenelist <- top.table %>%
+                filter(adj.P.Val < input$pthresholdwp) %>%
+                filter(abs(logFC) > input$logFCthresholdwp)
+            }
+            
+            siggenelist <- siggenelist$Probeset.ID
+            
+            
+            genelist <- list(bgenelist, siggenelist)
+          }
+
+          
+          #GSEA
+          if(input$oraPathway == "gsea"){
+            if (input$rankingWP == "logFC") {
+              genelist <- top.table$logFC
+            }
+            if (input$rankingWP == "-log(P-value)") {
+              genelist <- -log10(top.table$P.Value)
+            }
+            
+            # name the vector
+            names(genelist) <- top.table$Probeset.ID
+            
+            # omit any NA values 
+            genelist <-na.omit(genelist)
+            
+            # sort the list in decreasing order (required for clusterProfiler)
+            genelist <- sort(genelist, decreasing = TRUE)
+          }
+          
+        }
+      } 
+      
+      return(genelist)
+    })
+    
+    
+    
+    
+    #Results of enrichment analysis
+    WPresults <-eventReactive(input$wp.ok, {
+      
+      WPresults <- NULL
+      
+      if (!is.null((wpgenelist()))){
+        
+        if (species() == "Homo sapiens"){
+          if(input$oraPathway == "ora"){
+            WPresults <- enrichWP(gene = wpgenelist()[[2]],
+                                  organism = "Homo sapiens",
+                                  pvalueCutoff = 1,
+                                  qvalueCutoff = 1)
+          }
+          
+          if(input$oraPathway == "gsea"){
+            WPresults <- gseWP(geneList = wpgenelist(),
+                               organism = "Homo sapiens",
+                               pvalueCutoff = 1)
+          }
+        }
+      }
+      
+      return(WPresults)
+      
+    })
+    
+    
+    #Error message
+    if (is.null(WPresults())){
+      removeModal()
+      output$errorwp <- renderText({
+        "Pathway analysis is unfortunately not possible using the current probeset annotation."
+      })
+    }
+    
+    
+    if (!is.null(WPresults())){
+      removeModal()
+      
+      #Output table
+      output$wp <- DT::renderDataTable({
+        
+        allRes <- WPresults()@result
+        allRes$ID = paste0(
+          '<a ',
+          'href=',
+          paste(
+            "https://www.wikipathways.org/index.php/Pathway:",
+            allRes$ID,
+            sep = ''
+          ),
+          '>',
+          allRes$ID,
+          '</a>'
+        )
+        return(allRes)
+        
+      }, options = list(lengthMenu = c(5, 10, 20, 30), pageLength = 5),  
+      selection = list(mode = "single", selected = 1), rownames = FALSE, 
+      escape = FALSE)
+      
+      #Dotplot
+      output$WPplot <- renderPlot({
+        dotplot(WPresults(), showCategory = 20, orderBy = "x")
+      })
+      
+      #GSEA plot
+      output$WPplotgsea <- renderPlot({
+        req(input$oraPathway)
+        if(input$oraPathway == "gsea"){
+          gseaplot2(WPresults(), geneSetID = input$wp_rows_selected, 
+                    title = WPresults()$Description[input$wp_rows_selected])
+        }
+      })
+    }
+  })
   
   
   ##############################################################################
-  #Parallel coordinate plot
+  #Parallel coordinates plot
   ##############################################################################
   
-  
+  #Select comparison
   output$uiparacomp <- renderUI({
     pickerInput(
       inputId = "paracomp",
@@ -2812,6 +3255,36 @@ server <- function(input, output, session){
   })
   
   
+  #Parallel coordinates plot
+  output$allpara <- renderPlotly({
+    
+    req(input$paracomp)
+    
+    top.table1 = top.table()[[input$paracomp]]
+    
+    fig1 <- top.table1 %>% plot_ly(type = 'parcoords', 
+                                   line = list(color = ~t, colorscale = "Jet"),
+                                   dimensions = list(
+                                     list(label = "-log(P-value)", 
+                                          values = -log10(top.table1$P.Value),
+                                          constraintrange = c(1.3,max(-log10(top.table1$P.Value)))),
+                                     list(label = "logFC", 
+                                          values = ~logFC),
+                                     list(label = "AveExpr", 
+                                          values = ~AveExpr)
+                                     
+                                   )
+    )
+    
+    return(fig1)
+  })
+  
+  
+  
+  ##############################################################################
+  #Remainder
+  ##############################################################################
+  #Parrallel coordinates plot
   output$topfeaturepara <- renderPlotly({
     
     req(input$paracomp)
@@ -2858,7 +3331,6 @@ server <- function(input, output, session){
     )
     
   })
-  
   
   
   
@@ -2960,7 +3432,7 @@ server <- function(input, output, session){
                                   constraintrange = c(1.3,max(-log10(top.table1$P.Value)))),
                              list(label = "logFC", 
                                   values = ~logFC),
-                             list(label = "Average expression", 
+                             list(label = "AveExpr", 
                                   values = ~AveExpr)
                              
                            )
