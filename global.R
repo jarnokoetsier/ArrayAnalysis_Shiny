@@ -1,116 +1,84 @@
 
-pkg <- installed.packages()[, "Package"]
 
+################################################################################
+
+#Install and load packages
+
+################################################################################
+
+#******************************************************************************#
+#Brainarray packages
+#******************************************************************************#
 
 #Modified affy package from Brainarray
+if(!('affy' %in% installed.packages()[, "Package"])) {
+  install.packages("http://brainarray.mbni.med.umich.edu/Brainarray/Database/CustomCDF/25.0.0/affy_1.68.0.tar.gz", 
+                   type = "source", repos = NULL)
+}
+library(affy)
 
-if(!('affy' %in% pkg)) {
-  install.packages("http://brainarray.mbni.med.umich.edu/Brainarray/Database/CustomCDF/25.0.0/affy_1.68.0.tar.gz", type = "source", repos = NULL)
+
+
+#******************************************************************************#
+#CRAN packages
+#******************************************************************************#
+
+#Required CRAN packages:
+CRANpackages <- c("tidyverse", 
+                  "fuzzyjoin", 
+                  "plotly", 
+                  "gplots", 
+                  "heatmaply",
+                  "ggvenn",
+                  "DT",
+                  "shiny",
+                  "shinyWidgets",
+                  "shinycssloaders")
+
+#Install (if not yet installed) and load the required packages: 
+for (pkg in CRANpackages) {
+  if (!requireNamespace(pkg, quietly = TRUE))
+    install.packages(pkg, ask = FALSE)
+  require(as.character(pkg), character.only = TRUE)
 }
 
 
-#Bioconductor packages
 
-s_requiredpackages =
-  c(
-    "biomaRt",
-    "GEOquery",
-    "ArrayExpress",
-    "limma",
-    "makecdfenv",
-    "topGO",
-    "hugene10stprobeset.db",
-    "bioDist",
-    "gcrma",
-    "plier",
-    "clusterProfiler",
-    "pathview"
-  )
+#******************************************************************************#
+#Bioconductor packages
+#******************************************************************************#
+
+#Required Bioconductor packages:
+BiocPackages <- c("biomaRt",
+                  "GEOquery",
+                  "ArrayExpress",
+                  "limma",
+                  "makecdfenv",
+                  "topGO",
+                  "hugene10stprobeset.db",
+                  "bioDist",
+                  "gcrma",
+                  "plier",
+                  "clusterProfiler",
+                  "enrichplot")
+
 
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager", ask = F)
 
-for (i in s_requiredpackages) {
-  if (!requireNamespace(i, quietly = TRUE))
-    BiocManager::install(i, ask = F)
-  require(as.character(i), character.only = TRUE)
-}  
-
-
-#Other packages
-
-if(!('tidyverse' %in% pkg)){
-  install.packages("tidyverse")
-}
-
-if(!('fuzzyjoin' %in% pkg)){
-  install.packages("fuzzyjoin")
-}
-
-if(!("plotly" %in% pkg)){
-  install.packages("plotly")
-}
-
-if(!("gplots" %in% pkg)){
-  install.packages("gplots")
-}
-
-if(!("readxl" %in% pkg)){
-  install.packages("readxl")
-}
-
-if(!("heatmaply" %in% pkg)){
-  install.packages("heatmaply")
-}
-
-if(!("DT" %in% pkg)){
-  install.packages("DT")
-}
-
-#Shiny packages
-
-if(!('shiny' %in% pkg)){
-  install.packages("shiny")
-}
-
-if(!('shinyWidgets' %in% pkg)){
-  install.packages("shinyWidgets")
-}
-
-if(!('shinycssloaders' %in% pkg)){
-  install.packages("shinycssloaders")
+for (pkg in BiocPackages) {
+  if (!requireNamespace(pkg, quietly = TRUE))
+    BiocManager::install(pkg, ask = FALSE)
+  require(as.character(pkg), character.only = TRUE)
 }
 
 
 
-#Load packages
-library(affy)
-library(GEOquery)
-library(ArrayExpress)
-library(biomaRt)
-library(limma)
-library(fuzzyjoin)
-library(tidyverse)
-library(plotly)
-library(shiny)
-library(shinyWidgets)
-library(shinycssloaders)
-library(ggvenn)
-library(makecdfenv)
-library(topGO)
-library(bioDist)
-library(gplots)
-library(readxl)
-library(gcrma)
-library(plier)
-library(heatmaply)
-library(DT)
-
-###################################################################################################################################
+################################################################################
 
 #uploadcdfenv
 
-###################################################################################################################################
+################################################################################
 
 uploadcdfenv <- function(Data,cdf_path){
   #initial value
@@ -132,11 +100,12 @@ uploadcdfenv <- function(Data,cdf_path){
   return(Data)
 }
 
-###################################################################################################################################
+
+################################################################################
 
 #addUpdatedCDFenv
 
-###################################################################################################################################
+################################################################################
 
 addUpdatedCDFenv <- function(Data, species=NULL, type="ENSG") {
   # note: this function will add an updated cdf environment to the data object
@@ -196,11 +165,11 @@ addUpdatedCDFenv <- function(Data, species=NULL, type="ENSG") {
 }
 
 
-###################################################################################################################################
+################################################################################
 
 #colorsByFactor
 
-###################################################################################################################################
+################################################################################
 
 
 colorsByFactor <- function(experimentFactor) {
@@ -218,8 +187,10 @@ colorsByFactor <- function(experimentFactor) {
     tab.tmp <- table(experimentFactor)
     
     #set the two extreme colors for each class
-    colors.light <- rainbow(length(levels(experimentFactor)),s=1-sapply(tab.tmp,min,5)*.1)
-    colors.dark <- rainbow(length(levels(experimentFactor)),v=1-sapply(tab.tmp,min,5)*.14)
+    colors.light <- rainbow(length(levels(experimentFactor)),
+                            s=1-sapply(tab.tmp,min,5)*.1)
+    colors.dark <- rainbow(length(levels(experimentFactor)),
+                           v=1-sapply(tab.tmp,min,5)*.14)
     
     #create the colors to plot, and colors for the legend (average one per experimental group)
     plotColors <- NULL
@@ -235,11 +206,11 @@ colorsByFactor <- function(experimentFactor) {
   
 }
 
-###################################################################################################################################
+################################################################################
 
 #get_grouping
 
-###################################################################################################################################
+################################################################################
 
 get_grouping <- function(gset, database = "GEO") {
   
@@ -259,7 +230,7 @@ get_grouping <- function(gset, database = "GEO") {
     
     grouping <- as.data.frame(grouping[,-1])
     #Get character columns only
-    grouping[, sapply(grouping, class) == 'character']
+    grouping <- grouping[, sapply(grouping, class) == 'character']
     
     grouping <- grouping %>%
       mutate(across(everything(), as.character))
@@ -288,29 +259,53 @@ get_grouping <- function(gset, database = "GEO") {
   #remove columns with the same information
   uni = c(1)
   
-  suppressWarnings(
-    
-    for (i in 1:(ncol(grouping)-1)) {
-      for (j in (i+1):ncol(grouping)) {
-        if (all(str_detect(grouping[,i], grouping[,j]))) {
-          if (length(unique(str_remove(grouping[,i], grouping[,j]))) == 1){
-            uni <- c(uni, i)
+  tryCatch({
+    suppressWarnings(
+      
+      for (i in 1:(ncol(grouping)-1)) {
+        for (j in (i+1):ncol(grouping)) {
+          if (all(str_detect(grouping[,i], grouping[,j]))) {
+            if (length(unique(str_remove(grouping[,i], grouping[,j]))) == 1){
+              uni <- c(uni, i)
+            }
           }
-        }
-        if (all(str_detect(grouping[,j], grouping[,i]))) {
-          if (length(unique(str_remove(grouping[,j], grouping[,i]))) == 1) {
-            if (length(unique(str_remove(grouping[,i], grouping[,j]))) != 1){
-              uni <- c(uni, j)
+          if (all(str_detect(grouping[,j], grouping[,i]))) {
+            if (length(unique(str_remove(grouping[,j], grouping[,i]))) == 1) {
+              if (length(unique(str_remove(grouping[,i], grouping[,j]))) != 1){
+                uni <- c(uni, j)
+              }
             }
           }
         }
       }
-    }
-  )
+    )
+  },
+  error=function(cond) {
+    NULL
+  })
+  
+  
   
   uni <- unique(uni[-1])
-  grouping <- grouping[, -uni]
+  if (length(uni)>0){
+    grouping <- grouping[, -uni]
+  }
+  
   #rownames(grouping) <- NULL
+  
+  #minimum group size
+  minGroup <- function(x){
+    groupSize <- NULL
+    for (i in 1:length(unique(x))){
+      groupSize[i] <- sum(x == unique(x)[i])
+    }
+    return(min(groupSize))
+  }
+  
+  #Remove columns which have minimum group size of 1
+  test <- apply(grouping,2,minGroup)
+  grouping <- grouping[,test>1]
+  
   
   
   colnames(grouping) <- str_remove_all(colnames(grouping), ":ch1")
@@ -323,11 +318,11 @@ get_grouping <- function(gset, database = "GEO") {
 }
 
 
-###################################################################################################################################
+################################################################################
 
 #auto_group
 
-###################################################################################################################################
+################################################################################
 
 auto_group <- function(groups, attempt = 1){
   
@@ -381,11 +376,11 @@ auto_group <- function(groups, attempt = 1){
 }
 
 
-###################################################################################################################################
+################################################################################
 
 #get_meta
 
-###################################################################################################################################
+################################################################################
 
 
 get_meta <- function(gset, grouping_column, pairing_column = NULL, file_name = NULL, database = "GEO") {
@@ -469,11 +464,11 @@ get_meta <- function(gset, grouping_column, pairing_column = NULL, file_name = N
 
 
 
-###################################################################################################################################
+################################################################################
 
 #pca.plot
 
-###################################################################################################################################
+################################################################################
 
 
 pca.plot <- function(data.PC, meta1, hpc = 1, vpc = 2) {
@@ -513,7 +508,8 @@ pca.plot <- function(data.PC, meta1, hpc = 1, vpc = 2) {
   
   
   pcaplot <-
-    ggplot(data = PC, aes(x = X, y = Y, colour = Grouping, shape = Grouping, text = paste("Sample:", Sample.ID))) +
+    ggplot(data = PC, aes(x = X, y = Y, colour = Grouping, shape = Grouping, 
+                          text = paste("Sample:", Sample.ID))) +
     geom_point(size = 2) +
     scale_colour_manual(values = myPalette$legendColors) +
     labs(title = "PCA plot",
@@ -530,11 +526,11 @@ pca.plot <- function(data.PC, meta1, hpc = 1, vpc = 2) {
   
 }
 
-###################################################################################################################################
+################################################################################
 
 #pca3d
 
-###################################################################################################################################
+################################################################################
 
 pca3d <- function(data.PC, meta1, x = 1, y = 2, z = 3) {
 
@@ -590,12 +586,11 @@ pca3d <- function(data.PC, meta1, x = 1, y = 2, z = 3) {
 }
 
 
-###################################################################################################################################
+################################################################################
 
 #PCvariances
 
-###################################################################################################################################
-
+################################################################################
 
 PCvariances <- function(data.PC, x = 1, y = 2, z= NULL) {
   
@@ -632,11 +627,11 @@ PCvariances <- function(data.PC, x = 1, y = 2, z= NULL) {
   
 }
 
-###################################################################################################################################
+################################################################################
 
 #get_contrasts
 
-###################################################################################################################################
+################################################################################
 
 get_contrasts <- function(meta) {
   
@@ -648,11 +643,13 @@ get_contrasts <- function(meta) {
       for (n in (m+1):length(levels1)) {
         
         if (grepl("non|healthy|control", levels1[m])) {
-          contrast <- c(contrast, paste(make.names(levels1)[n], make.names(levels1)[m], sep = " - "))
+          contrast <- c(contrast, paste(make.names(levels1)[n], 
+                                        make.names(levels1)[m], sep = " - "))
         }
         
         if (!grepl("non|healthy|control", levels1[m])){
-          contrast <- c(contrast, paste(make.names(levels1)[m], make.names(levels1)[n], sep = " - "))
+          contrast <- c(contrast, paste(make.names(levels1)[m], 
+                                        make.names(levels1)[n], sep = " - "))
         }
       }
     }
@@ -660,54 +657,13 @@ get_contrasts <- function(meta) {
   
 }
   
-  
-###################################################################################################################################
 
-#get_contrasts1
 
-###################################################################################################################################
-
-get_contrasts1 <- function(meta) {
-  
-  levels1 <- unique(meta$Grouping)
-  
-  if (is.null(meta$Pairing)){
-    contrast <- paste(make.names(levels1)[2], make.names(levels1)[1], sep = " - ")
-    
-    for (m in 1:(length(levels1)-1)){
-      for (n in (m+1):length(levels1)) {
-        
-        if (grepl("non|healthy|control", levels1[m])) {
-          contrast <- c(contrast, paste(make.names(levels1)[n], make.names(levels1)[m], sep = " - "))
-        }
-        
-        if (!grepl("non|healthy|control", levels1[m])){
-          contrast <- c(contrast, paste(make.names(levels1)[m], make.names(levels1)[n], sep = " - "))
-        }
-      }
-    }
-    return(sort(contrast[-1]))
-  }
-  
-  if (!is.null(meta$Pairing)){
-    contrast <- NULL
-    for (m in 1:(length(levels1)-1)){
-      contrast <- c(contrast, paste(make.names(levels1)[m+1], make.names(levels1)[m], sep = " - "))
-    }
-    return(contrast)
-  }
-
-  
-  
-  
-  
-}
-
-###################################################################################################################################
+################################################################################
 
 #auto_contrast
 
-###################################################################################################################################
+################################################################################
 
 auto_contrasts <- function(meta) {
   
@@ -719,11 +675,13 @@ auto_contrasts <- function(meta) {
     for (n in (m+1):length(levels1)) {
       
       if (grepl("non|healthy|control", levels1[m])) {
-        contrast <- c(contrast, paste(make.names(levels1)[n], make.names(levels1)[m], sep = " - "))
+        contrast <- c(contrast, paste(make.names(levels1)[n], 
+                                      make.names(levels1)[m], sep = " - "))
       }
       
       if (!grepl("non|healthy|control", levels1[m])){
-        contrast <- c(contrast, paste(make.names(levels1)[m], make.names(levels1)[n], sep = " - "))
+        contrast <- c(contrast, paste(make.names(levels1)[m], 
+                                      make.names(levels1)[n], sep = " - "))
       }
     }
   }
@@ -794,11 +752,11 @@ auto_contrasts <- function(meta) {
   
 }
 
-###################################################################################################################################
+################################################################################
 
 #diff_expr
 
-###################################################################################################################################
+################################################################################
 
 
 diff_expr <- function(data.expr, meta, comparisons) {
@@ -809,7 +767,8 @@ diff_expr <- function(data.expr, meta, comparisons) {
   ph = as.data.frame(colnames(data.expr))
   colnames(ph) <- "cel_names"
   
-  ph1 <- ph %>% inner_join(meta, by = c("cel_names" = "names"), match_fun = str_detect)
+  ph1 <- ph %>% inner_join(meta, by = c("cel_names" = "names"), 
+                           match_fun = str_detect)
   
   if (is.null(ph1$Pairing)){
     
@@ -878,124 +837,16 @@ diff_expr <- function(data.expr, meta, comparisons) {
       
     }
   
-  
-  
-  
   return(top.table)
 }
 
 
-###################################################################################################################################
 
-#diff_expr1
-
-###################################################################################################################################
-
-
-diff_expr1 <- function(data.expr, meta, comparisons) {
-  
-  
-  #get grouping variable in correct order
-  
-  ph = as.data.frame(colnames(data.expr))
-  colnames(ph) <- "cel_names"
-  
-  ph1 <- ph %>% inner_join(meta, by = c("cel_names" = "names"), match_fun = str_detect)
-  
-  if (is.null(ph1$Pairing)){
-   
-     #model design
-    groups <- ph1$Grouping
-    levels <- unique(ph1$Grouping)
-    
-    f <- factor(groups,levels=levels)
-    
-    design <- model.matrix(~ 0 + f)
-    colnames(design) <- make.names(levels)
-    
-    
-    #fit linear model
-    
-    data.fit <- lmFit(data.expr,design)
-    
-    
-    #get contrasts
-    contrast <- comparisons
-    
-    
-    
-    #make top table for each comparison
-    top.table <- list()
-    
-    for (i in contrast) {
-      contrast.matrix <- makeContrasts(contrasts = i,levels=design)
-      
-      data.fit.con <- contrasts.fit(data.fit,contrast.matrix)
-      
-      data.fit.eb <- eBayes(data.fit.con)
-      
-      top.table[[i]] <- topTable(data.fit.eb, sort.by = "P", n = Inf)
-      
-      top.table[[i]] <- cbind(rownames(top.table[[i]]), top.table[[i]])
-      
-      rownames(top.table[[1]]) <- NULL
-      
-      colnames(top.table[[i]]) <- c("Probeset.ID", colnames(top.table[[i]])[-1])
-      
-    }
-  }
-  
-  if (!is.null(ph1$Pairing)){
-    
-    #Model design
-    fg <- factor(ph1$Grouping)
-    fp <- factor(ph1$Pairing)
-    
-    length(levels(fg))
-    
-    paired.design = model.matrix(~ fg + fp)
-    
-    levels1 <- levels(fg)
-    
-    contrast <- NULL
-    
-    for (m in 1:(length(levels1)-1)){
-      contrast <- c(contrast, paste(make.names(levels1)[m+1], make.names(levels1)[m], sep = " - "))
-    }
-    
-    remainder <- seq(1,(ncol(paired.design) - length(contrast) - 1))
-    colnames(paired.design) <- c("Intercept", contrast, remainder)
-    
-    #Fit linear model
-    data.fit = lmFit(data.expr,paired.design)
-    
-    
-    
-    
-    data.fit.eb = eBayes(data.fit)
-    
-    top.table <- list()
-    for (i in contrast) {
-      top.table[[i]] <- topTable(data.fit.eb, coef=i, sort.by = "P", n = Inf)
-      top.table[[i]] <- cbind(rownames(top.table[[i]]), top.table[[i]])
-      rownames(top.table[[1]]) <- NULL
-      colnames(top.table[[i]]) <- c("Probeset.ID", colnames(top.table[[i]])[-1])
-    }
-      
-    
-    
-  }
-
-  
-  return(top.table)
-}
-
-
-###################################################################################################################################
+################################################################################
 
 #plotvolcano
 
-###################################################################################################################################
+################################################################################
 
 plotvolcano <- function(top.table, p = "raw", p.threshold = 0.05, logFC.threshold = 1){
   
