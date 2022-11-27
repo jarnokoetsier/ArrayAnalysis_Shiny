@@ -6,18 +6,6 @@
 
 ################################################################################
 
-#******************************************************************************#
-#Brainarray packages
-#******************************************************************************#
-
-#Modified affy package from Brainarray
-if(!('affy' %in% installed.packages()[, "Package"])) {
-  install.packages("http://brainarray.mbni.med.umich.edu/Brainarray/Database/CustomCDF/25.0.0/affy_1.68.0.tar.gz", 
-                   type = "source", repos = NULL)
-}
-library(affy)
-
-
 
 #******************************************************************************#
 #CRAN packages
@@ -60,7 +48,8 @@ BiocPackages <- c("biomaRt",
                   "gcrma",
                   "plier",
                   "clusterProfiler",
-                  "enrichplot")
+                  "enrichplot",
+                  "KEGGREST")
 
 
 if (!requireNamespace("BiocManager", quietly = TRUE))
@@ -72,6 +61,17 @@ for (pkg in BiocPackages) {
   require(as.character(pkg), character.only = TRUE)
 }
 
+
+#******************************************************************************#
+#Brainarray packages
+#******************************************************************************#
+
+#Modified affy package from Brainarray
+if(!('affy' %in% installed.packages()[, "Package"])) {
+  install.packages("http://brainarray.mbni.med.umich.edu/Brainarray/Database/CustomCDF/25.0.0/affy_1.68.0.tar.gz", 
+                   type = "source", repos = NULL)
+}
+library(affy)
 
 
 ################################################################################
@@ -885,5 +885,34 @@ plotvolcano <- function(top.table, p = "raw", p.threshold = 0.05, logFC.threshol
   
 }
 
+################################################################################
 
+#get_chiptype
+
+################################################################################
+
+get_chiptype = function(annotation){
+  attributes <- c("affy_hc_g110", "affy_hg_focus", "affy_hg_u133a", "affy_hg_u133a_2", 
+                  "affy_hg_u133b", "affy_hg_u133_plus_2", "affy_hg_u95a", "affy_hg_u95av2",
+                  "affy_hg_u95b", "affy_hg_u95c", "affy_hg_u95d", "affy_hg_u95d", "affy_hg_u95e",
+                  "affy_hta_2_0", "affy_huex_1_0_st_v2", "affy_hugenefl", "affy_hugene_1_0_st_v1",
+                  "affy_hugene_2_0_st_v1", "affy_hugene_2_1_st_v1", "affy_primeview", "affy_u133_x3p")
+  
+  
+  attributes1 = NULL
+  attributes2 = NULL
+  
+  for (i in 1:length(attributes)){
+    attributes1[i] <- str_remove(attributes[i], "affy_")
+    attributes2[i] <- stringdist::stringdist(annotation, attributes1[i])
+  }
+  
+  chiptype <- attributes[attributes2 == min(attributes2)]
+  
+  if (length(chiptype) > 1){
+    chiptype <- NULL
+  }
+  
+  return(chiptype)
+}
 
