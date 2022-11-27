@@ -3,7 +3,7 @@
 Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
 
 server <- function(input, output, session){
-  options(shiny.maxRequestSize=50*1024^2)
+  options(shiny.maxRequestSize=125*1024^2)
   
   ##############################################################################
   #Data selection
@@ -140,7 +140,7 @@ server <- function(input, output, session){
   })
   
   
-  #Example dataset
+  #Example dataset (GSE36980)
   observeEvent(input$example, {
     
     if (input$database == "GEO"){
@@ -273,7 +273,7 @@ server <- function(input, output, session){
     #ArrayExpress
     if (database() == "ArrayExpress"){
       gset <- NULL
-      if (grepl("E-MTAB-", accession())){
+      if (grepl("E-MTAB-", accession()) | grepl("E-GEOD-", accession())){
         tryCatch({
           gset <- ArrayExpress(accession())
         },
@@ -940,6 +940,16 @@ server <- function(input, output, session){
       test <- samplelist %>% 
         fuzzyjoin::fuzzy_inner_join(meta(), by = c("names" = "Sample.ID"), 
                                     match_fun = str_detect)
+      
+      if (nrow(test) < length(samplelist)){
+        test <- meta() %>% 
+          fuzzyjoin::fuzzy_inner_join(samplelist, by = c("Sample.ID" = "names"), 
+                                      match_fun = str_detect)
+        
+        rownames(test) <- test$names
+        test <- test[samplelist$names,]
+        rownames(test) <- NULL
+      }
     
       #Display error if the matching is not successful
       if (nrow(test) < length(samplelist)){
@@ -1221,102 +1231,111 @@ server <- function(input, output, session){
     #Start from raw data
     #..........................................................................#
     if (rawornormalized() == "Raw"){
-      normMeth <- input$normMeth
-      CDFtype <- input$CDFtype
-      species <- input$species
       
-      experimentFactor <- experimentFactor()
-      
-      ifelse(input$annotations=="Custom annotations",
-             customCDF<-TRUE,customCDF<-FALSE)
-      ifelse(input$annotations=="Upload annotation file",
-             uploadCDF<-TRUE,uploadCDF<-FALSE)
-      ifelse(input$perGroup == "Use all arrays",
-             perGroup<-FALSE,perGroup<-TRUE)
-      
-      normMeth <- toupper(normMeth)
-      #if customCDF option is chosen, apply to copy of Data, in order not to change the original data object
-      Data.copy <- rawData()
-      if(customCDF){
-        print ("Changing CDF before pre-processing")
-        Data.copy <- addUpdatedCDFenv(Data.copy, species, CDFtype)
-      }
-      
-      if(uploadCDF){
-        print ("Changing CDF before pre-processing")
-        Data.copy <- uploadcdfenv(Data.copy, input$annot_file$datapath)
-      }
-      
-      print ("Pre-processing is running")
-      
-      nGroups <- 1
-      if(perGroup) {
-        nGroups <- max(1,length(levels(experimentFactor)))
-        if(nGroups==1) warning("normalization per group requested, 
+      normData <- tryCatch({
+        normMeth <- input$normMeth
+        CDFtype <- input$CDFtype
+        species <- input$species
+        
+        experimentFactor <- experimentFactor()
+        
+        ifelse(input$annotations=="Custom annotations",
+               customCDF<-TRUE,customCDF<-FALSE)
+        ifelse(input$annotations=="Upload annotation file",
+               uploadCDF<-TRUE,uploadCDF<-FALSE)
+        ifelse(input$perGroup == "Use all arrays",
+               perGroup<-FALSE,perGroup<-TRUE)
+        
+        normMeth <- toupper(normMeth)
+        #if customCDF option is chosen, apply to copy of Data, in order not to change the original data object
+        Data.copy <- rawData()
+        if(customCDF){
+          print ("Changing CDF before pre-processing")
+          Data.copy <- addUpdatedCDFenv(Data.copy, species, CDFtype)
+        }
+        
+        if(uploadCDF){
+          print ("Changing CDF before pre-processing")
+          Data.copy <- uploadcdfenv(Data.copy, input$annot_file$datapath)
+        }
+        
+        print ("Pre-processing is running")
+        
+        nGroups <- 1
+        if(perGroup) {
+          nGroups <- max(1,length(levels(experimentFactor)))
+          if(nGroups==1) warning("normalization per group requested, 
                                but no groups indicated in data set")
-      }
-      
-      #if per group normalization required, or a method selected that does not return an ExpressionSet object,
-      #make a model of class ExpressionSet to paste real values in, use the relatively fast RMA method
-      #note that binding of ExpressionSet objects is NOT possible
-      if((nGroups>1)) { # || (normMeth=="MAS5")) {
-        normData <- affy::rma(Data.copy)
-        exprs(normData)[] <- NA
-      }
-      
-      for(group in 1:nGroups) {
-        if(nGroups==1) {
-          Data.tmp <- Data.copy
-        } else {
-          Data.tmp <- Data.copy[,experimentFactor==(levels(experimentFactor)[group])]
         }
-        switch(normMeth, 
-               "MAS5" = {
-                 #doesn't work
-                 normData.tmp <- mas5(Data.tmp) 
-               },
-               "GCRMA" = {
-                 if(customCDF) {
-                   #probe library needed, first try whether this has been intalled, otherwise do so
-                   probeLibrary <- tolower(paste(Data@annotation,species,
-                                                 CDFtype,"probe",sep=""))
-                   loaded <- suppressWarnings(
-                     try(eval(parse("",-1,paste("library(",probeLibrary,")", 
-                                                sep=""))),TRUE))
-                   if(class(loaded)=="try-error") {
-                     install.packages(probeLibrary, 
-                                      repos="http://brainarray.mbni.med.umich.edu/bioc")
+        
+        #if per group normalization required, or a method selected that does not return an ExpressionSet object,
+        #make a model of class ExpressionSet to paste real values in, use the relatively fast RMA method
+        #note that binding of ExpressionSet objects is NOT possible
+        if((nGroups>1)) { # || (normMeth=="MAS5")) {
+          normData <- affy::rma(Data.copy)
+          exprs(normData)[] <- NA
+        }
+        
+        for(group in 1:nGroups) {
+          if(nGroups==1) {
+            Data.tmp <- Data.copy
+          } else {
+            Data.tmp <- Data.copy[,experimentFactor==(levels(experimentFactor)[group])]
+          }
+          switch(normMeth, 
+                 "MAS5" = {
+                   #doesn't work
+                   normData.tmp <- mas5(Data.tmp) 
+                 },
+                 "GCRMA" = {
+                   if(customCDF) {
+                     #probe library needed, first try whether this has been intalled, otherwise do so
+                     probeLibrary <- tolower(paste(Data@annotation,species,
+                                                   CDFtype,"probe",sep=""))
+                     loaded <- suppressWarnings(
+                       try(eval(parse("",-1,paste("library(",probeLibrary,")", 
+                                                  sep=""))),TRUE))
+                     if(class(loaded)=="try-error") {
+                       install.packages(probeLibrary, 
+                                        repos="http://brainarray.mbni.med.umich.edu/bioc")
+                     }
                    }
+                   if(aType() == "PMMM") ntype = "fullmodel"
+                   if(aType() == "PMonly") ntype = "affinities" # good results if most of the genes are not expressed
+                   normData.tmp <- gcrma(Data.tmp, type=ntype, fast = FALSE)
+                 },
+                 "RMA" = {
+                   normData.tmp <- affy::rma(Data.tmp)
+                 },
+                 "PLIER" = {
+                   if(aType() == "PMMM") ntype = "together"
+                   if(aType() == "PMonly") ntype = "pmonly"
+                   normData.tmp <- justPlier(Data.tmp, normalize=TRUE, 
+                                             norm.type = ntype)
                  }
-                 if(aType() == "PMMM") ntype = "fullmodel"
-                 if(aType() == "PMonly") ntype = "affinities" # good results if most of the genes are not expressed
-                 normData.tmp <- gcrma(Data.tmp, type=ntype, fast = FALSE)
-               },
-               "RMA" = {
-                 normData.tmp <- affy::rma(Data.tmp)
-               },
-               "PLIER" = {
-                 if(aType() == "PMMM") ntype = "together"
-                 if(aType() == "PMonly") ntype = "pmonly"
-                 normData.tmp <- justPlier(Data.tmp, normalize=TRUE, 
-                                           norm.type = ntype)
-               }
-        )
-        if(nGroups==1) {
-          normData <- normData.tmp
-          if(normMeth=="MAS5") exprs(normData)<-log2(exprs(normData))
-        } else {
-          try(
-            if(normMeth=="MAS5"){
-              exprs(normData)[,match(sampleNames(normData.tmp), sampleNames(normData))] <- log2(exprs(normData.tmp))
-            }else{
-              exprs(normData)[,match(sampleNames(normData.tmp), sampleNames(normData))] <- exprs(normData.tmp)
-            },TRUE)
+          )
+          if(nGroups==1) {
+            normData <- normData.tmp
+            if(normMeth=="MAS5") exprs(normData)<-log2(exprs(normData))
+          } else {
+            try(
+              if(normMeth=="MAS5"){
+                exprs(normData)[,match(sampleNames(normData.tmp), sampleNames(normData))] <- log2(exprs(normData.tmp))
+              }else{
+                exprs(normData)[,match(sampleNames(normData.tmp), sampleNames(normData))] <- exprs(normData.tmp)
+              },TRUE)
+          }
+          rm(normData.tmp, Data.tmp)
         }
-        rm(normData.tmp, Data.tmp)
-      }
+        
+        rm(Data.copy) 
+        
+        normData
+      },
+      error=function(cond) {
+        return(NULL)
+      })
       
-      rm(Data.copy) 
     }
     
     
@@ -1342,6 +1361,19 @@ server <- function(input, output, session){
 
     #..........................................................................#
     return(normData)
+  })
+  
+  
+  #Error message
+  observeEvent(if (is.null(normData())){input$preprocessing},{
+    removeModal()
+    
+    sendSweetAlert(
+      session = session,
+      title = "Error!",
+      text = "Something went wrong. Try using a different annotation.",
+      type = "error")
+    
   })
   
   #Get expression matrix
@@ -2542,10 +2574,23 @@ server <- function(input, output, session){
     colnames(sidecolors) <- "Grouping"
     
     
+    if (input$heatmaptheme1 == "Default"){
+      gradient = viridis(n = 256, alpha = 1, begin = 0, end = 1, 
+                         option = "viridis")
+    }
+    
+    if (input$heatmaptheme1 == "Yellow-red"){
+      gradient = heat.colors(100)
+    }
+    
+    if (input$heatmaptheme1 == "Dark"){
+      gradient = RColorBrewer::brewer.pal(8, "Dark2")
+    }
+    
     
     heatmaply(data.expr1, plot_method = "plotly", distfun = my.dist, hclustfun = my.hclust, seriate = "mean", 
               titleX = TRUE, titleY = TRUE, xlab = "Samples", ylab = "Features", main = paste0("Heatmap of the top ", input$topfeatures, " features"), 
-              key.title = "Expression", column_text_angle = 90, col_side_colors = sidecolors, col_side_palette = legendColors)
+              key.title = "Expression", column_text_angle = 90, col_side_colors = sidecolors, col_side_palette = legendColors, colors = gradient)
   })
   
   ##############################################################################
@@ -2718,7 +2763,6 @@ server <- function(input, output, session){
   #   clusterProfiler
   #****************************************************************************#
   
-  
   #Select comparison
   output$uigoacomp1 <- renderUI({
     pickerInput(
@@ -2728,6 +2772,37 @@ server <- function(input, output, session){
       options = list(
         style = "btn-primary")
     )
+  })
+  
+  #Select organism
+  output$uigoaOrg <- renderUI({
+    if ((PSannotation() == "No annotations") | ((rawornormalized() == "Normalized") & (is.null(normData.saved())))){
+      pickerInput(
+        inputId = "goaOrg",
+        label = "Organism",
+        choices = "hsapiens_gene_ensembl",
+        options = list(
+          style = "btn-danger")
+      )
+    }
+  })
+  
+  #Select chiptype
+  output$uigoaChip <- renderUI({
+    if ((PSannotation() == "No annotations") | ((rawornormalized() == "Normalized") & (is.null(normData.saved())))){
+      pickerInput(
+        inputId = "goaChip",
+        label = "Chip type",
+        choices = c("affy_hc_g110", "affy_hg_focus", "affy_hg_u133a", "affy_hg_u133a_2", 
+                    "affy_hg_u133b", "affy_hg_u133_plus_2", "affy_hg_u95a", "affy_hg_u95av2",
+                    "affy_hg_u95b", "affy_hg_u95c", "affy_hg_u95d", "affy_hg_u95d", "affy_hg_u95e",
+                    "affy_hta_2_0", "affy_huex_1_0_st_v2", "affy_hugenefl", "affy_hugene_1_0_st_v1",
+                    "affy_hugene_2_0_st_v1", "affy_hugene_2_1_st_v1", "affy_primeview", "affy_u133_x3p"),
+        selected = get_chiptype(annotation(normData())),
+        options = list(
+          style = "btn-warning")
+      )
+    }
   })
   
   output$goa1 <- renderDataTable(NULL)
@@ -2801,7 +2876,90 @@ server <- function(input, output, session){
           genelist <- sort(genelist, decreasing = TRUE)
         }
         
-      } 
+      }
+      
+      #No annotations
+      if ((PSannotation() == "No annotations") | ((rawornormalized() == "Normalized") & (is.null(normData.saved())))){
+        
+        for (i in 1:10) {
+          top.table <- tryCatch({
+            top.table1 <- top.table()[[input$goacomp1]]
+            
+            ensembl <- useMart("ensembl")
+            ensembl <- useDataset(input$goaOrg,mart=ensembl)
+            
+            annotation1 <- getBM(attributes = c(input$goaChip, 'ensembl_gene_id'), 
+                                 filters = input$goaChip, 
+                                 values = top.table1$Probeset.ID, 
+                                 mart = ensembl)
+            
+            colnames(annotation1) <- c("Probeset.ID", "Gene.ID")
+            annotation1$Probeset.ID <- as.character(annotation1$Probeset.ID)
+            
+            top.table <- top.table1 %>%
+              inner_join(annotation1, by = c("Probeset.ID" = "Probeset.ID"))
+            
+            top.table
+            
+          },
+          error=function(cond) {
+            return(NULL)
+          })
+          if (!is.null(top.table)){
+            break
+          } 
+        }
+        
+        
+        if (!is.null(top.table)){
+          
+          #ORA
+          if(input$oraGO == "ora"){
+            bgenelist <- top.table$Gene.ID
+            
+            if(input$raworadjgoa1 == "raw"){
+              siggenelist <- top.table %>%
+                filter(P.Value < input$pthresholdgoa1) %>%
+                filter(abs(logFC) > input$logFCthresholdgoa1)
+            }
+            
+            if(input$raworadjgoa1 == "adj"){
+              siggenelist <- top.table %>%
+                filter(adj.P.Val < input$pthresholdgoa1) %>%
+                filter(abs(logFC) > input$logFCthresholdgoa1)
+            }
+            
+            siggenelist <- siggenelist$Gene.ID
+            
+            
+            genelist <- list(bgenelist, siggenelist)
+            
+          }
+          
+          
+          #GSEA
+          if(input$oraGO == "gsea"){
+            if (input$rankingGO == "logFC") {
+              genelist <- top.table$logFC
+            }
+            if (input$rankingGO == "-log(P-value)") {
+              genelist <- -log10(top.table$P.Value)
+            }
+            
+            # name the vector
+            names(genelist) <- top.table$Gene.ID
+            
+            # omit any NA values 
+            genelist <-na.omit(genelist)
+            
+            # sort the list in decreasing order (required for clusterProfiler)
+            genelist <- sort(genelist, decreasing = TRUE)
+          }
+          
+        }
+        
+        
+      }
       
       return(genelist)
     })
@@ -2810,15 +2968,42 @@ server <- function(input, output, session){
     #Get GO results
     GOresults <- eventReactive(input$goa.ok1,{
       GOresults <- NULL
-      
+
       if (!is.null((genelist()))){
-        if ((CDFtype() == "ENTREZG") & (species() == "Homo sapiens")){
-          
+        if ((PSannotation() == "Custom annotations") & ((rawornormalized() == "Raw") | (!is.null(normData.saved())))){
+          if ((CDFtype() == "ENTREZG") & (species() == "Homo sapiens")){
+            
+            if(input$oraGO == "ora"){
+              GOresults <- enrichGO(
+                gene = genelist()[[2]], 
+                universe = genelist()[[1]], 
+                keyType = "ENTREZID",
+                OrgDb = org.Hs.eg.db,
+                ont = input$ontology1,
+                pAdjustMethod = "fdr",
+                pvalueCutoff = 1,
+                qvalueCutoff = 1)
+            }
+            
+            if(input$oraGO == "gsea"){
+              GOresults <- gseGO(
+                geneList = genelist(),
+                keyType = "ENTREZID",
+                OrgDb = org.Hs.eg.db,
+                ont = input$ontology1,
+                pAdjustMethod = "fdr",
+                pvalueCutoff = 1)
+            }
+            
+          }
+        }
+        
+        if ((PSannotation() == "No annotations") | ((rawornormalized() == "Normalized") & (is.null(normData.saved())))){
           if(input$oraGO == "ora"){
             GOresults <- enrichGO(
               gene = genelist()[[2]], 
               universe = genelist()[[1]], 
-              keyType = "ENTREZID",
+              keyType = "ENSEMBL",
               OrgDb = org.Hs.eg.db,
               ont = input$ontology1,
               pAdjustMethod = "fdr",
@@ -2829,7 +3014,7 @@ server <- function(input, output, session){
           if(input$oraGO == "gsea"){
             GOresults <- gseGO(
               geneList = genelist(),
-              keyType = "ENTREZID",
+              keyType = "ENSEMBL",
               OrgDb = org.Hs.eg.db,
               ont = input$ontology1,
               pAdjustMethod = "fdr",
@@ -2837,6 +3022,7 @@ server <- function(input, output, session){
           }
 
         }
+        
       }
       return(GOresults)
     })
@@ -2892,12 +3078,19 @@ server <- function(input, output, session){
   #Pathway enrichment analysis
   ##############################################################################
   
+  OraGSEA_WP <- eventReactive(input$wp.ok, {
+    input$oraPathway
+  })
+    
+  OraGSEA_KEGG <- eventReactive(input$kegg.ok, {
+    input$oraPathway
+  })
   
   #****************************************************************************#
   #   KEGG
   #****************************************************************************#
   
-  #Selecy comparison
+  #Select comparison
   output$uikeggcomp <- renderUI({
     pickerInput(
       inputId = "keggcomp",
@@ -2908,8 +3101,39 @@ server <- function(input, output, session){
     )
   })
   
+  #Select organism
+  output$uikeggOrg <- renderUI({
+    if ((PSannotation() == "No annotations") | ((rawornormalized() == "Normalized") & (is.null(normData.saved())))){
+      pickerInput(
+        inputId = "keggOrg",
+        label = "Organism",
+        choices = "hsapiens_gene_ensembl",
+        options = list(
+          style = "btn-danger")
+      )
+    }
+  })
+  
+  #Select chiptype
+  output$uikeggChip <- renderUI({
+    if ((PSannotation() == "No annotations") | ((rawornormalized() == "Normalized") & (is.null(normData.saved())))){
+      pickerInput(
+        inputId = "keggChip",
+        label = "Chip type",
+        choices = c("affy_hc_g110", "affy_hg_focus", "affy_hg_u133a", "affy_hg_u133a_2", 
+                    "affy_hg_u133b", "affy_hg_u133_plus_2", "affy_hg_u95a", "affy_hg_u95av2",
+                    "affy_hg_u95b", "affy_hg_u95c", "affy_hg_u95d", "affy_hg_u95d", "affy_hg_u95e",
+                    "affy_hta_2_0", "affy_huex_1_0_st_v2", "affy_hugenefl", "affy_hugene_1_0_st_v1",
+                    "affy_hugene_2_0_st_v1", "affy_hugene_2_1_st_v1", "affy_primeview", "affy_u133_x3p"),
+        selected = get_chiptype(annotation(normData())),
+        options = list(
+          style = "btn-warning")
+      )
+    }
+  })
+  
   output$kegg <- renderDataTable(NULL)
-  output$KEGGplot <- renderPlot(NULL)
+  output$KEGGplot <- renderPlotly(NULL)
   output$errorkegg <- renderText(NULL)
   
   
@@ -2979,7 +3203,84 @@ server <- function(input, output, session){
           }
           
         }
-      } 
+      }
+      
+      if ((PSannotation() == "No annotations") | ((rawornormalized() == "Normalized") & (is.null(normData.saved())))){
+        
+        
+          top.table <- tryCatch({
+            top.table1 <- top.table()[[input$keggcomp]]
+            
+            ensembl <- useMart("ensembl")
+            ensembl <- useDataset(input$keggOrg,mart=ensembl)
+            
+            annotation1 <- getBM(attributes = c(input$keggChip, 'entrezgene_id'), 
+                                 filters = input$keggChip, 
+                                 values = top.table1$Probeset.ID, 
+                                 mart = ensembl)
+            
+            colnames(annotation1) <- c("Probeset.ID", "Gene.ID")
+            annotation1$Probeset.ID <- as.character(annotation1$Probeset.ID)
+            
+            top.table <- top.table1 %>%
+              inner_join(annotation1, by = c("Probeset.ID" = "Probeset.ID"))
+            
+            top.table
+            
+          },
+          error=function(cond) {
+            return(NULL)
+          })
+        
+        
+        
+        if (!is.null(top.table)){
+          
+          #ORA
+          if(input$oraPathway == "ora"){
+            bgenelist <- top.table$Gene.ID
+            
+            if(input$raworadjkegg == "raw"){
+              siggenelist <- top.table %>%
+                filter(P.Value < input$pthresholdkegg) %>%
+                filter(abs(logFC) > input$logFCthresholdkegg)
+            }
+            
+            if(input$raworadjkegg == "adj"){
+              siggenelist <- top.table %>%
+                filter(adj.P.Val < input$pthresholdkegg) %>%
+                filter(abs(logFC) > input$logFCthresholdkegg)
+            }
+            
+            siggenelist <- siggenelist$Gene.ID
+            
+            
+            genelist <- list(bgenelist, siggenelist)
+          }
+          
+          
+          #GSEA
+          if(input$oraPathway == "gsea"){
+            if (input$rankingKEGG == "logFC") {
+              genelist <- top.table$logFC
+            }
+            if (input$rankingKEGG == "-log(P-value)") {
+              genelist <- -log10(top.table$P.Value)
+            }
+            
+            
+            # name the vector
+            names(genelist) <- top.table$Gene.ID
+            
+            # omit any NA values 
+            genelist <-na.omit(genelist)
+            
+            # sort the list in decreasing order (required for clusterProfiler)
+            genelist <- sort(genelist, decreasing = TRUE)
+          }
+        }
+      }
+      
       
       return(genelist)
     })
@@ -2993,21 +3294,44 @@ server <- function(input, output, session){
         KEGGresults <- NULL
         
         if (!is.null((kegggenelist()))){
-          if (species() == "Homo sapiens"){
-            
-            if(input$oraPathway == "ora"){
-              KEGGresults <- enrichKEGG(gene = kegggenelist()[[2]],
-                                        organism = 'hsa',
-                                        pvalueCutoff = 1,
-                                        qvalueCutoff = 1)
-            }
-            
-            if(input$oraPathway == "gsea"){
-              KEGGresults <- gseKEGG(geneList = kegggenelist(),
-                                        organism = 'hsa',
-                                        pvalueCutoff = 1)
+          if ((PSannotation() == "Custom annotations") & ((rawornormalized() == "Raw") | (!is.null(normData.saved())))){
+            if (species() == "Homo sapiens"){
+              
+              if(input$oraPathway == "ora"){
+                KEGGresults <- enrichKEGG(gene = kegggenelist()[[2]],
+                                          universe = kegggenelist()[[1]],
+                                          organism = 'hsa',
+                                          pvalueCutoff = 1,
+                                          qvalueCutoff = 1)
+              }
+              
+              if(input$oraPathway == "gsea"){
+                KEGGresults <- gseKEGG(geneList = kegggenelist(),
+                                       organism = 'hsa',
+                                       pvalueCutoff = 1)
+              }
             }
           }
+          
+          if ((PSannotation() == "No annotations") | ((rawornormalized() == "Normalized") & (is.null(normData.saved())))){
+            if (input$keggOrg == "hsapiens_gene_ensembl"){
+              
+              if(input$oraPathway == "ora"){
+                KEGGresults <- enrichKEGG(gene = kegggenelist()[[2]],
+                                          universe = kegggenelist()[[1]],
+                                          organism = 'hsa',
+                                          pvalueCutoff = 1,
+                                          qvalueCutoff = 1)
+              }
+              
+              if(input$oraPathway == "gsea"){
+                KEGGresults <- gseKEGG(geneList = kegggenelist(),
+                                       organism = 'hsa',
+                                       pvalueCutoff = 1)
+              }
+            }
+          }
+
         }
 
         return(KEGGresults)
@@ -3052,9 +3376,70 @@ server <- function(input, output, session){
         escape = FALSE)
         
         
-        #Dot plot
-        output$KEGGplot <- renderPlot({
-          dotplot(KEGGresults(), showCategory = 20, orderBy = "x")
+        #Bar plot
+        output$KEGGplot <- renderPlotly({
+          req(KEGGresults())
+          req(OraGSEA_KEGG())
+          
+          plotWP <- as.data.frame(KEGGresults())
+
+          if(OraGSEA_KEGG() == "ora"){
+
+            plotWP$GeneRatio <- with(read.table(text = plotWP$GeneRatio, sep = "/"), V1 / V2)
+            
+            #Arrange based on p-value
+            plotWP<- plotWP %>%
+              dplyr::arrange(pvalue)
+            
+            #Get class
+            test <- NULL
+            for (i in 1:20){
+              test[i] <- keggGet(plotWP[i,1])[[1]]$CLASS
+            }
+            
+            plotWP1 <- plotWP[1:20,]
+            plotWP1$Class <- test
+
+            
+            #Plot
+            fig <- ggplot(plotWP1, aes(x = reorder(Description,GeneRatio), y = GeneRatio, 
+                                       fill = Class)) + 
+              geom_bar(stat="identity") +
+              theme_bw(base_size = 14) +
+              coord_flip() +
+              ylab("Gene ratio") +
+              xlab(NULL) +
+              theme(legend.position = "none")
+            
+            return(ggplotly(fig, tooltip = "fill"))
+          }
+          
+          if(OraGSEA_KEGG() == "gsea"){
+            #Arrange based on p-value
+            plotWP <- plotWP %>%
+              dplyr::arrange(pvalue)
+            
+            #Get class
+            test <- NULL
+            for (i in 1:20){
+              test[i] <- keggGet(plotWP[i,1])[[1]]$CLASS
+            }
+            
+            plotWP1 <- plotWP[1:20,]
+            plotWP1$Class <- test
+            
+            #Plot
+            fig <- ggplot(plotWP1, aes(x = reorder(Description,NES), y = NES,
+                                       fill = Class)) +
+              geom_bar(stat="identity") +
+              theme_bw(base_size = 14) +
+              coord_flip() +
+              ylab("Normalized enrichment score (NES)") +
+              xlab(NULL) +
+              theme(legend.position = "none")
+            
+            return(ggplotly(fig, tooltip = "fill"))
+          }
         })
         
         #GSEA plot
@@ -3083,8 +3468,39 @@ server <- function(input, output, session){
     )
   })
   
+  #Select organism
+  output$uiwpOrg <- renderUI({
+    if ((PSannotation() == "No annotations") | ((rawornormalized() == "Normalized") & (is.null(normData.saved())))){
+      pickerInput(
+        inputId = "wpOrg",
+        label = "Organism",
+        choices = "hsapiens_gene_ensembl",
+        options = list(
+          style = "btn-danger")
+      )
+    }
+  })
+  
+  #Select chiptype
+  output$uiwpChip <- renderUI({
+    if ((PSannotation() == "No annotations") | ((rawornormalized() == "Normalized") & (is.null(normData.saved())))){
+      pickerInput(
+        inputId = "wpChip",
+        label = "Chip type",
+        choices = c("affy_hc_g110", "affy_hg_focus", "affy_hg_u133a", "affy_hg_u133a_2", 
+                    "affy_hg_u133b", "affy_hg_u133_plus_2", "affy_hg_u95a", "affy_hg_u95av2",
+                    "affy_hg_u95b", "affy_hg_u95c", "affy_hg_u95d", "affy_hg_u95d", "affy_hg_u95e",
+                    "affy_hta_2_0", "affy_huex_1_0_st_v2", "affy_hugenefl", "affy_hugene_1_0_st_v1",
+                    "affy_hugene_2_0_st_v1", "affy_hugene_2_1_st_v1", "affy_primeview", "affy_u133_x3p"),
+        selected = get_chiptype(annotation(normData())),
+        options = list(
+          style = "btn-warning")
+      )
+    }
+  })
+  
   output$wp <- renderDataTable(NULL)
-  output$WPplot <- renderPlot(NULL)
+  output$WPplot <- renderPlotly(NULL)
   output$errorwp <- renderText(NULL)
   
   
@@ -3152,7 +3568,82 @@ server <- function(input, output, session){
           }
           
         }
-      } 
+      }
+      
+      if ((PSannotation() == "No annotations") | ((rawornormalized() == "Normalized") & (is.null(normData.saved())))){
+        
+        
+          top.table <- tryCatch({
+            top.table1 <- top.table()[[input$wpcomp]]
+            
+            ensembl <- useMart("ensembl")
+            ensembl <- useDataset(input$wpOrg,mart=ensembl)
+            
+            annotation1 <- getBM(attributes = c(input$wpChip, 'entrezgene_id'), 
+                                 filters = input$wpChip, 
+                                 values = top.table1$Probeset.ID, 
+                                 mart = ensembl)
+            
+            colnames(annotation1) <- c("Probeset.ID", "Gene.ID")
+            annotation1$Probeset.ID <- as.character(annotation1$Probeset.ID)
+            
+            top.table <- top.table1 %>%
+              inner_join(annotation1, by = c("Probeset.ID" = "Probeset.ID"))
+            
+            top.table
+            
+          },
+          error=function(cond) {
+            return(NULL)
+          })
+     
+        
+        
+        if (!is.null(top.table)){
+          
+          #ORA
+          if(input$oraPathway == "ora"){
+            bgenelist <- top.table$Gene.ID
+            
+            if(input$raworadjwp == "raw"){
+              siggenelist <- top.table %>%
+                filter(P.Value < input$pthresholdwp) %>%
+                filter(abs(logFC) > input$logFCthresholdwp)
+            }
+            
+            if(input$raworadjwp == "adj"){
+              siggenelist <- top.table %>%
+                filter(adj.P.Val < input$pthresholdwp) %>%
+                filter(abs(logFC) > input$logFCthresholdwp)
+            }
+            
+            siggenelist <- siggenelist$Gene.ID
+            
+            
+            genelist <- list(bgenelist, siggenelist)
+          }
+          
+          
+          #GSEA
+          if(input$oraPathway == "gsea"){
+            if (input$rankingWP == "logFC") {
+              genelist <- top.table$logFC
+            }
+            if (input$rankingWP == "-log(P-value)") {
+              genelist <- -log10(top.table$P.Value)
+            }
+            
+            # name the vector
+            names(genelist) <- top.table$Gene.ID
+            
+            # omit any NA values 
+            genelist <-na.omit(genelist)
+            
+            # sort the list in decreasing order (required for clusterProfiler)
+            genelist <- sort(genelist, decreasing = TRUE)
+          }
+        }
+      }
       
       return(genelist)
     })
@@ -3166,21 +3657,42 @@ server <- function(input, output, session){
       WPresults <- NULL
       
       if (!is.null((wpgenelist()))){
-        
-        if (species() == "Homo sapiens"){
-          if(input$oraPathway == "ora"){
-            WPresults <- enrichWP(gene = wpgenelist()[[2]],
-                                  organism = "Homo sapiens",
-                                  pvalueCutoff = 1,
-                                  qvalueCutoff = 1)
-          }
-          
-          if(input$oraPathway == "gsea"){
-            WPresults <- gseWP(geneList = wpgenelist(),
-                               organism = "Homo sapiens",
-                               pvalueCutoff = 1)
+        if ((PSannotation() == "Custom annotations") & ((rawornormalized() == "Raw") | (!is.null(normData.saved())))){
+          if (species() == "Homo sapiens"){
+            if(input$oraPathway == "ora"){
+              WPresults <- enrichWP(gene = wpgenelist()[[2]],
+                                    universe = wpgenelist()[[1]],
+                                    organism = "Homo sapiens",
+                                    pvalueCutoff = 1,
+                                    qvalueCutoff = 1)
+            }
+            
+            if(input$oraPathway == "gsea"){
+              WPresults <- gseWP(geneList = wpgenelist(),
+                                 organism = "Homo sapiens",
+                                 pvalueCutoff = 1)
+            }
           }
         }
+        if ((PSannotation() == "No annotations") | ((rawornormalized() == "Normalized") & (is.null(normData.saved())))){
+          if (input$wpOrg == "hsapiens_gene_ensembl"){
+            if(input$oraPathway == "ora"){
+              WPresults <- enrichWP(gene = wpgenelist()[[2]],
+                                    universe = wpgenelist()[[1]],
+                                    organism = "Homo sapiens",
+                                    pvalueCutoff = 1,
+                                    qvalueCutoff = 1)
+            }
+            
+            if(input$oraPathway == "gsea"){
+              WPresults <- gseWP(geneList = wpgenelist(),
+                                 organism = "Homo sapiens",
+                                 pvalueCutoff = 1)
+            }
+          }
+        }
+        
+
       }
       
       return(WPresults)
@@ -3222,9 +3734,54 @@ server <- function(input, output, session){
       selection = list(mode = "single", selected = 1), rownames = FALSE, 
       escape = FALSE)
       
-      #Dotplot
-      output$WPplot <- renderPlot({
-        dotplot(WPresults(), showCategory = 20, orderBy = "x")
+      #Bar plot
+      output$WPplot <- renderPlotly({
+        
+        plotWP <- as.data.frame(WPresults())
+        
+        if(OraGSEA_WP() == "ora"){
+          plotWP$GeneRatio <- with(read.table(text = plotWP$GeneRatio, sep = "/"), V1 / V2)
+          
+          #Arrange based on p-value
+          plotWP<- plotWP %>%
+            dplyr::arrange(pvalue)
+          
+          #Get the first 20 elements
+          plotWP1 <- plotWP[1:20,]
+          
+          #Plot
+          fig <- ggplot(plotWP1, aes(x = reorder(Description,GeneRatio), y = GeneRatio, 
+                                     fill = p.adjust)) + 
+            geom_bar(stat="identity") +
+            theme_bw(base_size = 14) +
+            coord_flip() +
+            scale_fill_continuous(low="blue", high="red") +
+            ylab("Gene ratio") +
+            xlab(NULL)
+          
+          return(ggplotly(fig, tooltip = "fill"))
+        }
+        
+        if(OraGSEA_WP() == "gsea"){
+          #Arrange based on p-value
+          plotWP <- plotWP %>%
+            dplyr::arrange(pvalue)
+          
+          #Get the first 20 elements
+          plotWP1 <- plotWP[1:20,]
+          
+          #Plot
+          fig <- ggplot(plotWP1, aes(x = reorder(Description,NES), y = NES,
+                                     fill = p.adjust)) +
+            geom_bar(stat="identity") +
+            theme_bw(base_size = 14) +
+            coord_flip() +
+            scale_fill_continuous(low="blue", high="red") +
+            ylab("Normalized enrichment score (NES)") +
+            xlab(NULL)
+          
+          return(ggplotly(fig, tooltip = "fill"))
+        }
       })
       
       #GSEA plot
@@ -3254,13 +3811,13 @@ server <- function(input, output, session){
     )
   })
   
+
   
-  #Parallel coordinates plot
   output$allpara <- renderPlotly({
     
     req(input$paracomp)
     
-    top.table1 = top.table()[[input$paracomp]]
+    top.table1 <- top.table()[[input$paracomp]]
     
     fig1 <- top.table1 %>% plot_ly(type = 'parcoords', 
                                    line = list(color = ~t, colorscale = "Jet"),
@@ -3281,9 +3838,6 @@ server <- function(input, output, session){
   
   
   
-  ##############################################################################
-  #Remainder
-  ##############################################################################
   #Parrallel coordinates plot
   output$topfeaturepara <- renderPlotly({
     
@@ -3299,7 +3853,7 @@ server <- function(input, output, session){
       filter(Grouping == comparison[1] | Grouping == comparison[2])
     
     
-    topfeatures <- head(top.table()[[input$paracomp]], 5L)
+    topfeatures <- head(top.table()[[input$paracomp]], 10)
     data.expr1 <- data.expr()[topfeatures$Probeset.ID,]
     data.expr1 <- data.expr1[,samples$names]
     
@@ -3325,12 +3879,96 @@ server <- function(input, output, session){
                    values = as.vector(data.expr1[4,])),
               list(range = c(min(data.expr1[5,]),max(data.expr1[5,])),
                    label = rownames(data.expr1)[5], 
-                   values = as.vector(data.expr1[5,]))
+                   values = as.vector(data.expr1[5,])),
+              list(range = c(min(data.expr1[6,]),max(data.expr1[6,])),
+                   label = rownames(data.expr1)[6], 
+                   values = as.vector(data.expr1[6,])),
+              list(range = c(min(data.expr1[7,]),max(data.expr1[7,])),
+                   label = rownames(data.expr1)[7], 
+                   values = as.vector(data.expr1[7,])),
+              list(range = c(min(data.expr1[8,]),max(data.expr1[8,])),
+                   label = rownames(data.expr1)[8], 
+                   values = as.vector(data.expr1[8,])),
+              list(range = c(min(data.expr1[9,]),max(data.expr1[9,])),
+                   label = rownames(data.expr1)[9], 
+                   values = as.vector(data.expr1[9,])),
+              list(range = c(min(data.expr1[10,]),max(data.expr1[10,])),
+                   label = rownames(data.expr1)[10], 
+                   values = as.vector(data.expr1[10,]))
               
             )
     )
     
   })
+  
+  ##############################################################################
+  #Pie chart
+  ##############################################################################
+  
+  #Select comparison
+  output$uipiecomp <- renderUI({
+    pickerInput(
+      inputId = "comp_pie",
+      label = "Comparison",
+      choices = get_contrasts(meta1()),
+      options = list(
+        style = "btn-primary")
+    )
+  })
+  
+
+  output$piechart <- renderPlotly({
+    
+    #Requirements
+    req(input$comp_pie)
+    req(input$pchoice_pie)
+    req(input$pthreshold_pie)
+    req(input$logFCthreshold_pie)
+    
+    #Settings
+    comp <- input$comp_pie
+    p.choice <- input$pchoice_pie
+    p.threshold <- input$pthreshold_pie
+    logFC.threshold <- input$logFCthreshold_pie
+    
+    #Top.table
+    top.table <- top.table()[[comp]]
+    
+    #Filtered table
+    if (p.choice == "raw"){
+      top.table$Class[(top.table$logFC < logFC.threshold & top.table$logFC > (-1 * logFC.threshold)) | top.table$P.Value > p.threshold] = "Insignificant"
+      top.table$Class[top.table$logFC < (-1 * logFC.threshold) & top.table$P.Value <= p.threshold] = "Downregulated"
+      top.table$Class[top.table$logFC >= logFC.threshold & top.table$P.Value <= p.threshold] = "Upregulated"
+    }
+    
+    if (p.choice == "adj"){
+      top.table$Class[(top.table$logFC < logFC.threshold & top.table$logFC > (-1 * logFC.threshold)) | top.table$adj.P.Val > p.threshold] = "Insignificant"
+      top.table$Class[top.table$logFC < (-1 * logFC.threshold) & top.table$adj.P.Val <= p.threshold] = "Downregulated"
+      top.table$Class[top.table$logFC >= logFC.threshold & top.table$adj.P.Val <= p.threshold] = "Upregulated"
+      
+    }
+    
+    
+    df <- data.frame("Category" = names(table(top.table$Class)), table(top.table$Class))
+    
+    fig <- plot_ly(df, labels = ~Category, 
+                   values = ~Freq, type = 'pie', textposition = 'inside',
+                   insidetextfont = list(color = '#FFFFFF'),
+                   marker = list(colors = c( 'blue', 'darkgrey', 'red'),
+                                 line = list(color = '#FFFFFF', width = 1)),
+                   showlegend = TRUE)
+    fig <- fig %>% layout(xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+                          yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+    
+    fig
+  })
+ 
+  
+  
+  ##############################################################################
+  #Remainder
+  ##############################################################################
+
   
   
   
@@ -3416,30 +4054,7 @@ server <- function(input, output, session){
     
   })
   
-  
-  
-  output$allpara <- renderPlotly({
-    
-    req(input$paracomp)
-    
-    top.table1 = top.table()[[input$paracomp]]
-    
-    fig1 <- top.table1 %>% plot_ly(type = 'parcoords', 
-                           line = list(color = ~t, colorscale = "Jet"),
-                           dimensions = list(
-                             list(label = "-log(P-value)", 
-                                  values = -log10(top.table1$P.Value),
-                                  constraintrange = c(1.3,max(-log10(top.table1$P.Value)))),
-                             list(label = "logFC", 
-                                  values = ~logFC),
-                             list(label = "AveExpr", 
-                                  values = ~AveExpr)
-                             
-                           )
-    )
-    
-    return(fig1)
-  })
+
   
 }
 
