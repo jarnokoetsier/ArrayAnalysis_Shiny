@@ -1,5 +1,6 @@
 
 ui <- tagList(
+  
   tags$head(tags$style(HTML("
                            .navbar-nav {
                            float: none !important;
@@ -7,6 +8,18 @@ ui <- tagList(
                            .navbar-nav > li:nth-child(6) {
                            float: right;
                            }
+                           .my_style_1{ 
+                             background-image: url(Background1.jpg);
+                           }
+                           
+                           .my_style_1 { margin-top: -20px; }
+                           
+                           .my_style_1 { width: 100%; }
+                           
+                           .container-fluid { padding-left: 0; padding-right: 0; }
+                           
+                           .my_style_1 { position: absolute; left: 0; }
+                           
                            "))),
   
   
@@ -14,57 +27,44 @@ ui <- tagList(
 
   useSweetAlert(),
   
-  navbarPage("ArrayAnalysis", id = "navbar",
+  navbarPage(title = "ArrayAnalysis", id = "navbar",
              
              ###################################################################
              #  Data selection                                                   
              ###################################################################
              tabPanel("Data accession", 
                       value = "panel1", 
-                      icon = icon("fas fa-home"),
+                      icon = icon("fas fa-home"), class = "my_style_1",
                       
-                      
-                      #********************************************************#
-                      #   ArrayAnalysis logo
-                      #********************************************************#
-                      
-                      fluidRow(
-                        column(12, align = "center",
-                               img(src = "logo.png", height = "250"))
-                      ),
-                      
-                      hr(),
-                      
-                      br(),
-                      
-                      #********************************************************#
-                      #   Description
-                      #********************************************************#
-                      
-                      fluidRow(
-                        column(12, align = "center",
-                               
-                               h1(strong("Welcome to ArrayAnalysis!")),
-                               
-                               h5("Get started by entering your database 
-                                  accession number or uploading your 
-                                  own files.")
-                        )
-                      ),
-                      
-                      br(),
                       
                       #********************************************************#
                       #   Data selection
                       #********************************************************#
+                      br(),
+                      br(),
+                      br(),
+                      br(),
+                      br(),
+                      br(),
                       
                       fluidRow(
+                        
                         column(4, offset = 4, 
                                align = "center", 
-                               style = "background-color:#E5E4E2;",
+                               style = "background-color:#FFFFFF;",
                                
                                br(),
                                
+                               img(src = "logo.png", width = "100%"),
+                               
+                               h1(strong(span(style = "color:#000000", "Welcome to ArrayAnalysis!"))),
+                               
+                               h5(span(style = "color:#000000", "Get started by entering your database 
+                                  accession number or uploading your 
+                                  own files.")),
+                               
+                               br(),
+
                                #Choose database
                                radioGroupButtons(
                                  inputId = "database",
@@ -98,7 +98,7 @@ ui <- tagList(
                                           label = "Example",
                                           style = "jelly",
                                           color = "royal",
-                                          icon = icon("play-circle")),
+                                          icon("fas fa-mouse-pointer")),
                                
                                #Start the analysis
                                actionBttn(inputId = "startAnalysis",
@@ -115,8 +115,8 @@ ui <- tagList(
                                           icon = icon("info")),
                                
                                br(),
-                               
-                               br() 
+                               br(),
+                               br()
                                
                                )
                         ),
@@ -138,7 +138,19 @@ ui <- tagList(
                                           icon = icon("fas fa-sign-in-alt"))
                         )
                         
-                      )
+                      ),
+                      
+                      br(),
+                      br(),
+                      br(),
+                      br(),
+                      br(),
+                      br(),
+                      br(),
+                      br(),
+                      br(),
+                      br(),
+                      br()
                       
                       
                       #********************************************************#
@@ -737,7 +749,7 @@ ui <- tagList(
                                  #Select comparison
                                  uiOutput("uipcomp"),
                                  
-                                 hr(),
+                                 br(),
                                  
                                  #P-value histogram
                                  plotlyOutput("phist") %>% 
@@ -747,7 +759,7 @@ ui <- tagList(
                         
                         
                         #******************************************************#
-                        #   logFC analysis
+                        #   logFC histogram
                         #******************************************************#
                         tabPanel("logFC histogram", value = "panel8",
                                  
@@ -759,19 +771,78 @@ ui <- tagList(
                                  h4("The logFC histogram shows the distribution of the
                                     log2 fold changes in gene expression levels."),
                                  
-                                 
                                  hr(),
                                  
                                  #Select comparison
                                  uiOutput("uilogfccomp"),
                                  
-                                 hr(),
+                                 br(),
                                  
                                  #logFC histogram
                                  plotlyOutput("logfchist") %>% 
                                    withSpinner(color="#0dc5c1")
                                  
                                  ),
+                        
+                        #******************************************************#
+                        #   Pie chart
+                        #******************************************************#
+                        tabPanel("Pie chart", value = "panel_piechart",
+                                 
+                                 #Title
+                                 h1(strong(span(style = "color:#3A3B3C", 
+                                                "Pie chart"))),
+                                 
+                                 hr(),
+                                 
+                                 fluidRow(
+                                   
+                                   column(4,
+                                          
+                                          sliderInput(
+                                            inputId = "pthreshold_pie",
+                                            label = "P threshold",
+                                            value = 0.05,
+                                            min = 0,
+                                            max = 0.5,
+                                            step = 0.01
+                                          ),
+                                          
+                                          sliderInput(
+                                            inputId = "logFCthreshold_pie",
+                                            label = "logFC threshold",
+                                            value = 0,
+                                            min = 0,
+                                            max = 5,
+                                            step = 0.1
+                                          ),
+
+                                   ),
+                                   
+                                   column(4,
+                                          
+                                          #Raw or adjusted p-value?
+                                          prettyRadioButtons(
+                                            inputId = "pchoice_pie",
+                                            label = "P-value", 
+                                            choices = 
+                                              c("Raw P-value" = "raw", 
+                                                "Adjusted P-value" = "adj")),
+                                          
+                                          #Select comparison
+                                          uiOutput("uipiecomp")
+                                   )
+                                   
+                                 ),
+                                 
+                                 br(),
+                                 
+                                 #Pie chart
+                                 plotlyOutput("piechart") %>% 
+                                   withSpinner(color="#0dc5c1")
+                                 
+                        ),
+                        
                         
                         
                         #******************************************************#
@@ -968,6 +1039,24 @@ ui <- tagList(
                                  
                                  hr(),
                                  
+                                 #Theme
+                                 dropdownButton(
+                                   tags$h3("Theme"),
+                                   
+                                   selectInput(inputId = 'heatmaptheme1',
+                                               label = NULL,
+                                               choices = c("Default", 
+                                                           "Yellow-red", 
+                                                           "Dark")),
+                                   
+                                   circle = TRUE, status = "info",
+                                   icon = icon("fas fa-cog"), width = "300px",
+                                   
+                                   tooltip = tooltipOptions(
+                                     title = "Click to change theme!")
+                                   
+                                 ),
+                                 
                                  #Heatmap
                                  plotlyOutput("topfeatureheatmap",
                                               height = "1000px",
@@ -1009,7 +1098,7 @@ ui <- tagList(
                                               
                                               fluidRow(
                                                 
-                                                column(3,
+                                                column(2,
                                                        
                                                        conditionalPanel(
                                                          condition = "input.oraGO=='ora'",
@@ -1045,7 +1134,7 @@ ui <- tagList(
                                               conditionalPanel(
                                                 condition = "input.oraGO=='ora'",
                                               
-                                              column(4,
+                                              column(3,
                                                        
                                                      #P-value threshold (ORA)
                                                        numericInput(
@@ -1062,7 +1151,7 @@ ui <- tagList(
                                                      
                                               ),
                                               
-                                              column(4,
+                                              column(3,
                                                      
                                                      #Select comparison
                                                      uiOutput("uigoacomp1"),
@@ -1078,6 +1167,16 @@ ui <- tagList(
                                                        options = list(
                                                          style = "btn-info"))
       
+                                              ),
+                                              
+                                              column(3,
+                                                     
+                                                     #Select organism
+                                                     uiOutput("uigoaOrg"),
+                                                     
+                                                     #select chiptype
+                                                     uiOutput("uigoaChip")
+                                                     
                                               )
                                               
                                             ),
@@ -1138,7 +1237,7 @@ ui <- tagList(
                                             
                                             fluidRow(
                                               
-                                              column(3,
+                                              column(2,
                                                      
                                                      conditionalPanel(
                                                        condition = "input.oraPathway=='ora'",
@@ -1175,7 +1274,7 @@ ui <- tagList(
                                               conditionalPanel(
                                                 condition = "input.oraPathway=='ora'",
                                                 
-                                                column(4,
+                                                column(3,
                                                        
                                                        #P-value threshold (ORA)
                                                        numericInput(
@@ -1192,12 +1291,22 @@ ui <- tagList(
                                                 
                                               ),
                                               
-                                              column(4,
+                                              column(3,
                                                      
                                                      #Select comparison
                                                      uiOutput("uiwpcomp")
                                                      
-                                              )
+                                              ),
+                                              
+                                              column(3,
+                                                     
+                                                     #Select organism
+                                                     uiOutput("uiwpOrg"),
+                                                     
+                                                     #select chiptype
+                                                     uiOutput("uiwpChip")
+                                                     
+                                              ),
                                               
                                             ),
                                             
@@ -1206,8 +1315,8 @@ ui <- tagList(
                                             #Error
                                             textOutput("errorwp"),
                                             
-                                            #Dot plot
-                                            plotOutput("WPplot") %>% 
+                                            #Barplot
+                                            plotlyOutput("WPplot") %>% 
                                               withSpinner(color="#0dc5c1"),
                                             
                                             #Output table
@@ -1228,7 +1337,7 @@ ui <- tagList(
                                             
                                             fluidRow(
                                               
-                                              column(3,
+                                              column(2,
                                                      
                                                      conditionalPanel(
                                                        condition = "input.oraPathway=='ora'",
@@ -1265,7 +1374,7 @@ ui <- tagList(
                                               conditionalPanel(
                                                 condition = "input.oraPathway=='ora'",
                                                 
-                                                column(4,
+                                                column(3,
                                                        
                                                        #P-value threshold (ORA)
                                                        numericInput(
@@ -1283,11 +1392,21 @@ ui <- tagList(
                                                 
                                               ),
                                               
-                                              
-                                              column(4,
+                                              column(3,
                                                      
                                                      #Select comparison
                                                      uiOutput("uikeggcomp")
+                                                     
+                                              ),
+                                              
+                                              
+                                              column(3,
+                                                     
+                                                     #Select organism
+                                                     uiOutput("uikeggOrg"),
+                                                     
+                                                     #select chiptype
+                                                     uiOutput("uikeggChip")
                                                      
                                               )
                                               
@@ -1298,8 +1417,8 @@ ui <- tagList(
                                             #Error
                                             textOutput("errorkegg"),
                                             
-                                            #Dot plot
-                                            plotOutput("KEGGplot") %>% 
+                                            #Barplot
+                                            plotlyOutput("KEGGplot") %>% 
                                               withSpinner(color="#0dc5c1"),
                                             
                                             #Ouput table
@@ -1337,7 +1456,10 @@ ui <- tagList(
                                               
                                             ),
 
-                                            plotlyOutput("allpara") %>% withSpinner(color="#0dc5c1")
+                                            plotlyOutput("allpara") %>% 
+                                              withSpinner(color="#0dc5c1"),
+                                            
+                                            plotlyOutput("topfeaturepara")
                                    )     
                               )
                         )
