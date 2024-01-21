@@ -73,7 +73,7 @@ for (pkg in BiocPackages) {
 # Example metadata
 #******************************************************************************#
 
-exampleMeta <- as.data.frame(fread("Data/metaData_GSE36980.csv"))
+exampleMeta <- as.data.frame(fread("Data/metaData_GSE6955.csv"))
 
 #******************************************************************************#
 # FilterList for biomaRt annotations
