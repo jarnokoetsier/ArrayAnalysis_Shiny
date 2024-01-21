@@ -834,11 +834,10 @@ ui <- tagList(
                                              fill = TRUE),
                           
                           br(),
-                          br(),
                           
                           #Pre-processing
                           h4(strong(tags$span(
-                            "4. Pre-processing",
+                            "5. Pre-processing",
                             tags$span(
                               icon(
                                 name = "question-circle",
