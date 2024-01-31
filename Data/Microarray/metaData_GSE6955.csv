@@ -1,0 +1,7 @@
+ID,Name,Group,Area,Age
+GSM160306,Superior Frontal Gyrus_2y_normal,CTRL,SFG,2
+GSM160307,Superior Frontal Gyrus_2-4y_RTT,RTT,SFG,3
+GSM160308,Superior Frontal Gyrus_5y_normal,CTRL,SFG,5
+GSM160309,Brain area 8/9_6y_RTT,RTT,BA,6
+GSM160310,Superior Frontal Gyrus_10y_normal,CTRL,SFG,10
+GSM160311,Brain area 8/9_8yp_RTT,RTT,BA,8

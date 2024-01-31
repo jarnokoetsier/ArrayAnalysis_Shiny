@@ -48,7 +48,6 @@ for (pkg in CRANpackages) {
 #Required Bioconductor packages:
 BiocPackages <- c("biomaRt",
                   "GEOquery",
-                  "ArrayExpress",
                   "limma",
                   "makecdfenv",
                   "bioDist",
@@ -56,7 +55,9 @@ BiocPackages <- c("biomaRt",
                   "plier",
                   "clusterProfiler",
                   "affy",
-                  "oligo")
+                  "oligo",
+                  "DESeq2",
+                  "apeglm")
 
 
 if (!requireNamespace("BiocManager", quietly = TRUE))
@@ -73,7 +74,7 @@ for (pkg in BiocPackages) {
 # Example metadata
 #******************************************************************************#
 
-exampleMeta <- as.data.frame(fread("Data/metaData_GSE6955.csv"))
+exampleMeta <- as.data.frame(fread("Data/Microarray/metaData_GSE6955.csv"))
 
 #******************************************************************************#
 # FilterList for biomaRt annotations

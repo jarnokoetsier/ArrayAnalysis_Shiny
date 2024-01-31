@@ -631,7 +631,8 @@ colorsByFactor <- function(experimentFactor) {
 # experimentFactor: factor with experimental groups (will be used for colouring)
 # normMatrix: normalized expression data (ExpressionSet)
 
-getBoxplots <- function(experimentFactor, normData){
+getBoxplots <- function(experimentFactor, normData, RNASeq = FALSE){
+  
   # Width of all the plots
   WIDTH <- 1000
   
@@ -658,8 +659,17 @@ getBoxplots <- function(experimentFactor, normData){
   legendSymbols <- sort(plotSymbols, decreasing=TRUE)
   
   Type <- "Norm"
-  tmain <- "Boxplot of normalized intensities"
-  tmtext2 <- "Normalized log intensity\n\n\n"
+  
+  if (!isTRUE(RNASeq)){
+    tmain <- "Boxplot of normalized intensities"
+    tmtext2 <- "Normalized log intensity\n\n\n"
+    description <- "Distributions should be comparable between arrays\n"
+  }
+  if (isTRUE(RNASeq)){
+    tmain <- "Boxplot of normalized counts"
+    tmtext2 <- "Normalized log counts\n\n\n"
+    description <- "Distributions should be comparable between samples\n"
+  }
   
   DataBoxplot<- tempfile(fileext='.png')
   png(file = DataBoxplot,width=WIDTH,height=HEIGHT, pointsize=POINTSIZE)
@@ -686,7 +696,7 @@ getBoxplots <- function(experimentFactor, normData){
        labels=sampleNames(normData), cex.axis=cexval)
   axis(2, cex.axis=0.7)
   mtext(tmtext2, side=2, cex=0.8)
-  mtext("Distributions should be comparable between arrays\n", side=3,
+  mtext(description, side=3,
         font=1, cex=0.7)
   dev.off()
   
@@ -706,7 +716,7 @@ getBoxplots <- function(experimentFactor, normData){
 # experimentFactor: factor with experimental groups (will be used for colouring)
 # normMatrix: normalized expression matrix
 
-getDensityplots <- function(experimentFactor, normMatrix){
+getDensityplots <- function(experimentFactor, normMatrix, RNASeq = FALSE){
   
   # Prepare dataframe
   plot_df <- tidyr::gather(as.data.frame(normMatrix))
@@ -721,12 +731,19 @@ getDensityplots <- function(experimentFactor, normMatrix){
   legendColors <- myPalette$legendColors
   names(legendColors) <- levels(experimentFactor)
   
+  if (!isTRUE(RNASeq)){
+    xaxis_name <- "Normalized log intensity"
+  }
+  if (isTRUE(RNASeq)){
+    xaxis_name <- "Normalized log counts"
+  }
+  
   #Make density plot
   densityPlot <- ggplot2::ggplot(plot_df, 
                                  ggplot2::aes(x = value, colour = key, shape = Group)) +
     ggplot2::geom_density(size = 1) +
     ggplot2::scale_colour_manual(values = plotColors) +
-    ggplot2::xlab("Normalized log intensity") +
+    ggplot2::xlab(xaxis_name) +
     ggplot2::ylab("Density") +
     ggplot2::theme_classic() +
     ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
@@ -741,6 +758,88 @@ getDensityplots <- function(experimentFactor, normMatrix){
     plotly::layout(height = 600, width = 1000)
   return(p)
   
+}
+
+
+#==============================================================================#
+# getHeatmap()
+#==============================================================================#
+
+# DESCRIPTION:
+# Make interactive heatmap of sample-sample correlations
+
+# VARIABLES:
+# experimentFactor: factor with experimental groups (will be used for colouring)
+# normMatrix: normalized expression matrix
+# clusterOption1: distance method (e.g., spearman, pearson, euclidean)
+# clusterOption2: linkage method (e.g. ward.D2)
+# theme: color theme of heatmap
+getHeatmap <- function(experimentFactor, 
+                       normMatrix,
+                       clusterOption1,
+                       clusterOption2,
+                       theme){
+  
+  # Make color palette
+  myPalette <- colorsByFactor(experimentFactor)
+  
+  # Plot colors
+  myPalette <- colorsByFactor(experimentFactor)
+  plotColors <- myPalette$plotColors
+  names(plotColors) <- colnames(normMatrix)
+  
+  # Legend colors
+  legendColors <- myPalette$legendColors
+  names(legendColors) <- levels(experimentFactor)
+  
+  #note: for computing array correlation, euclidean would not make sense
+  #only use euclidean distance to compute the similarity of the correlation
+  #vectors for the arrays
+  COpt1 <- "pearson"
+  if (tolower(clusterOption1) == "spearman") COpt1 <- "spearman"
+  crp <- cor(normMatrix, use="complete.obs", method=COpt1)
+  
+  switch(tolower(clusterOption1),
+         "pearson" = {
+           my.dist <- function(x) cor.dist(x, abs=FALSE)
+         },
+         "spearman" = {
+           my.dist <- function(x) spearman.dist(x, abs=FALSE)
+         },
+         "euclidean" = {
+           my.dist <- function(x) euc(x)
+         }
+  )
+  
+  # Perform clustering
+  my.hclust <- function(d) hclust(d, method=clusterOption2)
+  names(legendColors) <- levels(experimentFactor)
+  sidecolors <- data.frame(experimentFactor)
+  colnames(sidecolors) <- "Experimental group"
+  
+  # Select heatmap theme colour
+  if (theme == "Default"){
+    gradient = viridis(n = 256, alpha = 1, begin = 0, end = 1,
+                       option = "viridis")
+  }
+  
+  if (theme == "Yellow-red"){
+    gradient = heat.colors(100)
+  }
+  
+  if (theme == "Dark"){
+    gradient = RColorBrewer::brewer.pal(8, "Dark2")
+  }
+  
+  # Make heatmap
+  p <- heatmaply(crp, plot_method = "plotly", distfun = my.dist,
+                 hclustfun = my.hclust, symm = TRUE, seriate = "mean",
+                 titleX = FALSE, titleY = FALSE, key.title = NULL,
+                 show_dendrogram = c(TRUE, FALSE), col_side_colors = sidecolors,
+                 col_side_palette = legendColors, column_text_angle = 90,
+                 colors = gradient)
+  
+  return(p)
 }
 
 #==============================================================================#
@@ -944,15 +1043,23 @@ getStatistics <- function(normMatrix,
       # eBayes
       data.fit.eb <- limma::eBayes(data.fit.con)
       
+      temp_toptable <- limma::topTable(data.fit.eb, 
+                                       sort.by = "P",
+                                       n = Inf,
+                                       confint = TRUE)
+      
+      # Calculate SE of log2FC
+      temp_toptable$SE <- (temp_toptable$CI.R - temp_toptable$CI.L)/3.92
+      
       # get top table
-      top_table[[i]] <- limma::topTable(data.fit.eb, sort.by = "P", n = Inf)[,c("logFC",
-                                                                         "AveExpr",
-                                                                         "t",
-                                                                         "P.Value",
-                                                                         "adj.P.Val")]
+      top_table[[i]] <- temp_toptable[,c("AveExpr",
+                                         "logFC",
+                                         "SE",
+                                         "P.Value",
+                                         "adj.P.Val")]
       top_table[[i]] <- cbind(rownames(top_table[[i]]), top_table[[i]])
       rownames(top_table[[i]]) <- NULL
-      colnames(top_table[[i]]) <- c("GeneID", "log2FC", "meanExpr", "t-value",
+      colnames(top_table[[i]]) <- c("GeneID", "meanExpr", "log2FC", "log2FC SE",
                                     "p-value", "adj. p-value")
     }
     
@@ -1192,16 +1299,18 @@ selID <- function(ProbeAnnotation){
 # logFC_thres: logFC threshold
 
 ORA <- function(top_table,
-                   geneset = "GO-BP",
-                   geneID_col = colnames(top_table)[1],
-                   geneID_type = "ENTREZID",
-                   organism = "Homo sapiens",
-                   rawadj = "raw",
-                   updown = "Both",
-                   p_thres = 0.05,
-                   logFC_thres = 0){
+                geneset = "GO-BP",
+                geneID_col = colnames(top_table)[1],
+                geneID_type = "ENTREZID",
+                organism = "Homo sapiens",
+                updown = "Both",
+                topN = FALSE,
+                N = NULL,
+                rawadj = "raw",
+                p_thres = 0.05,
+                logFC_thres = 0){
   
-  tryCatch({
+  #tryCatch({
     
     #Required Bioconductor annotation packages:
     pkg <- switch(organism,
@@ -1211,6 +1320,7 @@ ORA <- function(top_table,
                   "Mus musculus" = "org.Mm.eg.db",
                   "Rattus norvegicus" = "org.Rn.eg.db"
     )
+    
     
     if (!requireNamespace(pkg, quietly = TRUE))
       BiocManager::install(pkg, ask = FALSE)
@@ -1228,18 +1338,27 @@ ORA <- function(top_table,
     }
     
     # Select differentially expressed gens (DEGs, geneList)
-    if (rawadj == "raw"){
-      geneList <- top_table[((abs(top_table[,"log2FC"])) > logFC_thres) & 
-                              (top_table[,"p-value"] < p_thres),
-                            geneID_col]
+    
+    if (isTRUE(topN)){
+      top_table_sort <- arrange(top_table, `p-value`)
+      geneList <- head(top_table,N)[,geneID_col]
       geneList <- unlist(geneList, ", ")
+      
+    } else{
+      if (rawadj == "raw"){
+        geneList <- top_table[((abs(top_table[,"log2FC"])) > logFC_thres) & 
+                                (top_table[,"p-value"] < p_thres),
+                              geneID_col]
+        geneList <- unlist(geneList, ", ")
+      }
+      if (rawadj == "adj"){
+        geneList <- top_table[((abs(top_table[,"log2FC"])) > logFC_thres) & 
+                                (top_table[,"adj. p-value"] < p_thres),
+                              geneID_col]
+        geneList <- unlist(geneList, ", ")
+      }
     }
-    if (rawadj == "adj"){
-      geneList <- top_table[((abs(top_table[,"log2FC"])) > logFC_thres) & 
-                              (top_table[,"adj. p-value"] < p_thres),
-                            geneID_col]
-      geneList <- unlist(geneList, ", ")
-    }
+
     
     # perform ORA
     ORA_data <- NULL
@@ -1344,9 +1463,9 @@ ORA <- function(top_table,
     ORA_data@result <- output
     
     return(ORA_data)
-  }, error = function(cond){
-    NULL
-  })
+  #}, error = function(cond){
+   # NULL
+  #})
 }
 
 #==============================================================================#
@@ -1552,4 +1671,499 @@ makeORAnetwork <- function(ORA_data, layout, nSets){
     ggplot2::scale_color_gradient(low = "#6BAED6", high = "#FB6A4A")
   
   return(p)
+}
+
+#==============================================================================#
+# readRNASeq()
+#==============================================================================#
+
+# DESCRIPTION:
+# Read RNA-seq data
+
+# VARIABLES:
+# path: path to expression matrix
+
+readRNASeq <- function(path){
+  
+  # Read matrix
+  exprMatrix <- as.matrix(data.table::fread(path))
+  
+  # Set rownames
+  rownames(exprMatrix) <- exprMatrix[,1]
+  exprMatrix <- exprMatrix[,-1]
+  
+  # Make numeric
+  exprMatrix_num <- matrix(as.numeric(exprMatrix), nrow = nrow(exprMatrix), ncol = ncol(exprMatrix))
+  
+  # Set rownames and column names of numeric matrix
+  rownames(exprMatrix_num) <- rownames(exprMatrix) 
+  colnames(exprMatrix_num) <- colnames(exprMatrix)
+  
+  # Return expression matrix
+  return(exprMatrix_num)
+}
+
+#==============================================================================#
+# RNASeqNormalization()
+#==============================================================================#
+
+# DESCRIPTION:
+# Perform filtering and normalization (DESeq2) of RNA-seq data
+
+# VARIABLES:
+# gxData: matrix of raw counts
+# metaData: meta data
+# filterThreshold: minimum number of counts for n = smallestGroupSize
+# smallestGroupSize: size of smallest experimental group
+
+RNASeqNormalization <- function(gxData,
+                                metaData,
+                                filterThres = 10,
+                                smallestGroupSize){
+  
+  # Generate DESeqDataSet object
+  dds <- DESeqDataSetFromMatrix(countData = gxData,
+                                colData = metaData,
+                                design = ~0)
+  
+  # Filtering
+  keep <- rowSums(counts(dds) >= filterThres) >= smallestGroupSize
+  dds <- dds[keep,]
+  
+  # estimate size factors (for normalization)
+  dds <- estimateSizeFactors(dds)
+  
+  # Return normalized counts
+  normalized_counts <- log2(counts(dds, normalized=TRUE)+1)
+  return(normalized_counts)
+}
+
+#==============================================================================#
+# RNASeqNormalization_processed()
+#==============================================================================#
+
+# DESCRIPTION:
+# Additional processing of processed data (ExpressionSet)
+
+# VARIABLES:
+# gxData: matrix of normalized counts
+# experimentFactor: factor of experimental group
+# transMeth: transformation method (e.g., "None", "Log2-transformation")
+# normMeth: normalization method (e.g., "None", "Quantile")
+# perGroup_name: perform normalization per group?
+
+RNASeqNormalization_processed <- function(gxMatrix,
+                                          experimentFactor,
+                                          transMeth,
+                                          normMeth,
+                                          perGroup_name){
+  
+  # Get expression values from data object
+  m <- gxMatrix
+  
+  # Perform log2-transformation (if selected)
+  if (transMeth == "Log2-transformation"){
+    m <- m[rowSums(m<=0)==0,]
+    m <- log2(m+1)
+  }
+  
+  # No additional normalization
+  if(normMeth == "None"){
+    gxMatrix_final <-  m
+  }
+  
+  # Quantile normalization
+  if(normMeth == "Quantile"){
+    
+    # Use all array for normalization
+    if (perGroup_name == "Use all arrays"){
+      m <- limma::normalizeQuantiles(m)
+      gxMatrix_final <- m
+    } else{
+      for (g in levels(experimentFactor)){
+        m[,experimentFactor == g] <- limma::normalizeQuantiles(m[,experimentFactor == g])
+      }
+      # Perform normalization per experimental group
+      gxMatrix_final <- m
+    }
+  }
+  return(gxMatrix_final)
+}
+
+#==============================================================================#
+# getStatistics_RNASeq()
+#==============================================================================#
+
+# DESCRIPTION:
+# Perform statistical analysis (DESeq2) and optionally gene annotation (biomaRt)
+
+# VARIABLES:
+# rawMatrix: matrix of raw counts
+# metaData: meta data
+# expFactor: column name(s) of the meta data that contain the experimental factor
+# covGroups_num: continuous/numerical covariates
+# covGroups_char: discrete/character covariates
+# comparisons: for which which comparisons to calculate statistics
+# filterThreshold: minimum number of counts for n = smallestGroupSize
+# smallestGroupSize: size of smallest experimental group
+# addAnnotation: add biomaRt annotations to the output table
+# biomart_dataset: biomaRt dataset (e.g., hsapiens_gene_ensembl)
+# biomart_attributes: biomaRt attributes (output IDs)
+# biomart_filters: biomaRt filters (input IDs)
+
+getStatistics_RNASeq <- function(rawMatrix, 
+                                 metaData, 
+                                 expFactor, 
+                                 covGroups_num, 
+                                 covGroups_char, 
+                                 comparisons,
+                                 filterThres = 10,
+                                 smallestGroupSize,
+                                 addAnnotation = TRUE,
+                                 biomart_dataset = "hsapiens_gene_ensembl",
+                                 biomart_attributes = c("ensembl_gene_id",
+                                                        "entrezgene_id",
+                                                        "gene_name"),
+                                 biomart_filters = "entrezgene_id"){
+  tryCatch({
+    metaData <- metaData[,c(expFactor, covGroups_num, covGroups_char)]
+    
+    
+    
+    # Get experiment factor
+    if(length(expFactor) > 1){
+      experimentFactor <- factor(make.names(apply(metaData[,expFactor], 1, paste, collapse = "_" )))
+    } else{
+      experimentFactor <- factor(make.names(metaData[,expFactor]))
+    }
+    
+    # Get covariates
+    for (n in covGroups_num){
+      metaData[,n] <- as.numeric(metaData[,n])
+    }
+    for (c in covGroups_char){
+      metaData[,c] <- factor(metaData[,c])
+    }
+    covariates <- c(covGroups_num, covGroups_char)
+    
+    # Make formula
+    if (!is.null(covariates)){
+      formula <- paste0("~ ", "experimentFactor + ", paste0(covariates, collapse = " + "))
+    } else {
+      formula <- paste0("~ ", "experimentFactor + ")
+    }
+    
+    # make DESeqDataSet object
+    sampleInfo <- cbind.data.frame(experimentFactor, metaData[,covariates])
+    colnames(sampleInfo) <- c("experimentFactor", covariates)
+    rownames(sampleInfo) <- rownames(metaData)
+    dds <- DESeq2::DESeqDataSetFromMatrix(countData = rawMatrix,
+                                  colData = sampleInfo,
+                                  design = as.formula(formula))
+    # Filtering
+    keep <- rowSums(counts(dds) >= filterThres) >= smallestGroupSize
+    dds <- dds[keep,]
+    
+    
+    # Perform statistical comparison for each of the selected comparison
+    top_table <- list()
+    for (i in comparisons){
+      
+      # Change level
+      referenceLevel <- make.names(stringr::str_split(i," - ")[[1]][2])
+      dds$experimentFactor <- relevel(dds$experimentFactor, ref = referenceLevel)
+      dds <- DESeq2::DESeq(dds)
+      
+      contrastName <- paste("experimentFactor",
+                            make.names(stringr::str_split(i," - ")[[1]][1]),
+                            "vs",
+                            make.names(stringr::str_split(i," - ")[[1]][2]), sep = "_")
+      #res <- results(dds, name=contrastName)
+      resLFC <- as.data.frame(DESeq2::lfcShrink(dds, coef=contrastName, type="apeglm"))
+      resLFC <- dplyr::arrange(resLFC,by = pvalue)
+      
+      top_table[[i]] <- resLFC[,c("baseMean",
+                                  "log2FoldChange",
+                                  "lfcSE",
+                                  "pvalue",
+                                  "padj")]
+      top_table[[i]] <- cbind(rownames(top_table[[i]]), top_table[[i]])
+      rownames(top_table[[i]]) <- NULL
+      colnames(top_table[[i]]) <- c("GeneID", "meanExpr", "log2FC", "log2FC SE",
+                                    "p-value", "adj. p-value")
+    }
+    
+    # Add annotations to table if this option is selected
+    if (isTRUE(addAnnotation)){
+      
+      # Change attribute and filter name
+      if (biomart_dataset == "hsapiens_gene_ensembl"){
+        biomart_attributes1 <- stringr::str_replace(biomart_attributes,
+                                                    "gene_name",
+                                                    "hgnc_symbol")
+        biomart_filters1 <- stringr::str_replace(biomart_filters,
+                                                 "gene_name",
+                                                 "hgnc_symbol")
+      } else{
+        biomart_attributes1 <- stringr::str_replace(biomart_attributes,
+                                                    "gene_name",
+                                                    "external_gene_name")
+        biomart_filters1 <- stringr::str_replace(biomart_filters,
+                                                 "gene_name",
+                                                 "external_gene_name")
+      }
+      
+      
+      # Do this for each top table in the list
+      for (t in 1:length(top_table)){
+        
+        # Round numbers in top table
+        for (n in 2:6){
+          top_table[[t]][,n] <- signif(top_table[[t]][,n],3)
+        }
+        
+        # Get annotations
+        ensembl <- biomaRt::useMart("ensembl")
+        ensembl <- biomaRt::useDataset(biomart_dataset, mart=ensembl)
+        annotations <- biomaRt::getBM(attributes=biomart_attributes1, 
+                                      filters = biomart_filters1,
+                                      values = top_table[[t]]$GeneID,
+                                      mart = ensembl)
+        
+        # Convert entrezgene id to character
+        if("entrezgene_id" %in% biomart_attributes){
+          annotations$entrezgene_id <- as.character(annotations$entrezgene_id)
+        }
+        annotations[annotations == ""] <- NA
+        annotations[annotations == " "] <- NA
+        
+        # Combine annotations with top table
+        annotations[,biomart_filters] <- as.character(annotations[,biomart_filters])
+        top_table_ann <- dplyr::left_join(top_table[[t]], annotations,
+                                          by = c("GeneID" = biomart_filters))
+        
+        colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "gene_name"
+        colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "gene_name"
+        
+        # Make sure that there are no duplicate gene ids
+        for (a in 1:(ncol(top_table_ann)-6)){
+          temp1 <- unique(top_table_ann[,c(1,6+a)])
+          temp1 <- temp1[!is.na(temp1[,2]),]
+          temp_ann <- temp1 %>%
+            dplyr::group_by(GeneID) %>%
+            dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = ", "))
+          
+          top_table[[t]] <- dplyr::left_join(top_table[[t]], temp_ann,
+                                             by = c("GeneID" = "GeneID"))
+        }
+        
+      }
+      
+    }
+    return(top_table)
+  }, error = function(cond){
+    NULL
+  })
+}
+
+
+
+#==============================================================================#
+# getStatistics_RNASeq_processed()
+#==============================================================================#
+
+# DESCRIPTION:
+# Perform statistical analysis (limma) and optionally probeset annotation (biomaRt)
+
+# VARIABLES:
+# normMatrix: normalized intensity matrix
+# metaData: meta data
+# expFactor: column name(s) of the meta data that contain the experimental factor
+# covGroups_num: continuous/numerical covariates
+# covGroups_char: discrete/character covariates
+# addAnnotation: add biomaRt annotations to the output table
+# biomart_dataset: biomaRt dataset (e.g., hsapiens_gene_ensembl)
+# biomart_attributes: biomaRt attributes (output IDs)
+# biomart_filters: biomaRt filters (input IDs)
+
+getStatistics_RNASeq_processed <- function(normMatrix, 
+                                           metaData, 
+                                           expFactor, 
+                                           covGroups_num, 
+                                           covGroups_char, 
+                                           comparisons,
+                                           addAnnotation = TRUE,
+                                           biomart_dataset = "hsapiens_gene_ensembl",
+                                           biomart_attributes = c("ensembl_gene_id",
+                                                                  "entrezgene_id",
+                                                                  "gene_name"),
+                                           biomart_filters = "entrezgene_id"){
+  tryCatch({
+    # Get experiment factor
+    if(length(expFactor) > 1){
+      experimentFactor <- factor(make.names(apply(metaData[,expFactor], 1, paste, collapse = "_" )))
+    } else{
+      experimentFactor <- factor(make.names(metaData[,expFactor]))
+    }
+    
+    # Get covariates
+    for (n in covGroups_num){
+      metaData[,n] <- as.numeric(metaData[,n])
+    }
+    for (c in covGroups_char){
+      metaData[,c] <- as.character(metaData[,c])
+    }
+    covariates <- c(covGroups_num, covGroups_char)
+    
+    # Make formula
+    if (!is.null(covariates)){
+      formula <- paste("~ 0", "experimentFactor", paste0("metaData$`",covariates,"`", collapse = "+"),sep = "+")
+    } else {
+      formula <- paste("~ 0", "experimentFactor",sep = "+")
+    }
+    
+    # Make design matrix
+    design <- model.matrix(as.formula(formula))
+    colnames(design)[1:length(levels(experimentFactor))] <- make.names(levels(factor(experimentFactor)))
+    colnames(design) <- make.names(colnames(design))
+    
+    v <- voom(normMatrix, design, plot=FALSE)
+    
+    #fit linear model
+    data.fit <- limma::lmFit(v,design)
+    
+    # Perform statistical comparison for each of the selected comparison
+    top_table <- list()
+    for (i in comparisons){
+      
+      # Make contrast
+      contrast.matrix <- limma::makeContrasts(contrasts = i,levels=design)
+      
+      # Fit contrasts
+      data.fit.con <- limma::contrasts.fit(data.fit,contrast.matrix)
+      
+      # eBayes
+      data.fit.eb <- limma::eBayes(data.fit.con)
+      
+      temp_toptable <- limma::topTable(data.fit.eb, 
+                                       sort.by = "P",
+                                       n = Inf,
+                                       confint = TRUE)
+      
+      # Calculate SE of log2FC
+      temp_toptable$SE <- (temp_toptable$CI.R - temp_toptable$CI.L)/3.92
+      
+      # get top table
+      top_table[[i]] <- temp_toptable[,c("AveExpr",
+                                         "logFC",
+                                         "SE",
+                                         "P.Value",
+                                         "adj.P.Val")]
+      top_table[[i]] <- cbind(rownames(top_table[[i]]), top_table[[i]])
+      rownames(top_table[[i]]) <- NULL
+      colnames(top_table[[i]]) <- c("GeneID", "meanExpr", "log2FC", "log2FC SE",
+                                    "p-value", "adj. p-value")
+    }
+    
+    # Add annotations to table if this option is selected
+    if (addAnnotation == TRUE){
+      
+      # Change attribute name
+      if (biomart_dataset == "hsapiens_gene_ensembl"){
+        biomart_attributes1 <- stringr::str_replace(biomart_attributes,
+                                                    "gene_name",
+                                                    "hgnc_symbol")
+      } else{
+        biomart_attributes1 <- stringr::str_replace(biomart_attributes,
+                                                    "gene_name",
+                                                    "external_gene_name")
+      }
+      
+      
+      # Do this for each top table in the list
+      for (t in 1:length(top_table)){
+        
+        # Round numbers in top table
+        for (n in 2:6){
+          top_table[[t]][,n] <- signif(top_table[[t]][,n],3)
+        }
+        
+        # Get annotations
+        ensembl <- biomaRt::useMart("ensembl")
+        ensembl <- biomaRt::useDataset(biomart_dataset, mart=ensembl)
+        annotations <- biomaRt::getBM(attributes=biomart_attributes1, 
+                                      filters = biomart_filters,
+                                      values = top_table[[t]]$GeneID,
+                                      mart = ensembl)
+        
+        # Convert entrezgene id to character
+        if("entrezgene_id" %in% biomart_attributes){
+          annotations$entrezgene_id <- as.character(annotations$entrezgene_id)
+        }
+        annotations[annotations == ""] <- NA
+        annotations[annotations == " "] <- NA
+        
+        # Combine annotations with top table
+        annotations[,biomart_filters] <- as.character(annotations[,biomart_filters])
+        top_table_ann <- dplyr::left_join(top_table[[t]], annotations,
+                                          by = c("GeneID" = biomart_filters))
+        
+        colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "gene_name"
+        colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "gene_name"
+        
+        # Make sure that there are no duplicate gene ids
+        for (a in 1:(ncol(top_table_ann)-6)){
+          temp1 <- unique(top_table_ann[,c(1,6+a)])
+          temp1 <- temp1[!is.na(temp1[,2]),]
+          temp_ann <- temp1 %>%
+            dplyr::group_by(GeneID) %>%
+            dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = ", "))
+          
+          top_table[[t]] <- dplyr::left_join(top_table[[t]], temp_ann,
+                                             by = c("GeneID" = "GeneID"))
+        }
+        
+      }
+      
+    }
+    return(top_table)
+  }, error = function(cond){
+    NULL
+  })
+}
+
+
+#==============================================================================#
+# checkTransformation()
+#==============================================================================#
+
+# DESCRIPTION:
+# Check if transformation is required
+
+# VARIABLES:
+# gxMatrix: expression matrix
+# RNASeq data?
+
+checkTransformation <- function(gxMatrix, RNASeq = TRUE){
+  
+  if (isTRUE(RNASeq)){
+    gxMatrix <- gxMatrix[rowSums(gxMatrix<=0)==0,]
+    r <- range(gxMatrix)
+    diff <- r[2]-r[1]
+    if (diff > 500){
+      output <- "Count matrix"
+    } else{
+      output <- "log-transformed matrix"
+    }
+  } else{
+    gxMatrix <- gxMatrix[rowSums(gxMatrix<=0)==0,]
+    r <- range(gxMatrix)
+    diff <- r[2]-r[1]
+    if (diff > 500){
+      output <- "Count matrix"
+    } else{
+      output <- "log-transformed matrix"
+    }
+  }
+  return(output)
 }
