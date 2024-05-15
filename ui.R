@@ -82,18 +82,17 @@ ui <- tagList(
                                  br(),
                                  
                                  # Analyse microarray or RNA-seq data?
-                                 radioGroupButtons(
+                                 shinyWidgets::radioGroupButtons(
                                    inputId = "microarray_or_rnaseq",
                                    label = NULL,
-                                   choices = c("Microarray", 
-                                               "RNA-Seq",
-                                               "Documentation"),
+                                   choices = c("Microarray analysis" = "Microarray", 
+                                               "RNA-Seq analysis" = "RNA-Seq"),
                                    status = "danger",
                                    selected = "Microarray"
                                  ),
                                  
                                  # Analyse raw or processed data?
-                                 prettyRadioButtons(
+                                 shinyWidgets::prettyRadioButtons(
                                    inputId = "raw_or_norm",
                                    label = NULL, 
                                    choices = c("Raw data", "Processed data"),
@@ -105,7 +104,7 @@ ui <- tagList(
                                  br(),
                                  
                                  # Action button: start analysis by clicking
-                                 actionBttn(inputId = "startAnalysis",
+                                 shinyWidgets::actionBttn(inputId = "startAnalysis",
                                             label = "Start Analysis",
                                             style = "simple",
                                             color = "primary",
@@ -152,36 +151,48 @@ ui <- tagList(
                           #Title
                           h2(strong("Data upload")),
                           h5("Before you can run the analysis workflow, you first 
-                           need to upload the expression data as well as the meta data."),
+                           need to upload the expression data and a metadata table."),
                           
                           hr(),
                           
+                          # Description upload expression data
                           h4(strong("1. Upload expression data")),
-                          h5("The expression data should be supplied as an .zip folder
-                           containing all '.CEL.gz' files. The file names should match with
-                           the sample IDs in the meta data."),
+                          h5("The expression data should be supplied as an ", 
+                             em(".zip"), " folder containing all ", em(".CEL.gz"), 
+                             " files. The file names should match with
+                           the sample IDs in the metadata table."),
+                          
+                          # File input for upload expression data
                           fileInput(inputId = "uploadCEL_microarray_raw",
                                     label = NULL,
                                     accept = ".zip",
                                     placeholder = "Select .zip data file"),
                           
-                          h4(strong("2. Upload meta data")),
-                          h5("The meta data includes relevant information (e.g., diagnostic group)
-                           about the samples. You can upload the meta data as a 
-                           .csv/.tsv file or upload a Series Matrix file.", 
-                             "Click ", downloadLink('downloadmeta_example', 'here'),
-                             "for an example .csv meta data file. A Series Matrix File
-                           can be downloaded from the GEO website."),
+                          # Description upload metadata
+                          h4(strong("2. Upload metadata")),
+                          h5("The meta data includes relevant information 
+                          (e.g., diagnostic group) about the samples. 
+                             You can upload the metadata as a ", em(".csv/.tsv"),
+                             " file or upload a Series Matrix file.", "Click ", 
+                             downloadLink('downloadmeta_example_microarray_raw', 
+                                          'here'),
+                             "for an example ",em(".csv"), " metadata table. 
+                             A Series Matrix File can be downloaded from the ",
+                             a("GEO website.", 
+                               href = "https://www.ncbi.nlm.nih.gov/geo/",
+                               target="_blank")),
                           
-                          prettyRadioButtons(inputId = "MetaFileType", 
+                          # Select .csv/.tsv or Series Matrix File
+                          shinyWidgets::prettyRadioButtons(inputId = "MetaFileType_microarray_raw", 
                                              label = NULL, 
                                              choices = c(".tsv/.csv file",
                                                          "Series Matrix File"),
                                              inline = TRUE,
                                              fill = TRUE),
                           
+                          # .tsv/.csv file input for upload metadata
                           conditionalPanel(
-                            condition = "input.MetaFileType=='.tsv/.csv file'",
+                            condition = "input.MetaFileType_microarray_raw=='.tsv/.csv file'",
                             fileInput(inputId = "uploadMeta_microarray_raw_tsv",
                                       label = NULL,
                                       accept = c(".tsv",".csv"),
@@ -189,8 +200,9 @@ ui <- tagList(
                             
                           ),
                           
+                          # Series Matrix File input for upload metadata
                           conditionalPanel(
-                            condition = "input.MetaFileType=='Series Matrix File'",
+                            condition = "input.MetaFileType_microarray_raw=='Series Matrix File'",
                             fileInput(inputId = "uploadMeta_microarray_raw_smf",
                                       label = NULL,
                                       accept = ".txt.gz",
@@ -199,24 +211,28 @@ ui <- tagList(
                           ),
                           
                           # Confirm upload
-                          actionBttn(inputId = "upload_microarray_raw",
+                          shinyWidgets::actionBttn(inputId = "upload_microarray_raw",
                                      label = "Read data",
                                      style = "simple",
                                      color = "primary",
                                      icon = icon("fas fa-upload")),
-                          actionBttn(inputId = "example_microarray_raw",
+                          
+                          # Run example
+                          shinyWidgets::actionBttn(inputId = "example_microarray_raw",
                                      label = "Run example",
                                      style = "simple",
                                      color = "warning",
                                      icon = icon("cloud-arrow-up")),
                           
-                          
+                          # Button to go to next tab
                           uiOutput("next_upload_microarray_raw")
                           
                         ), # End of side panel
                         
                         # Main panel
                         mainPanel(
+                          
+                          # Expression matrix and meta data table
                           uiOutput("UI_upload_microarray_raw")
                         )
                         
@@ -253,12 +269,12 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Uncheck the box to exclude samples from the analysis.", 
+                              prompter::add_prompt(message = "Uncheck the box to exclude samples from the analysis.", 
                                          position = "right",
                                          size = "large")
                           ))),
                           
-                          awesomeCheckbox(inputId = "outlier",
+                          shinyWidgets::awesomeCheckbox(inputId = "outlier_microarray_raw",
                                           label = "Keep all samples", 
                                           value = TRUE,
                                           status = "danger"),
@@ -274,8 +290,11 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "The experimental groups are the 
-                                       groups that you would like to compare, like disease status groups.", 
+                              prompter::add_prompt(message = "The experimental groups are the 
+                                       groups that you would like to compare to each other (e.g., disease vs healthy). 
+                                                   The selected groups will only be used in the pre-processing in case
+                                                   normalization 'Per experimental group' is selected. The selected groups
+                                                   will also be used for the visualization of the pre-processing quality.", 
                                          position = "right",
                                          size = "large")
                           ))),
@@ -294,7 +313,7 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Select the normalization method 
+                              prompter::add_prompt(message = "Select the normalization method 
                                        and whether you would like to do the normalization
                                        on all arrays or per experimental group.", 
                                          position = "right",
@@ -302,12 +321,12 @@ ui <- tagList(
                           ))),
                           
                           
-                          radioGroupButtons(inputId = "normMeth_microarray", 
+                          shinyWidgets::radioGroupButtons(inputId = "normMeth_microarray_raw", 
                                             label = NULL, 
                                             choices = c("RMA","GCRMA","PLIER"), #"None"
                                             status = "danger"),
                           
-                          prettyRadioButtons(inputId = "perGroup_microarray", 
+                          shinyWidgets::prettyRadioButtons(inputId = "perGroup_microarray_raw", 
                                              label = NULL, 
                                              choices = c("Use all arrays",
                                                          "Per experimental group"),
@@ -325,14 +344,15 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Select the probeset annotation. 
+                              prompter::add_prompt(message = "Select the probeset annotation. 
                                        ENTREZG or ENSG custom annotations are recommended.
-                                       If no annotation is selected, the affy annotation will be used.", 
+                                       If no annotation is selected, the standard affy annotations 
+                                       will be used by default.", 
                                          position = "right",
                                          size = "large")
                           ))),
                           
-                          selectInput(inputId = "annotations_microarray",
+                          selectInput(inputId = "annotations_microarray_raw",
                                       label = NULL,
                                       choices = c("No annotations",
                                                   "Custom annotations",
@@ -340,11 +360,11 @@ ui <- tagList(
                                       selected = "Custom annotations"),
                           
                           conditionalPanel(
-                            condition = "input.annotations_microarray=='Custom annotations'",
+                            condition = "input.annotations_microarray_raw=='Custom annotations'",
                             
                             uiOutput("UI_species_microarray_raw"),
                             
-                            selectInput(inputId = "CDFtype_microarray",
+                            selectInput(inputId = "CDFtype_microarray_raw",
                                         label = "Annotation format",
                                         choices = c("ENTREZG","REFSEQ","ENSG",
                                                     "ENSE","ENST","VEGAG","VEGAE",
@@ -352,9 +372,9 @@ ui <- tagList(
                                                     "MIRBASEF","MIRBASEG"))
                           ),
                           conditionalPanel(
-                            condition = "input.annotations_microarray=='Upload annotation file'",
+                            condition = "input.annotations_microarray_raw=='Upload annotation file'",
                             
-                            fileInput(inputId = "annot_file_microarray",
+                            fileInput(inputId = "annot_file_microarray_raw",
                                       label = "Upload annotation file",
                                       multiple = FALSE)
                           ),
@@ -369,13 +389,13 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Click to perform the pre-processing!", 
+                              prompter::add_prompt(message = "Click to perform the pre-processing!", 
                                          position = "right",
                                          size = "large")
                           ))),
                           
                           
-                          actionBttn(inputId = "start_preprocessing_microarray_raw",
+                          shinyWidgets::actionBttn(inputId = "start_preprocessing_microarray_raw",
                                      label = "Calculate",
                                      style = "simple",
                                      color = "warning",
@@ -407,14 +427,23 @@ ui <- tagList(
                tabPanel("Statistical analysis", value = "panel_statistics_microarray_raw", 
                         icon = icon("fas fa-chart-bar"),
                         
+                        #******************************************************#
+                        #   Information
+                        #******************************************************#
+                        
                         sidebarPanel(
                           h2(strong("Statistical analysis")),
-                          
                           h5("In the statistical analysis step, 
-                        you can select which groups to compare to each other and 
+                        you can find differentially expressed genes by selecting 
+                        which groups to compare to each other and 
                            which covariates to add to the statistical model."),
-                          
                           hr(),
+                          
+                          #******************************************************#
+                          #   Options
+                          #******************************************************#
+                          
+                          # Make comparisons
                           h4(strong(tags$span(
                             "1. Make comparisons",
                             tags$span(
@@ -422,32 +451,44 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Select which experimental groups you want 
-                                       to compare to each other.", 
+                              prompter::add_prompt(message = "Select which experimental groups you want 
+                                       to compare to each other. Please be aware of the 
+                                                   direction of the comparison! This will 
+                                                   influence the logFC estimate.", 
                                          position = "right",
                                          size = "large")
                           ))),
+                          
+                          # Select experimental factor
                           uiOutput("UI_expFactor_microarray_raw"),
+                          
+                          # Select comparison(s)
                           uiOutput("UI_comparisons_microarray_raw"),
                           htmlOutput("expFactor_levels_micorarray_raw"),
                           br(),
                           
+                          # Select covariates
                           h4(strong(tags$span(
-                            "2. Add covariated",
+                            "2. Add covariates",
                             tags$span(
                               icon(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Adjust for variables like age and sex 
+                              prompter::add_prompt(message = "Adjust for variables like age and sex 
                                        by adding them as covariates to the model.", 
                                          position = "right",
                                          size = "large")
                           ))),
+                          
+                          # Continuous/numeric covariates
                           uiOutput("UI_covGroups_num_microarray_raw"),
+                          
+                          # Descrete/character covariates
                           uiOutput("UI_covGroups_char_microarray_raw"),
                           br(),
                           
+                          # Add gene annotations to top table using biomaRt
                           h4(strong(tags$span(
                             "3. Add gene annotation",
                             tags$span(
@@ -455,12 +496,12 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Add gene annotations from biomaRt to 
+                              prompter::add_prompt(message = "Add gene annotations from biomaRt to 
                                        the output.", 
                                          position = "right",
                                          size = "large")
                           ))),
-                          awesomeCheckbox(inputId = "addAnnotation_microarray_raw",
+                          shinyWidgets::awesomeCheckbox(inputId = "addAnnotation_microarray_raw",
                                           label = "Add gene annotations from biomaRt", 
                                           value = FALSE,
                                           status = "danger"),
@@ -478,11 +519,11 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Click to start the statistical analysis!", 
+                              prompter::add_prompt(message = "Click to start the statistical analysis!", 
                                          position = "right",
                                          size = "large")
                           ))),
-                          actionBttn(inputId = "calculate_statistics_microarray_raw",
+                          shinyWidgets::actionBttn(inputId = "calculate_statistics_microarray_raw",
                                      label = "Calculate",
                                      style = "simple",
                                      color = "warning",
@@ -525,7 +566,7 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Choose from the comparisons for which 
+                              prompter::add_prompt(message = "Choose from the comparisons for which 
                                        the statistical analysis was performed in the previous step.", 
                                          position = "right",
                                          size = "large")
@@ -540,7 +581,7 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "A geneset is a collection of genes that are association 
+                              prompter::add_prompt(message = "A geneset is a collection of genes that are association 
                                        with a specific biological process (GO-BP), molecular function (GO-MF),
                                        cellular component (GO-CC), or biological pathway (WikiPathways).", 
                                          position = "right",
@@ -561,14 +602,14 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Tip: look at the volcano plot in the previous 
+                              prompter::add_prompt(message = "Tip: look at the volcano plot in the previous 
                                        step (statistical analysis) to find the optimal P value and 
                                        logFC thresholds.", 
                                          position = "right",
                                          size = "large")
                           ))),
                           # Up/down regulated genes only
-                          prettyRadioButtons(
+                          shinyWidgets::prettyRadioButtons(
                             inputId = "updown_ORA_microarray_raw",
                             label = "Perform ORA on ...", 
                             choices = 
@@ -580,7 +621,7 @@ ui <- tagList(
                             fill = TRUE),
                           
                           # top N or logFC/P value threshold
-                          radioGroupButtons(inputId = "topNorThres_microarray_raw",
+                          shinyWidgets::radioGroupButtons(inputId = "topNorThres_microarray_raw",
                                             label = "Select DEGs based on ...", 
                                             choices = c("Threshold", 
                                                         "Top N"),
@@ -597,7 +638,7 @@ ui <- tagList(
                               value = 0.05),
                             
                             # Raw or adjusted P value?
-                            prettyRadioButtons(inputId = "rawp_ORA_microarray_raw", 
+                            shinyWidgets::prettyRadioButtons(inputId = "rawp_ORA_microarray_raw", 
                                                label = NULL, 
                                                choices = c("Raw P value" = "raw", 
                                                            "Adjusted P value" = "adj"),
@@ -620,7 +661,7 @@ ui <- tagList(
                               label = "Top N most significant genes",
                               value = 100),
                           ),
-
+                          
                           br(),
                           
                           # Select gene identifier
@@ -631,7 +672,7 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "We need to know which gene identifiers are 
+                              prompter::add_prompt(message = "We need to know which gene identifiers are 
                                        used, so we can link the genes to their correct genesets.", 
                                          position = "right",
                                          size = "large")
@@ -646,11 +687,11 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Click to start the overrepresentation analysis!", 
+                              prompter::add_prompt(message = "Click to start the overrepresentation analysis!", 
                                          position = "right",
                                          size = "large")
                           ))),
-                          actionBttn(inputId = "calculate_ORA_microarray_raw",
+                          shinyWidgets::actionBttn(inputId = "calculate_ORA_microarray_raw",
                                      label = "Calculate",
                                      style = "simple",
                                      color = "warning",
@@ -682,34 +723,47 @@ ui <- tagList(
                           h2(strong("Data upload")),
                           h5("Before you can run the analysis workflow, you first 
                            need to upload the expression data as well as the meta data."),
-                          
                           hr(),
                           
+                          # Description upload expression data
                           h4(strong("1. Upload expression data")),
                           h5("The expression data should be supplied as a Series 
-                           Matrix File."),
+                           Matrix File. A Series Matrix File can be downloaded from the ",
+                             a("GEO website.", 
+                               href = "https://www.ncbi.nlm.nih.gov/geo/",
+                               target="_blank")),
+                          
+                          # File input for Series Matrix File
                           fileInput(inputId = "uploadExprData_microarray_norm_smf",
                                     label = NULL,
                                     accept = ".txt.gz",
                                     placeholder = "Select .txt.gz Series Matrix File"),
                           
-                          h4(strong("2. Upload meta data")),
-                          h5("The meta data includes relevant information (e.g., diagnostic group)
-                           about the samples. You can upload the meta data as a 
-                           .csv/.tsv file or upload a Series Matrix file.", 
-                             "Click ", downloadLink('downloadmeta_example_norm', 'here'),
-                             "for an example .csv meta data file. A Series Matrix File
-                           can be downloaded from the GEO website."),
+                          # Description upload metadata
+                          h4(strong("2. Upload metadata")),
+                          h5("The meta data includes relevant information 
+                          (e.g., diagnostic group) about the samples. 
+                             You can upload the metadata as a ", em(".csv/.tsv"),
+                             " file or upload a Series Matrix file.", "Click ", 
+                             downloadLink('downloadmeta_example_microarray_norm', 
+                                          'here'),
+                             "for an example ",em(".csv"), " metadata table. 
+                             A Series Matrix File can be downloaded from the ",
+                             a("GEO website.", 
+                               href = "https://www.ncbi.nlm.nih.gov/geo/",
+                               target="_blank")),
                           
-                          prettyRadioButtons(inputId = "MetaFileType_norm", 
-                                             label = NULL, 
-                                             choices = c(".tsv/.csv file",
-                                                         "Series Matrix File"),
-                                             inline = TRUE,
-                                             fill = TRUE),
+                          # .tsv/.csv or Series Matrix File
+                          shinyWidgets::prettyRadioButtons(inputId = "MetaFileType_microarray_norm", 
+                                                           label = NULL, 
+                                                           choices = c(".tsv/.csv file",
+                                                                       "Series Matrix File"),
+                                                           inline = TRUE,
+                                                           fill = TRUE),
                           
+                          # File input for .tsv/.csv file
                           conditionalPanel(
-                            condition = "input.MetaFileType_norm=='.tsv/.csv file'",
+                            condition = "input.MetaFileType_microarray_norm=='.tsv/.csv file'",
                             fileInput(inputId = "uploadMeta_microarray_norm_tsv",
                                       label = NULL,
                                       accept = c(".tsv",".csv"),
@@ -717,8 +771,9 @@ ui <- tagList(
                             
                           ),
                           
+                          # File input for Series Matrix File
                           conditionalPanel(
-                            condition = "input.MetaFileType_norm=='Series Matrix File'",
+                            condition = "input.MetaFileType_microarray_norm=='Series Matrix File'",
                             fileInput(inputId = "uploadMeta_microarray_norm_smf",
                                       label = NULL,
                                       accept = ".txt.gz",
@@ -727,24 +782,28 @@ ui <- tagList(
                           ),
                           
                           # Confirm upload
-                          actionBttn(inputId = "upload_microarray_norm",
-                                     label = "Read data",
-                                     style = "simple",
-                                     color = "primary",
-                                     icon = icon("fas fa-upload")),
-                          actionBttn(inputId = "example_microarray_norm",
-                                     label = "Run example",
-                                     style = "simple",
-                                     color = "warning",
-                                     icon = icon("cloud-arrow-up")),
+                          shinyWidgets::actionBttn(inputId = "upload_microarray_norm",
+                                                   label = "Read data",
+                                                   style = "simple",
+                                                   color = "primary",
+                                                   icon = icon("fas fa-upload")),
                           
+                          # Run example
+                          shinyWidgets::actionBttn(inputId = "example_microarray_norm",
+                                                   label = "Run example",
+                                                   style = "simple",
+                                                   color = "warning",
+                                                   icon = icon("cloud-arrow-up")),
                           
+                          # Button to go to next tab
                           uiOutput("next_upload_microarray_norm")
                           
                         ), # End of side panel
                         
                         # Main panel
                         mainPanel(
+                          
+                          # Preview of expression matrix and metadata table
                           uiOutput("UI_upload_microarray_norm")
                         )
                         
@@ -782,14 +841,14 @@ ui <- tagList(
                               ) 
                             ) |>
                               prompter::add_prompt(message = "Uncheck the box to exclude samples from the analysis.", 
-                                         position = "right",
-                                         size = "large")
+                                                   position = "right",
+                                                   size = "large")
                           ))),
                           
-                          awesomeCheckbox(inputId = "outlier_norm",
-                                          label = "Keep all samples", 
-                                          value = TRUE,
-                                          status = "danger"),
+                          shinyWidgets::awesomeCheckbox(inputId = "outlier_norm",
+                                                        label = "Keep all samples", 
+                                                        value = TRUE,
+                                                        status = "danger"),
                           
                           uiOutput("UI_outlier_microarray_norm"),
                           br(),
@@ -802,10 +861,10 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "The experimental groups are the 
+                              prompter::add_prompt(message = "The experimental groups are the 
                                        groups that you would like to compare, like disease status groups.", 
-                                         position = "right",
-                                         size = "large")
+                                                   position = "right",
+                                                   size = "large")
                           ))),
                           
                           
@@ -822,11 +881,11 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Select the transformation method. 
+                              prompter::add_prompt(message = "Select the transformation method. 
                                        The aim of data transformation is to make the 
                                        data more normally distributed.", 
-                                         position = "right",
-                                         size = "large")
+                                                   position = "right",
+                                                   size = "large")
                           ))),
                           uiOutput("UI_transformation_microarray_norm"),
                           br(),
@@ -846,19 +905,19 @@ ui <- tagList(
                           ))),
                           
                           
-                          radioGroupButtons(inputId = "normMeth_microarray_norm", 
-                                            label = NULL, 
-                                            choices = c("Quantile","None"),
-                                            selected = "None",
-                                            status = "danger"),
+                          shinyWidgets::radioGroupButtons(inputId = "normMeth_microarray_norm", 
+                                                          label = NULL, 
+                                                          choices = c("Quantile","None"),
+                                                          selected = "None",
+                                                          status = "danger"),
                           
-                          prettyRadioButtons(inputId = "perGroup_microarray_norm", 
-                                             label = NULL, 
-                                             choices = c("Use all arrays",
-                                                         "Per experimental group"),
-                                             inline = TRUE, 
-                                             status = "danger",
-                                             fill = TRUE),
+                          shinyWidgets::prettyRadioButtons(inputId = "perGroup_microarray_norm", 
+                                                           label = NULL, 
+                                                           choices = c("Use all arrays",
+                                                                       "Per experimental group"),
+                                                           inline = TRUE, 
+                                                           status = "danger",
+                                                           fill = TRUE),
                           
                           br(),
                           
@@ -870,17 +929,17 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Click to perform the pre-processing!", 
-                                         position = "right",
-                                         size = "large")
+                              prompter::add_prompt(message = "Click to perform the pre-processing!", 
+                                                   position = "right",
+                                                   size = "large")
                           ))),
                           
                           
-                          actionBttn(inputId = "start_preprocessing_microarray_norm",
-                                     label = "Calculate",
-                                     style = "simple",
-                                     color = "warning",
-                                     icon = icon("sync")),
+                          shinyWidgets::actionBttn(inputId = "start_preprocessing_microarray_norm",
+                                                   label = "Calculate",
+                                                   style = "simple",
+                                                   color = "warning",
+                                                   icon = icon("sync")),
                           
                           br(),
                           
@@ -1198,7 +1257,8 @@ ui <- tagList(
                           h5("The meta data includes relevant information (e.g., diagnostic group)
                            about the samples. You can upload the meta data as a 
                            .csv/.tsv file or upload a Series Matrix file.", 
-                             "Click ", downloadLink('downloadmeta_example_rnaseq_raw', 'here'),
+                             "Click ", downloadLink('downloadmeta_example_rnaseq_raw', 
+                                                    'here'),
                              "for an example .csv meta data file. A Series Matrix File
                            can be downloaded from the GEO website."),
                           
@@ -1784,7 +1844,7 @@ ui <- tagList(
                           htmlOutput("experimentallevels_rnaseq_norm"),
                           br(),
                           
-                          #Transformation
+                          # Transformation
                           h4(strong(tags$span(
                             "3. Transformation",
                             tags$span(
@@ -1801,6 +1861,27 @@ ui <- tagList(
                           
                           uiOutput("UI_transformation_rnaseq_norm"),
                           br(),
+                          
+                          
+                          # Filtering
+                          h4(strong(tags$span(
+                            "4. Filtering",
+                            tags$span(
+                              icon(
+                                name = "question-circle",
+                              ) 
+                            ) |>
+                              add_prompt(message = "Select the minimum count required 
+                                         for at least s samples, where s is the smallest 
+                                         experimental group size", 
+                                         position = "right",
+                                         size = "large")
+                          ))),
+                          
+                          uiOutput("UI_filtering_rnaseq_norm"),
+                          br(),
+                          
+                          
                           #Normalization
                           h4(strong(tags$span(
                             "4. Normalization",

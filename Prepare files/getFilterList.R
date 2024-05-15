@@ -17,8 +17,8 @@ filterList <- list()
 for (i in 1:length(sets)){
   ensembl1 <- useDataset(sets[i], mart=ensembl)
   all_filters <- biomaRt::listFilters(ensembl1)
-  filterList[[i]] <- c("ensembl_gene_id",
-                       "entrezgene_id",
+  filterList[[i]] <- c("Ensembl Gene ID",
+                       "Entrez Gene ID",
                        setdiff(all_filters$name[str_detect(all_filters$name,"affy")],
                                all_filters$name[str_detect(all_filters$name,"with")]))
 }
@@ -27,3 +27,9 @@ names(filterList) <- sets
 
 # Save file
 save(filterList, file = "filterList_biomaRt.RData")
+
+
+for (i in 1:length(filterList)){
+  filterList[[i]][1:2] <- c("Ensembl Gene ID",
+                            "Entrez Gene ID")
+}

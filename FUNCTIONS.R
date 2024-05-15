@@ -31,31 +31,34 @@ firstup <- function(x) {
 # shiny_upload: is it an object from shiny upload
 
 getCELs <- function(zippath, shiny_upload = TRUE){
-  
-  if (shiny_upload){
-    # Unzip files
-    if(!file.exists(paste0("unzipped_",str_remove(zippath$name, ".zip")))){
-      unzip(zippath$datapath, exdir = paste0("Data_unzipped/unzipped_",str_remove(zippath$name, ".zip")))
+  tryCatch({
+    if (shiny_upload){
+      # Unzip files
+      if(!file.exists(paste0("Data_unzipped/unzipped_",stringr::str_remove(zippath$name, ".zip")))){
+        unzip(zippath$datapath, exdir = paste0("Data_unzipped/unzipped_",stringr::str_remove(zippath$name, ".zip")))
+      }
+      
+      # list CEL files
+      celfiles <- list.files(tail(list.dirs(paste0("Data_unzipped/unzipped_",stringr::str_remove(zippath$name, ".zip"))),1),
+                             pattern = "CEL", 
+                             full.names = TRUE) 
     }
-    
-    # list CEL files
-    celfiles <- list.files(tail(list.dirs(paste0("Data_unzipped/unzipped_",str_remove(zippath$name, ".zip"))),1),
-                           pattern = "CEL", 
-                           full.names = TRUE) 
-  }
-  if (!shiny_upload){
-    # Unzip files
-    if(!file.exists(paste0("unzipped_",str_remove(zippath, ".zip")))){
-      unzip(zippath, exdir = paste0("Data_unzipped/unzipped_",str_remove(basename(zippath), ".zip")))
+    if (!shiny_upload){
+      # Unzip files
+      if(!file.exists(paste0("Data_unzipped/unzipped_",stringr::str_remove(zippath, ".zip")))){
+        unzip(zippath, exdir = paste0("Data_unzipped/unzipped_",stringr::str_remove(basename(zippath), ".zip")))
+      }
+      
+      # list CEL files
+      celfiles <- list.files(tail(list.dirs(paste0("Data_unzipped/unzipped_",stringr::str_remove(basename(zippath), ".zip"))),1),
+                             pattern = "CEL", 
+                             full.names = TRUE) 
     }
+    return(celfiles)
     
-    # list CEL files
-    celfiles <- list.files(tail(list.dirs(paste0("Data_unzipped/unzipped_",str_remove(basename(zippath), ".zip"))),1),
-                           pattern = "CEL", 
-                           full.names = TRUE) 
-  }
-
-  return(celfiles)
+  }, error = function(cond){
+    return(NULL)
+  })
 }
 
 #==============================================================================#
@@ -67,13 +70,20 @@ getCELs <- function(zippath, shiny_upload = TRUE){
 
 # VARIABLES:
 # celfiles: vector with path to each of the celfiles
+# rm: remove unzipped directory
 
-readCELs <- function(celfiles){
+readCELs <- function(celfiles, zippath, rm = FALSE){
   tryCatch({
-  gxData <- affy::ReadAffy(filenames = celfiles)
-  return(gxData)
+    if(!file.exists(paste0("Data_unzipped/unzipped_",stringr::str_remove(zippath, ".zip")))){
+      unzip(zippath, exdir = paste0("Data_unzipped/unzipped_",stringr::str_remove(basename(zippath), ".zip")))
+    }
+    
+    gxData <- affy::ReadAffy(filenames = celfiles)
+    if(rm){unlink("Data_unzipped", recursive = TRUE)}
+    return(gxData)
   }, error = function(cond){
     gxData <- oligo::read.celfiles(filenames = celfiles)
+    if(rm){unlink("Data_unzipped", recursive = TRUE)}
     return(gxData)
   })
 }
@@ -114,6 +124,7 @@ getMetaData <- function(path, celfiles, filetype){
     }
     metaData <- metaData[,-remove_col]
   }
+  metaData <- metaData[,!duplicated(colnames(metaData))]
   
   # get sample IDs
   CELsamples <- stringr::str_remove(basename(celfiles),"\\.CEL.*")
@@ -137,7 +148,7 @@ getMetaData <- function(path, celfiles, filetype){
         sumIDs[i] <- sum(metaData[,i] %in% CELsamples_alt)
       }
     }
-
+    
     # Add additional column with CEL names
     combineCELs <- data.frame(AltName = CELsamples_alt,
                               CELName = CELsamples)
@@ -176,7 +187,7 @@ getMetaData <- function(path, celfiles, filetype){
     # Set sample names as row names
     rownames(metaData_fil) <- metaData_fil[,which.max(sumIDs)]
   }
- 
+  colnames(metaData_fil) <- make.names(colnames(metaData_fil))
   return(metaData_fil)
 }
 
@@ -215,7 +226,7 @@ autoGroup <- function(metaData){
   } else {
     return(colnames(metaData)[1])
   }
- 
+  
 }
 
 #==============================================================================#
@@ -229,7 +240,7 @@ autoGroup <- function(metaData){
 # gxData: data object (AffyBatch or GeneFeaturSet)
 
 getOrganism <- function(gxData){
-
+  
   organism <- "Homo sapiens"
   if (str_detect(gxData@annotation,regex("Cattle|Bos|taurus|Bt",ignore_case = T))){
     organism <- "Bos taurus"
@@ -478,7 +489,7 @@ microarrayNormalization <- function(gxData,
                if(aType == "PMMM") ntype = "together"
                if(aType == "PMonly") ntype = "pmonly"
                normData.tmp <- plier::justPlier(Data.tmp, normalize=TRUE,
-                                         norm.type = ntype)
+                                                norm.type = ntype)
              }
       )
       
@@ -959,10 +970,10 @@ makeComparisons <- function(ExpLevels){
 
 selFilter <- function(ProbeAnnotation){
   
-  selFilter <- "entrezgene_id"
+  selFilter <- "Entrez Gene ID"
   if (!is.null(ProbeAnnotation)){
     if (ProbeAnnotation == "ENSG"){
-      selFilter <- "ensembl_gene_id"
+      selFilter <- "Ensembl Gene ID"
     }
   }
   return(selFilter)
@@ -994,11 +1005,35 @@ getStatistics <- function(normMatrix,
                           comparisons,
                           addAnnotation = TRUE,
                           biomart_dataset = "hsapiens_gene_ensembl",
-                          biomart_attributes = c("ensembl_gene_id",
-                                                 "entrezgene_id",
-                                                 "gene_name"),
-                          biomart_filters = "entrezgene_id"){
+                          biomart_attributes = c("Ensembl Gene ID",
+                                                 "Entrez Gene ID",
+                                                 "Gene Symbol/Name"),
+                          biomart_filters = "Entrez Gene ID"){
   tryCatch({
+    
+    # Replace name of biomaRt filter
+    biomart_filters <- tryCatch({
+      switch(biomart_filters,
+             "Gene Symbol/Name" = "gene_name",
+             "Entrez Gene ID" = "entrezgene_id",
+             "Ensembl Gene ID" = "ensembl_gene_id",
+      )
+    }, error = function(cond){
+      return(biomart_filters)
+    })
+    
+    # Replace name(s) of biomaRt attributes
+    for (a in 1:length(biomart_attributes)){
+      biomart_attributes[a] <- tryCatch({
+        switch(biomart_attributes[a],
+               "Gene Symbol/Name" = "gene_name",
+               "Entrez Gene ID" = "entrezgene_id",
+               "Ensembl Gene ID" = "ensembl_gene_id",
+        )
+      }, error = function(cond){
+        return(biomart_attributes[a])
+      })
+    }
     # Get experiment factor
     if(length(expFactor) > 1){
       experimentFactor <- factor(apply(metaData[,expFactor], 1, paste, collapse = "_" ))
@@ -1069,12 +1104,12 @@ getStatistics <- function(normMatrix,
       # Change attribute name
       if (biomart_dataset == "hsapiens_gene_ensembl"){
         biomart_attributes1 <- stringr::str_replace(biomart_attributes,
-                                           "gene_name",
-                                           "hgnc_symbol")
+                                                    "gene_name",
+                                                    "hgnc_symbol")
       } else{
         biomart_attributes1 <- stringr::str_replace(biomart_attributes,
-                                           "gene_name",
-                                           "external_gene_name")
+                                                    "gene_name",
+                                                    "external_gene_name")
       }
       
       
@@ -1090,9 +1125,9 @@ getStatistics <- function(normMatrix,
         ensembl <- biomaRt::useMart("ensembl")
         ensembl <- biomaRt::useDataset(biomart_dataset, mart=ensembl)
         annotations <- biomaRt::getBM(attributes=biomart_attributes1, 
-                             filters = biomart_filters,
-                             values = top_table[[t]]$GeneID,
-                             mart = ensembl)
+                                      filters = biomart_filters,
+                                      values = top_table[[t]]$GeneID,
+                                      mart = ensembl)
         
         # Convert entrezgene id to character
         if("entrezgene_id" %in% biomart_attributes){
@@ -1104,7 +1139,7 @@ getStatistics <- function(normMatrix,
         # Combine annotations with top table
         annotations[,biomart_filters] <- as.character(annotations[,biomart_filters])
         top_table_ann <- dplyr::left_join(top_table[[t]], annotations,
-                                   by = c("GeneID" = biomart_filters))
+                                          by = c("GeneID" = biomart_filters))
         
         colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "gene_name"
         colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "gene_name"
@@ -1115,10 +1150,10 @@ getStatistics <- function(normMatrix,
           temp1 <- temp1[!is.na(temp1[,2]),]
           temp_ann <- temp1 %>%
             dplyr::group_by(GeneID) %>%
-            dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = ", "))
+            dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = "; "))
           
           top_table[[t]] <- dplyr::left_join(top_table[[t]], temp_ann,
-                                      by = c("GeneID" = "GeneID"))
+                                             by = c("GeneID" = "GeneID"))
         }
         
       }
@@ -1226,7 +1261,7 @@ makeVolcano <- function(top_table,
       ggplot2::theme_classic() +
       ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5)) +
       ggplot2::scale_color_manual(values = setNames(c("darkgrey", "red", "blue"),
-                                           c("unchanged", "upregulated", "downregulated")))
+                                                    c("unchanged", "upregulated", "downregulated")))
   }
   
   if (p == "adj"){
@@ -1246,7 +1281,7 @@ makeVolcano <- function(top_table,
       ggplot2::theme_classic() +
       ggplot2::theme(plot.title = element_text(face = "bold", hjust = 0.5)) +
       ggplot2::scale_color_manual(values = setNames(c("darkgrey", "red", "blue"),
-                                           c("unchanged", "upregulated", "downregulated")))
+                                                    c("unchanged", "upregulated", "downregulated")))
   }
   
   p <- plotly::ggplotly(volcano, tooltip = "text")
@@ -1310,7 +1345,8 @@ ORA <- function(top_table,
                 p_thres = 0.05,
                 logFC_thres = 0){
   
-  #tryCatch({
+  tryCatch({
+    
     
     #Required Bioconductor annotation packages:
     pkg <- switch(organism,
@@ -1326,8 +1362,83 @@ ORA <- function(top_table,
       BiocManager::install(pkg, ask = FALSE)
     require(as.character(pkg), character.only = TRUE)
     
+    #..........................................................................#
+    # Filter top table for background genes (in genesets)
+    #..........................................................................#
+    
+    # get all background genes
+    if (geneset == "WikiPathways"){
+      load("Objects/gmt_WP_all.RData")
+      gmt_all <- gmt_all[[str_replace(organism," ","_")]]
+      bg_genes <- as.character(unique(gmt_all[,geneID_type]))
+      
+    } 
+    if (geneset == "GO-BP"){
+      bg_genes <- AnnotationDbi::select(BiocGenerics::get(pkg), 
+                                        columns = c(geneID_type, "GO"), 
+                                        keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
+      
+      bg_genes <- unique(bg_genes[bg_genes$ONTOLOGY=="BP",geneID_type])
+      bg_genes <- bg_genes[!is.na(bg_genes)]
+    }
+    if (geneset == "GO-MF"){
+      bg_genes <- AnnotationDbi::select(BiocGenerics::get(pkg), 
+                                        columns = c(geneID_type, "GO"), 
+                                        keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
+      
+      bg_genes <- unique(bg_genes[bg_genes$ONTOLOGY=="MF",geneID_type])
+      bg_genes <- bg_genes[!is.na(bg_genes)]
+    }
+    if (geneset == "GO-CC"){
+      bg_genes <- AnnotationDbi::select(BiocGenerics::get(pkg), 
+                                        columns = c(geneID_type, "GO"), 
+                                        keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
+      
+      bg_genes <- unique(bg_genes[bg_genes$ONTOLOGY=="CC",geneID_type])
+      bg_genes <- bg_genes[!is.na(bg_genes)]
+    }
+    
+    
+    # If the gene IDs are not saved in the first column, some genes might be 
+    # separated by a comma in the same row.
+    if (which(colnames(top_table) == geneID_col) != 1){
+      
+      # Split all genes by a comma
+      genes_all <- str_split(top_table[,geneID_col], "; ")
+      
+      # Combine all genes into a single vector
+      single_name <- NULL
+      combined_name <- NULL
+      for (i in 1:length(genes_all)){
+        single_name <- c(single_name, genes_all[[i]])
+        combined_name <- c(combined_name, rep(top_table[i,geneID_col], length(genes_all[[i]])))
+      }
+      gene_names <- data.frame(single_name,
+                               combined_name)
+      gene_names <- gene_names[!is.na(single_name),]
+      
+      # Make separate row names for single gene name
+      colnames(top_table)[colnames(top_table) == geneID_col] <- "ID"
+      top_table_name <- left_join(top_table, gene_names, by = c("ID" = "combined_name"))
+      colnames(top_table_name)[colnames(top_table_name) == "ID"] <- geneID_col
+      
+      # Filter top table
+      top_table_fil <- unique(top_table_name[top_table_name[,"single_name"] %in% bg_genes,-which(colnames(top_table_name) == "single_name")])
+      
+    } else { # If all the gene IDs are in the first column:
+      
+      # Filter top table
+      top_table_fil <- top_table[top_table[,geneID_col] %in% bg_genes,]
+    }
+    
+    
+    #..........................................................................#
+    # Perform ORA on filtered top table
+    #..........................................................................#
+    top_table <- top_table_fil
+    
     # Universe: background list of genes
-    universe <- unlist(str_split(top_table[,geneID_col], ", "))
+    universe <- unlist(stringr::str_split(top_table[,geneID_col], "; "))
     
     # Filter top_table for up- or downregulated genes only
     if (updown == "Upregulated genes only"){
@@ -1342,23 +1453,23 @@ ORA <- function(top_table,
     if (isTRUE(topN)){
       top_table_sort <- arrange(top_table, `p-value`)
       geneList <- head(top_table,N)[,geneID_col]
-      geneList <- unlist(geneList, ", ")
+      geneList <- unlist(stringr::str_split(geneList, "; "))
       
     } else{
       if (rawadj == "raw"){
         geneList <- top_table[((abs(top_table[,"log2FC"])) > logFC_thres) & 
                                 (top_table[,"p-value"] < p_thres),
                               geneID_col]
-        geneList <- unlist(geneList, ", ")
+        geneList <- unlist(stringr::str_split(geneList, "; "))
       }
       if (rawadj == "adj"){
         geneList <- top_table[((abs(top_table[,"log2FC"])) > logFC_thres) & 
                                 (top_table[,"adj. p-value"] < p_thres),
                               geneID_col]
-        geneList <- unlist(geneList, ", ")
+        geneList <- unlist(stringr::str_split(geneList, "; "))
       }
     }
-
+    
     
     # perform ORA
     ORA_data <- NULL
@@ -1460,12 +1571,15 @@ ORA <- function(top_table,
     output <- output[,c("ID", "Description", "GeneRatio", "BgRatio",
                         "p-value", "adj. p-value")]
     
+    # make term names shorter
+    output$Description[nchar(output$Description)>50] <- paste0(substring(output$Description[nchar(output$Description)>50],1,47),"...")
+    
     ORA_data@result <- output
     
     return(ORA_data)
-  #}, error = function(cond){
-   # NULL
-  #})
+  }, error = function(cond){
+    NULL
+  })
 }
 
 #==============================================================================#
@@ -1492,7 +1606,7 @@ make_ORAgene_table <- function(ORA_data,
   if (which(colnames(top_table) == geneID_col) != 1){
     
     # Split all genes by a comma
-    genes_all <- str_split(top_table[,geneID_col], ", ")
+    genes_all <- str_split(top_table[,geneID_col], "; ")
     
     # Combine all genes into a single vector
     single_name <- NULL
@@ -1569,18 +1683,18 @@ makeORAplot <- function(ORA_data, nSets){
   # Make the plot
   p <- ggplot2::ggplot(plotDF[1:nSets,], 
                        ggplot2::aes(text = paste0("ID: ",ID, "\n",
-                                               "Name: ", Description, "\n",
-                                               "Gene ratio: ", GeneRatio, "\n",
-                                               "Background ratio: ", BgRatio, "\n",
-                                               "p-value: ", `p-value`, "\n",
-                                               "FDR-adj. p-value: ", `adj. p-value`, "\n"))) +
+                                                  "Name: ", Description, "\n",
+                                                  "Gene ratio: ", GeneRatio, "\n",
+                                                  "Background ratio: ", BgRatio, "\n",
+                                                  "p-value: ", `p-value`, "\n",
+                                                  "FDR-adj. p-value: ", `adj. p-value`, "\n"))) +
     ggplot2::geom_bar(ggplot2::aes(x = -log10(`p-value`), 
                                    y = Name, 
                                    fill = -log10(`p-value`)),
-             position = ggplot2::position_dodge(), 
-             stat = "identity", 
-             color = "black",
-             size = 0.5) +
+                      position = ggplot2::position_dodge(), 
+                      stat = "identity", 
+                      color = "black",
+                      size = 0.5) +
     ggplot2::xlab("-log10 p-value") +
     ggplot2::ylab(NULL) +
     ggplot2::theme_minimal() +
@@ -1651,9 +1765,9 @@ makeORAnetwork <- function(ORA_data, layout, nSets){
   
   # make a graph from this matrix
   g <- igraph::graph_from_adjacency_matrix(graph_matrix, 
-                                   mode = "lower", 
-                                   weighted = "Jaccard Index", 
-                                   diag = FALSE)
+                                           mode = "lower", 
+                                           weighted = "Jaccard Index", 
+                                           diag = FALSE)
   
   # Add -log10 p-value and GO name as vertex attributes
   rownames(ORAresults) <- ORAresults$ID
@@ -1665,7 +1779,7 @@ makeORAnetwork <- function(ORA_data, layout, nSets){
     ggraph::geom_edge_link0(ggplot2::aes(width = `Jaccard Index`), edge_alpha = 0.1) + 
     ggraph::geom_node_point(ggplot2::aes(color = `-log10 p-value`), size = 7) + 
     ggraph::geom_node_text(ggplot2::aes(label = label), color = 'black', 
-                   size = 5, repel = TRUE) + 
+                           size = 5, repel = TRUE) + 
     ggplot2::theme_void() +
     ggplot2::scale_color_continuous() +
     ggplot2::scale_color_gradient(low = "#6BAED6", high = "#FB6A4A")
@@ -1756,10 +1870,16 @@ RNASeqNormalization_processed <- function(gxMatrix,
                                           experimentFactor,
                                           transMeth,
                                           normMeth,
-                                          perGroup_name){
+                                          perGroup_name,
+                                          filterThres){
   
   # Get expression values from data object
   m <- gxMatrix
+  
+  # Filtering
+  smallestGroupSize <- min(table(experimentFactor))
+  keep <- rowSums(m >= filterThres) >= smallestGroupSize
+  m <- m[keep,]
   
   # Perform log2-transformation (if selected)
   if (transMeth == "Log2-transformation"){
@@ -1821,14 +1941,36 @@ getStatistics_RNASeq <- function(rawMatrix,
                                  smallestGroupSize,
                                  addAnnotation = TRUE,
                                  biomart_dataset = "hsapiens_gene_ensembl",
-                                 biomart_attributes = c("ensembl_gene_id",
-                                                        "entrezgene_id",
-                                                        "gene_name"),
-                                 biomart_filters = "entrezgene_id"){
-  tryCatch({
-    metaData <- metaData[,c(expFactor, covGroups_num, covGroups_char)]
+                                 biomart_attributes = c("Ensembl Gene ID",
+                                                        "Entrez Gene ID",
+                                                        "Gene Symbol/Name"),
+                                 biomart_filters = "Entrez Gene ID"){
+ # tryCatch({
+    #metaData <- metaData[,c(expFactor, covGroups_num, covGroups_char)]
     
+    # Replace name of biomaRt filter
+    biomart_filters <- tryCatch({
+      switch(biomart_filters,
+             "Gene Symbol/Name" = "gene_name",
+             "Entrez Gene ID" = "entrezgene_id",
+             "Ensembl Gene ID" = "ensembl_gene_id",
+      )
+    }, error = function(cond){
+      return(biomart_filters)
+    })
     
+    # Replace name(s) of biomaRt attributes
+    for (a in 1:length(biomart_attributes)){
+      biomart_attributes[a] <- tryCatch({
+        switch(biomart_attributes[a],
+               "Gene Symbol/Name" = "gene_name",
+               "Entrez Gene ID" = "entrezgene_id",
+               "Ensembl Gene ID" = "ensembl_gene_id",
+        )
+      }, error = function(cond){
+        return(biomart_attributes[a])
+      })
+    }
     
     # Get experiment factor
     if(length(expFactor) > 1){
@@ -1850,7 +1992,7 @@ getStatistics_RNASeq <- function(rawMatrix,
     if (!is.null(covariates)){
       formula <- paste0("~ ", "experimentFactor + ", paste0(covariates, collapse = " + "))
     } else {
-      formula <- paste0("~ ", "experimentFactor + ")
+      formula <- paste0("~ ", "experimentFactor")
     }
     
     # make DESeqDataSet object
@@ -1858,8 +2000,8 @@ getStatistics_RNASeq <- function(rawMatrix,
     colnames(sampleInfo) <- c("experimentFactor", covariates)
     rownames(sampleInfo) <- rownames(metaData)
     dds <- DESeq2::DESeqDataSetFromMatrix(countData = rawMatrix,
-                                  colData = sampleInfo,
-                                  design = as.formula(formula))
+                                          colData = sampleInfo,
+                                          design = as.formula(formula))
     # Filtering
     keep <- rowSums(counts(dds) >= filterThres) >= smallestGroupSize
     dds <- dds[keep,]
@@ -1951,7 +2093,7 @@ getStatistics_RNASeq <- function(rawMatrix,
           temp1 <- temp1[!is.na(temp1[,2]),]
           temp_ann <- temp1 %>%
             dplyr::group_by(GeneID) %>%
-            dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = ", "))
+            dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = "; "))
           
           top_table[[t]] <- dplyr::left_join(top_table[[t]], temp_ann,
                                              by = c("GeneID" = "GeneID"))
@@ -1961,9 +2103,9 @@ getStatistics_RNASeq <- function(rawMatrix,
       
     }
     return(top_table)
-  }, error = function(cond){
-    NULL
-  })
+  #}, error = function(cond){
+  #  NULL
+  #})
 }
 
 
@@ -1994,11 +2136,36 @@ getStatistics_RNASeq_processed <- function(normMatrix,
                                            comparisons,
                                            addAnnotation = TRUE,
                                            biomart_dataset = "hsapiens_gene_ensembl",
-                                           biomart_attributes = c("ensembl_gene_id",
-                                                                  "entrezgene_id",
-                                                                  "gene_name"),
-                                           biomart_filters = "entrezgene_id"){
+                                           biomart_attributes = c("Ensembl Gene ID",
+                                                                  "Entrez Gene ID",
+                                                                  "Gene Symbol/Name"),
+                                           biomart_filters = "Entrez Gene ID"){
   tryCatch({
+    
+    # Replace name of biomaRt filter
+    biomart_filters <- tryCatch({
+      switch(biomart_filters,
+             "Gene Symbol/Name" = "gene_name",
+             "Entrez Gene ID" = "entrezgene_id",
+             "Ensembl Gene ID" = "ensembl_gene_id",
+      )
+    }, error = function(cond){
+      return(biomart_filters)
+    })
+    
+    # Replace name(s) of biomaRt attributes
+    for (a in 1:length(biomart_attributes)){
+      biomart_attributes[a] <- tryCatch({
+        switch(biomart_attributes[a],
+               "Gene Symbol/Name" = "gene_name",
+               "Entrez Gene ID" = "entrezgene_id",
+               "Ensembl Gene ID" = "ensembl_gene_id",
+        )
+      }, error = function(cond){
+        return(biomart_attributes[a])
+      })
+    }
+    
     # Get experiment factor
     if(length(expFactor) > 1){
       experimentFactor <- factor(make.names(apply(metaData[,expFactor], 1, paste, collapse = "_" )))
@@ -2027,6 +2194,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
     colnames(design)[1:length(levels(experimentFactor))] <- make.names(levels(factor(experimentFactor)))
     colnames(design) <- make.names(colnames(design))
     
+    # Voom transformation
     v <- voom(normMatrix, design, plot=FALSE)
     
     #fit linear model
@@ -2117,7 +2285,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
           temp1 <- temp1[!is.na(temp1[,2]),]
           temp_ann <- temp1 %>%
             dplyr::group_by(GeneID) %>%
-            dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = ", "))
+            dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = "; "))
           
           top_table[[t]] <- dplyr::left_join(top_table[[t]], temp_ann,
                                              by = c("GeneID" = "GeneID"))
@@ -2165,5 +2333,28 @@ checkTransformation <- function(gxMatrix, RNASeq = TRUE){
       output <- "log-transformed matrix"
     }
   }
+  return(output)
+}
+
+#==============================================================================#
+# checkTransformation()
+#==============================================================================#
+
+# DESCRIPTION:
+# Check if filtering is required
+
+# VARIABLES:
+# gxMatrix: expression matrix
+
+checkFiltering <- function(gxMatrix){
+  
+  
+  n0 <- sum(rowSums(gxMatrix==0)==ncol(gxMatrix))
+  if (n0 > 0){
+    output <- "No filtering"
+  } else{
+    output <- "Filtering"
+  }
+  
   return(output)
 }

@@ -9,6 +9,13 @@ Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
 # Start server
 server <- function(input, output, session){
   
+  if (!interactive()) {
+    session$onSessionEnded(function() {
+      stopApp()
+      q("no")
+    })
+  }
+  
   ##############################################################################
   
   # Preparations
@@ -18,42 +25,28 @@ server <- function(input, output, session){
   # Set options for data upload
   options(shiny.maxRequestSize=125*1024^10)
   
-  # Example meta data file
-  output$downloadmeta_example <- downloadHandler(
-    filename = "MetaData_example.csv",
-    content = function(file){
-      write.csv(exampleMeta, file, quote = FALSE, row.names = FALSE)
-    }
-  )
-  # Example meta data file
-  output$downloadmeta_example_norm <- downloadHandler(
-    filename = "MetaData_example.csv",
-    content = function(file){
-      write.csv(exampleMeta, file, quote = FALSE, row.names = FALSE)
-    }
-  )
   # Make list for reactive values
   rv <- reactiveValues()
   
-  # Remove the other RNA-seq (raw) tabs
+  # Hide the RNA-seq (raw) tabs
   hideTab("navbar", target = "panel_upload_rnaseq_raw")
   hideTab("navbar", target = "panel_preprocessing_rnaseq_raw")
   hideTab("navbar", target = "panel_statistics_rnaseq_raw" )
   hideTab("navbar", target = "panel_ORA_rnaseq_raw")
   
-  # Remove the other RNA-seq (norm) tabs
+  # Hide the RNA-seq (norm) tabs
   hideTab("navbar", target = "panel_upload_rnaseq_norm")
   hideTab("navbar", target = "panel_preprocessing_rnaseq_norm")
   hideTab("navbar", target = "panel_statistics_rnaseq_norm")
   hideTab("navbar", target = "panel_ORA_rnaseq_norm")
   
-  # Remove the other microarray (raw) tabs
+  # Hide the microarray (raw) tabs
   hideTab("navbar", target = "panel_upload_microarray_raw")
   hideTab("navbar", target = "panel_preprocessing_microarray_raw")
   hideTab("navbar", target = "panel_statistics_microarray_raw" )
   hideTab("navbar", target = "panel_ORA_microarray_raw")
   
-  # Remove the other microarray (norm) tabs
+  # Hide the microarray (norm) tabs
   hideTab("navbar", target = "panel_upload_microarray_norm")
   hideTab("navbar", target = "panel_preprocessing_microarray_norm")
   hideTab("navbar", target = "panel_statistics_microarray_norm")
@@ -82,25 +75,9 @@ server <- function(input, output, session){
         return(input$raw_or_norm)
       })
       
-      
       ############################################################################
       
-      # Documentation (WORK IN PROGRESS)
-      
-      ############################################################################
-      
-      # Go to the documentation table
-      if (microarray_or_rnaseq() == "Documentation"){
-        observeEvent(input$startAnalysis,{
-          updateNavbarPage(session, "navbar",
-                           selected = "documentation")
-        })
-      }
-      
-      
-      ############################################################################
-      
-      # RNA-seq Analysis (WORK IN PROGRESS)
+      # RNA-seq Analysis
       
       ############################################################################
       
@@ -113,7 +90,7 @@ server <- function(input, output, session){
         if (raw_or_norm() == "Raw data"){
           
           #======================================================================#
-          # Data Upload
+          # TAB2: Data Upload
           #======================================================================#
           
           #----------------------------------------------------------------------#
@@ -152,13 +129,21 @@ server <- function(input, output, session){
             # Go to microarray tab
             updateNavbarPage(session, "navbar",
                              selected = "panel_upload_rnaseq_raw")
+            
+            # Example meta data file
+            output$downloadmeta_example_rnaseq_raw <- downloadHandler(
+              filename = "MetaData_example.csv",
+              content = function(file){
+                write.csv(exampleMeta, file, quote = FALSE, row.names = FALSE)
+              }
+            )
           })
           
           #----------------------------------------------------------------------#
           # Upload files
           #----------------------------------------------------------------------#
           
-          observeEvent(input$upload_rnaseq_raq,{
+          observeEvent(input$upload_rnaseq_raw,{
             
             # Show modal
             show_modal_spinner(text = "Reading data...",
@@ -171,12 +156,12 @@ server <- function(input, output, session){
             if (input$MetaFileType_rnaseq_raw ==".tsv/.csv file"){
               rv$metaData <- getMetaData(path = input$uploadMeta_rnaseq_raw_tsv$datapath,
                                          celfiles = colnames(rv$gxData),
-                                         filetype = input$MetaFileType_norm)
+                                         filetype = input$MetaFileType_rnaseq_raw)
             }
             if (input$MetaFileType_rnaseq_raw =="Series Matrix File"){
               rv$metaData <- getMetaData(path = input$uploadMeta_rnaseq_raw_smf$datapath,
                                          celfiles =  colnames(rv$gxData),
-                                         filetype = input$MetaFileType_norm)
+                                         filetype = input$MetaFileType_rnaseq_raw)
             }
             
             # Read raw expression data
@@ -229,14 +214,14 @@ server <- function(input, output, session){
                has been correctly imported."),
                              hr(),
                              DT::dataTableOutput(outputId = "exprTable_upload_rnaseq_raw") %>% 
-                               withSpinner(color="#0dc5c1")),
+                               shinycssloaders::withSpinner(color="#0dc5c1")),
                     tabPanel("Meta data",                  # Meta table
                              h3(strong("Meta data")),
                              h5("This is a preview of the meta data. Please check if the data 
                has been correctly imported."),
                              hr(),
                              DT::dataTableOutput(outputId = "metaTable_rnaseq_raw") %>% 
-                               withSpinner(color="#0dc5c1")),
+                               shinycssloaders::withSpinner(color="#0dc5c1")),
                   )
                 )
               })
@@ -267,10 +252,10 @@ server <- function(input, output, session){
                   hr(),
                   h2(strong("Continue your analysis")),
                   shinyWidgets::actionBttn(inputId = "next_upload_rnaseq_raw",
-                             label = "Next",
-                             style = "jelly",
-                             color = "danger",
-                             icon = icon("arrow-right"))
+                                           label = "Next",
+                                           style = "jelly",
+                                           color = "danger",
+                                           icon = icon("arrow-right"))
                 )
               })
               
@@ -285,7 +270,7 @@ server <- function(input, output, session){
               shinybusy::remove_modal_spinner()
             }
             
-          }) # Observe event
+          }) # EO observeEvent
           
           #----------------------------------------------------------------------#
           # Run Example
@@ -295,7 +280,7 @@ server <- function(input, output, session){
             
             # Show modal
             shinybusy::show_modal_spinner(text = "Reading data...",
-                               color="#0dc5c1")
+                                          color="#0dc5c1")
             
             # Read expression data
             rv$gxData <- readRNASeq(path="Data/RNAseq/rawExpr_GSE128380.csv")
@@ -356,14 +341,14 @@ server <- function(input, output, session){
                has been correctly imported."),
                              hr(),
                              DT::dataTableOutput(outputId = "exprTable_upload_rnaseq_raw") %>% 
-                               withSpinner(color="#0dc5c1")),
+                               shinycssloaders::withSpinner(color="#0dc5c1")),
                     tabPanel("Meta data",                  # Meta table
-                             h3(strong("Meta data")),
-                             h5("This is a preview of the meta data. Please check if the data 
+                             h3(strong("Metadata table")),
+                             h5("This is a preview of the metadata table. Please check if the data 
                has been correctly imported."),
                              hr(),
                              DT::dataTableOutput(outputId = "metaTable_rnaseq_raw") %>% 
-                               withSpinner(color="#0dc5c1")),
+                               shinycssloaders::withSpinner(color="#0dc5c1")),
                   )
                 )
               })
@@ -394,14 +379,15 @@ server <- function(input, output, session){
                   hr(),
                   h2(strong("Continue your analysis")),
                   shinyWidgets::actionBttn(inputId = "next_upload_rnaseq_raw",
-                             label = "Next",
-                             style = "jelly",
-                             color = "danger",
-                             icon = icon("arrow-right"))
+                                           label = "Next",
+                                           style = "jelly",
+                                           color = "danger",
+                                           icon = icon("arrow-right"))
                 )
               })
               
             } else {
+              
               # No common samples between meta data and expression data
               shinyWidgets::sendSweetAlert(
                 session = session,
@@ -412,11 +398,11 @@ server <- function(input, output, session){
               shinybusy::remove_modal_spinner()
             }
             
-          }) # Observe event
+          }) # EO observeEvent
           
           
           #======================================================================#
-          # Data Pre-processing
+          # TAB3: Data Pre-processing
           #======================================================================#
           
           # Go to data upload tab
@@ -433,7 +419,7 @@ server <- function(input, output, session){
             if(!input$outlier_norm){
               samples <- rownames(rv$metaData)
               
-              pickerInput(inputId = "select_outliers_rnaseq_raw",
+              shinyWidgets::pickerInput(inputId = "select_outliers_rnaseq_raw",
                           label = tags$span(
                             "Select samples to be removed", 
                             tags$span(
@@ -441,7 +427,7 @@ server <- function(input, output, session){
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Select one or more samples to exclude from the analysis.", 
+                              prompter::add_prompt(message = "Select one or more samples to exclude from the analysis.", 
                                          position = "right",
                                          size = "large")
                           ),
@@ -455,7 +441,7 @@ server <- function(input, output, session){
           
           # 2. Select experimental groups
           output$UI_groupselect_rnaseq_raw <- renderUI({
-            pickerInput(inputId = "groupselect_rnaseq_raw",
+            shinyWidgets::pickerInput(inputId = "groupselect_rnaseq_raw",
                         label = NULL,
                         choices = colnames(rv$metaData),
                         selected = autoGroup(rv$metaData),
@@ -489,7 +475,7 @@ server <- function(input, output, session){
             
             # Show modal
             shinybusy::show_modal_spinner(text = "Pre-processing data...",
-                               color="#0dc5c1")
+                                          color="#0dc5c1")
             
             # Select outlier
             if (!isTRUE(input$outier_rnaseq_raw)){
@@ -527,9 +513,9 @@ server <- function(input, output, session){
             
             
             
-            #======================================================================#
-            # QC
-            #======================================================================#
+            #======================#
+            # Make QC plots/tables
+            #======================#
             
             #********************************************************************#
             # Expression values
@@ -567,7 +553,7 @@ server <- function(input, output, session){
             )
             
             # Boxplot of single gene
-            output$ExprBoxplot_rnaseq_raw <- renderPlotly({
+            output$ExprBoxplot_rnaseq_raw <- plotly::renderPlotly({
               req(input$exprTable_rnaseq_raw_rows_selected)
               
               # Set colors
@@ -643,13 +629,14 @@ server <- function(input, output, session){
             # Make PCA plot
             output$PCA_rnaseq_raw <- plotly::renderPlotly({
               
+              # Make colors
               if(length(input$colorFactor_rnaseq_raw) > 1){
                 colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_rnaseq_raw], 1, paste, collapse = "_" ))
               } else{
                 colorFactor <- factor(rv$metaData_fil[,input$colorFactor_rnaseq_raw])
               }
-              print(head(colorFactor))
               
+              # Make PCA score plot
               plot_PCA(PC_data = rv$PCA_data, 
                        colorFactor = colorFactor, 
                        xpc = as.numeric(stringr::str_remove(input$xpca_rnaseq_raw,"PC")), 
@@ -658,54 +645,65 @@ server <- function(input, output, session){
                        xyz = input$xyz_rnaseq_raw)
               
             })
-            #********************************************************************#
+            #======================#
             # UI
-            #********************************************************************#
+            #======================#
             
             # Render UI for main tab
             output$UI_QC_rnaseq_raw <- renderUI({
               tagList(
                 tabsetPanel(
+                  
+                  # TAB1: expression values
                   tabPanel("Expression values",
                            icon = icon("fas fa-mouse-pointer"),
+                           
+                           # Title + description
                            h3(strong("Normalized expression values")),
                            h5("Here you can view the normalized log intensity (expression) values."),
                            hr(),
-                           dataTableOutput(outputId = "exprTable_rnaseq_raw") %>% 
-                             withSpinner(color="#0dc5c1"),
+                           
+                           # Table
+                           DT::dataTableOutput(outputId = "exprTable_rnaseq_raw") %>% 
+                             shinycssloaders::withSpinner(color="#0dc5c1"),
+                           
+                           # Download button
                            downloadButton("downloadNormalizedData_rnaseq_raw", 
                                           "Download"),
-                           plotlyOutput("ExprBoxplot_rnaseq_raw")%>% 
-                             withSpinner(color="#0dc5c1")
+                           
+                           # Boxplot of the selected gene's expression values
+                           plotly::plotlyOutput("ExprBoxplot_rnaseq_raw")%>% 
+                             shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
+                  
+                  # TAB2: Boxplots of all gene's expression values
                   tabPanel("Boxplots",
                            icon = icon("fas fa-file"),
                            h3(strong("Boxplots")),
                            h5("These are boxplots of the normalized expression expression values."),
                            hr(),
                            plotOutput(outputId = "boxplots_rnaseq_raw") %>% 
-                             withSpinner(color="#0dc5c1")
+                             shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
+                  # TAB3: Density plots of all gene's expression values
                   tabPanel("Density plots",
                            icon = icon("fas fa-mouse-pointer"),
                            h3(strong("Density plots")),
                            h5("These are density plots of the normalized expression expression values."),
                            hr(),
-                           plotlyOutput(outputId = "densityplots_rnaseq_raw") %>% 
-                             withSpinner(color="#0dc5c1")
+                           plotly::plotlyOutput(outputId = "densityplots_rnaseq_raw") %>% 
+                             shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
+                  # TAB4: Heatmap of sample-sample correlations
                   tabPanel("Correlation plot", 
                            icon = icon("fas fa-mouse-pointer"),
-                           
                            br(),
-                           
                            fluidRow(
-                             
-                             #Distance method
+                             # Select istance method
                              column(4,
-                                    pickerInput(
+                                    shinyWidgets::pickerInput(
                                       inputId = "clusteroption1_rnaseq_raw",
                                       label = "Distance calculation 
                                               method",
@@ -715,9 +713,9 @@ server <- function(input, output, session){
                                         style = "btn-primary"))
                              ),
                              
-                             #Ckustering method
+                             #Clustering method
                              column(4,
-                                    pickerInput(
+                                    shinyWidgets::pickerInput(
                                       inputId = "clusteroption2_rnaseq_raw",
                                       label = "Clustering method",
                                       choices = c("ward.D2","single",
@@ -731,30 +729,28 @@ server <- function(input, output, session){
                            hr(),
                            
                            #Theme
-                           dropdownButton(
+                           shinyWidgets::dropdownButton(
                              tags$h3("Theme"),
-                             
                              selectInput(inputId = 'heatmaptheme_rnaseq_raw',
                                          label = NULL,
                                          choices = c("Default", 
                                                      "Yellow-red", 
                                                      "Dark")),
-                             
                              circle = TRUE, status = "info",
                              icon = icon("fas fa-cog"), width = "300px",
-                             
-                             tooltip = tooltipOptions(
+                             tooltip = shinyWidgets::tooltipOptions(
                                title = "Click to change theme!")
-                             
                            ),
                            
-                           plotlyOutput("heatmap_rnaseq_raw", 
+                           plotly::plotlyOutput("heatmap_rnaseq_raw", 
                                         width = "1000px", 
                                         height="600px") %>% 
-                             withSpinner(color="#0dc5c1", 
+                             shinycssloaders::withSpinner(color="#0dc5c1", 
                                          proxy.height = "400px")
                            
                   ),
+                  
+                  # TAB5: PCA score plot
                   tabPanel("PCA",
                            icon = icon("fas fa-mouse-pointer"),
                            # Title + text
@@ -768,7 +764,7 @@ server <- function(input, output, session){
                            fluidRow(
                              column(3,
                                     # Color by which factor?
-                                    pickerInput(inputId = "colorFactor_rnaseq_raw",
+                                    shinyWidgets::pickerInput(inputId = "colorFactor_rnaseq_raw",
                                                 label = "Color by:",
                                                 choices = colnames(rv$metaData_fil),
                                                 selected = autoGroup(rv$metaData_fil),
@@ -777,7 +773,7 @@ server <- function(input, output, session){
                              column(3,
                                     br(),
                                     # 3D plot?
-                                    materialSwitch(
+                                    shinyWidgets::materialSwitch(
                                       inputId = "xyz_rnaseq_raw",
                                       label = "3D",
                                       value = FALSE, 
@@ -820,14 +816,14 @@ server <- function(input, output, session){
                            # Print plot
                            fluidRow(
                              hr(),
-                             plotlyOutput("PCA_rnaseq_raw")%>% 
-                               withSpinner(color="#0dc5c1")
+                             plotly::plotlyOutput("PCA_rnaseq_raw")%>% 
+                               shinycssloaders::withSpinner(color="#0dc5c1")
                            ) 
                            
-                  ) # PCA tabpanel
-                ) # tabsetpanel
-              ) # taglist
-            }) # renderUI
+                  ) # EO PCA tabpanel
+                ) # EO tabSetPanel
+              ) # EO tagList
+            }) # EO renderUI
             
             # Allow user to go to next tab
             output$UI_next_preprocessing_rnaseq_raw <- renderUI({
@@ -835,7 +831,7 @@ server <- function(input, output, session){
               tagList(
                 hr(),
                 h2(strong("Continue your analysis")),
-                actionBttn(inputId = "next_preprocessing_rnaseq_raw",
+                shinyWidgets::actionBttn(inputId = "next_preprocessing_rnaseq_raw",
                            label = "Next",
                            style = "jelly",
                            color = "danger",
@@ -843,12 +839,12 @@ server <- function(input, output, session){
               )
             })
             
-          }) # observeEvent
+          }) # EO observeEvent
           
           
           
           #======================================================================#
-          # Statistical analysis
+          # TAB4: Statistical analysis
           #======================================================================#
           
           # Go to data upload tab
@@ -864,7 +860,7 @@ server <- function(input, output, session){
           # Select experimental group
           output$UI_expFactor_rnaseq_raw <- renderUI({
             tagList(
-              pickerInput(inputId = "expFactor_rnaseq_raw",
+              shinyWidgets::pickerInput(inputId = "expFactor_rnaseq_raw",
                           label = "Experiment factor:",
                           choices = colnames(rv$metaData_fil),
                           selected = autoGroup(rv$metaData_fil),
@@ -897,7 +893,7 @@ server <- function(input, output, session){
           output$UI_covGroups_num_rnaseq_raw <- renderUI({
             req(input$expFactor_rnaseq_raw)
             tagList(
-              pickerInput(inputId = "covGroups_num_rnaseq_raw",
+              shinyWidgets::pickerInput(inputId = "covGroups_num_rnaseq_raw",
                           label = "Continuous covariates (e.g., age):",
                           choices = setdiff(colnames(rv$metaData_fil),
                                             input$expFactor_rnaseq_raw),
@@ -910,7 +906,7 @@ server <- function(input, output, session){
           output$UI_covGroups_char_rnaseq_raw <- renderUI({
             req(input$expFactor_rnaseq_raw)
             tagList(
-              pickerInput(inputId = "covGroups_char_rnaseq_raw",
+              shinyWidgets::pickerInput(inputId = "covGroups_char_rnaseq_raw",
                           label = "Discrete covariates (e.g., sex):",
                           choices = setdiff(colnames(rv$metaData_fil),
                                             input$expFactor_rnaseq_raw),
@@ -924,7 +920,7 @@ server <- function(input, output, session){
             req(input$expFactor_rnaseq_raw)
             
             tagList(
-              multiInput(
+              shinyWidgets::multiInput(
                 inputId = "comparisons_rnaseq_raw",
                 label = "Comparisons:", 
                 choices = makeComparisons(make.names(unique(rv$experimentFactor))),
@@ -937,7 +933,7 @@ server <- function(input, output, session){
           # Select comparisons
           output$UI_biomart_dataset_rnaseq_raw <- renderUI({
             req(input$addAnnotation_rnaseq_raw)
-            pickerInput(inputId = "biomart_dataset_rnaseq_raw",
+            shinyWidgets::pickerInput(inputId = "biomart_dataset_rnaseq_raw",
                         label = "Organism:",
                         choices = c("Homo sapiens" = "hsapiens_gene_ensembl" ,
                                     "Bos taurus" = "btaurus_gene_ensembl",
@@ -954,20 +950,20 @@ server <- function(input, output, session){
             
             tagList(
               
-              pickerInput(inputId = "biomart_filter_rnaseq_raw",
+              shinyWidgets::pickerInput(inputId = "biomart_filter_rnaseq_raw",
                           label = "Gene ID",
-                          choices = c("ensembl_gene_id",
-                                      "entrezgene_id",
-                                      "gene_name"),
-                          selected = "entrezgene_id",
+                          choices = c("Ensembl Gene ID",
+                                      "Entrez Gene ID",
+                                      "Gene Symbol/Name"),
+                          selected = "Entrez Gene ID",
                           multiple = FALSE),
               
-              pickerInput(inputId = "biomart_attributes_rnaseq_raw",
+              shinyWidgets::pickerInput(inputId = "biomart_attributes_rnaseq_raw",
                           label = "Output",
-                          choices = c("ensembl_gene_id",
-                                      "entrezgene_id",
-                                      "gene_name"),
-                          selected = "gene_name",
+                          choices = c("Ensembl Gene ID",
+                                      "Entrez Gene ID",
+                                      "Gene Symbol/Name"),
+                          selected = "Gene Symbol/Name",
                           multiple = TRUE)
             )
             
@@ -975,11 +971,11 @@ server <- function(input, output, session){
           
           
           
-          #======================================================================#
-          # Output of statistical analysis
-          #======================================================================#
+          #=========================================#
+          # Generate output of statistical analysis
+          #=========================================#
           observeEvent(input$calculate_statistics_rnaseq_raw,{
-            show_modal_spinner(text = "Statistical analysis...",
+            shinybusy::show_modal_spinner(text = "Statistical analysis...",
                                color="#0dc5c1")
             
             # Calculate statistics
@@ -1023,7 +1019,7 @@ server <- function(input, output, session){
                 
                 # Show comparisons
                 output$UI_comparisons_view_rnaseq_raw <- renderUI({
-                  pickerInput(inputId = "comparisons_view_rnaseq_raw",
+                  shinyWidgets::pickerInput(inputId = "comparisons_view_rnaseq_raw",
                               label = "Select comparison:",
                               choices = names(rv$top_table),
                               selected = names(rv$top_table)[1],
@@ -1031,7 +1027,7 @@ server <- function(input, output, session){
                 })
                 
                 # Show message
-                sendSweetAlert(
+                shinyWidgets::sendSweetAlert(
                   session = session,
                   title = "Info",
                   text = "Statistical analysis has been performed. You can download 
@@ -1043,7 +1039,7 @@ server <- function(input, output, session){
               } else{
                 shinybusy::remove_modal_spinner()
                 # Show message
-                sendSweetAlert(
+                shinyWidgets::sendSweetAlert(
                   session = session,
                   title = "Error",
                   text = "Oops...something went wrong! Please try again!",
@@ -1053,10 +1049,12 @@ server <- function(input, output, session){
             })
             
             
-            # Make outputs:
+            #=========================================#
+            # Plot output of statistical analysis
+            #=========================================#
             
             #********************************************************************#
-            # top table
+            # TAB1: top table
             #********************************************************************#
             
             # print top table
@@ -1097,32 +1095,36 @@ server <- function(input, output, session){
               # make interactive plot
               plotExpr %>%
                 plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                        color = ~Grouping, colors = legendColors, type = "box") %>%
+                                color = ~Grouping, colors = legendColors, type = "box") %>%
                 plotly::layout(xaxis = list(title = " "),
-                       yaxis = list(title = 'log expression'),
-                       legend = list(title=list(text='Group')),
-                       showlegend = FALSE)
+                               yaxis = list(title = 'log expression'),
+                               legend = list(title=list(text='Group')),
+                               showlegend = FALSE)
               
             })
             
             #********************************************************************#
-            # Histograms
+            # TAB2: P value and logFC histograms
             #********************************************************************#
+            
+            # P value histogram
             output$Phistogram_rnaseq_raw <- plotly::renderPlotly({
               req(rv$top_table)
               p <- makePHistogram(rv$top_table[[input$comparisons_view_rnaseq_raw]][,"p-value"])
               return(p)
             })
             
-            output$logFChistogram_rnaseq_raw <- renderPlotly({
+            # logFC histrogram
+            output$logFChistogram_rnaseq_raw <- plotly::renderPlotly({
               req(rv$top_table)
               p <- makelogFCHistogram(rv$top_table[[input$comparisons_view_rnaseq_raw]][,"log2FC"])
               return(p)
             })
             
             #********************************************************************#
-            # Volcano plot
+            # TAB3: Volcano plot
             #********************************************************************#
+            
             observeEvent(input$plot_volcano_rnaseq_raw, {
               req(rv$top_table)
               req(input$rawp_volcano_rnaseq_raw)
@@ -1134,10 +1136,13 @@ server <- function(input, output, session){
                                logFC_threshold = input$logFC_thres_volcano_rnaseq_raw)
               
               output$volcano_rnaseq_raw <- plotly::renderPlotly(p)
-            }, ignoreNULL = FALSE)
+            }, ignoreNULL = FALSE) 
+            # ignoreNULL: generate plot even if action button is not pressed
             
             
-            # UI: Output in different tabs
+            #=========================================#
+            #  # UI: Output in different tabs
+            #=========================================#
             
             observe({
               output$UI_output_statistics_rnaseq_raw <- renderUI({
@@ -1154,12 +1159,12 @@ server <- function(input, output, session){
                              h3(strong("Top Table")),
                              h5("The Top Table includes the output of the selected statistical analysis."),
                              hr(),
-                             dataTableOutput(outputId = "top_table_rnaseq_raw") %>% 
-                               withSpinner(color="#0dc5c1"),
+                             DT::dataTableOutput(outputId = "top_table_rnaseq_raw") %>% 
+                               shinycssloaders::withSpinner(color="#0dc5c1"),
                              downloadButton("download_top_table_rnaseq_raw", 
                                             "Download"),
-                             plotlyOutput("ExprBoxplot_statistics_rnaseq_raw")%>% 
-                               withSpinner(color="#0dc5c1")
+                             plotly::plotlyOutput("ExprBoxplot_statistics_rnaseq_raw")%>% 
+                               shinycssloaders::withSpinner(color="#0dc5c1")
                     ),
                     #********************************************************************#
                     # histogram tab
@@ -1168,11 +1173,11 @@ server <- function(input, output, session){
                     tabPanel("Histograms",
                              icon = icon("fas fa-mouse-pointer"),
                              br(),
-                             plotlyOutput("Phistogram_rnaseq_raw")%>% 
-                               withSpinner(color="#0dc5c1"),
+                             plotly::plotlyOutput("Phistogram_rnaseq_raw")%>% 
+                               shinycssloaders::withSpinner(color="#0dc5c1"),
                              hr(),
-                             plotlyOutput("logFChistogram_rnaseq_raw")%>% 
-                               withSpinner(color="#0dc5c1")
+                             plotly::plotlyOutput("logFChistogram_rnaseq_raw")%>% 
+                               shinycssloaders::withSpinner(color="#0dc5c1")
                              
                     ),
                     
@@ -1210,15 +1215,17 @@ server <- function(input, output, session){
                                )
                              ),
                              hr(),
-                             actionBttn(inputId = "plot_volcano_rnaseq_raw", 
+                             
+                             # Button to reload the volcano plot
+                             shinyWidgets::actionBttn(inputId = "plot_volcano_rnaseq_raw", 
                                         label = "Plot",
                                         style = "jelly",
                                         color = "primary",
                                         icon = icon("sync")),
                              br(),
                              br(),
-                             # Volcano plot
-                             plotlyOutput("volcano_rnaseq_raw")%>% 
+                             # Volcano plot output
+                             plotly::plotlyOutput("volcano_rnaseq_raw")%>% 
                                withSpinner(color="#0dc5c1")
                              
                     )
@@ -1234,7 +1241,7 @@ server <- function(input, output, session){
               tagList(
                 hr(),
                 h2(strong("Continue your analysis")),
-                actionBttn(inputId = "next_statistics_rnaseq_raw",
+                shinyWidgets::actionBttn(inputId = "next_statistics_rnaseq_raw",
                            label = "Next",
                            style = "jelly",
                            color = "danger",
@@ -1246,7 +1253,7 @@ server <- function(input, output, session){
           
           
           #======================================================================#
-          # ORA
+          # TAB5: ORA
           #======================================================================#
           # Go to data upload tab
           observeEvent(input$next_statistics_rnaseq_raw,{
@@ -1256,11 +1263,15 @@ server <- function(input, output, session){
                              selected = "panel_ORA_rnaseq_raw")
           })
           
+          #********************************************************************#
+          # Options for ORA
+          #********************************************************************#
+          
           # Comparisons for which ORA should be performed
           observe({
             req(rv$top_table)
             output$UI_comparisons_view_ORA_rnaseq_raw <- renderUI({
-              pickerInput(inputId = "comparisons_view_ORA_rnaseq_raw",
+              shinyWidgets::pickerInput(inputId = "comparisons_view_ORA_rnaseq_raw",
                           label = NULL,
                           choices = names(rv$top_table),
                           selected = names(rv$top_table)[1],
@@ -1268,15 +1279,20 @@ server <- function(input, output, session){
             })
           })
           
-          # Which columns contain gene ids
           observe({
+            
+            # Get all columns of the top table that can possibly contain the gene IDs
             req(input$comparisons_view_ORA_rnaseq_raw)
             col_choice <- 1
             if (length(colnames(rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]])) > 6){
               col_choice <- c(1,7:ncol(rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]]))
             }
+            
+            # Several options need to be selected before ORA can be performed
             output$UI_geneID_ORA_rnaseq_raw <- renderUI({
               tagList(
+                
+                # Select organism
                 selectInput(inputId = "organism_ORA_rnaseq_raw",
                             label = "Organism",
                             choices = c("Bos taurus",
@@ -1286,31 +1302,40 @@ server <- function(input, output, session){
                                         "Rattus norvegicus"),
                             selected = "Homo sapiens"),
                 
-                pickerInput(inputId = "geneID_ORA_rnaseq_raw",
+                # Which columns of the top table contains the gene ids?
+                shinyWidgets::pickerInput(inputId = "geneID_ORA_rnaseq_raw",
                             label = "Which column of the top table contains the gene IDs?",
                             choices = colnames(rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]])[col_choice],
                             selected = colnames(rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]])[1],
                             multiple = FALSE),
                 
-                pickerInput(inputId = "selID_ORA_rnaseq_raw",
+                # Which gene IDs do they column contain?
+                shinyWidgets::pickerInput(inputId = "selID_ORA_rnaseq_raw",
                             label = "Which gene ID to use?",
-                            choices = c("ensembl_gene_id" = "ENSEMBL", 
-                                        "entrezgene_id" = "ENTREZID", 
-                                        "gene_name" = "SYMBOL"),
+                            choices = c("Ensembl Gene ID" = "ENSEMBL", 
+                                        "Entrez Gene ID" = "ENTREZID", 
+                                        "Gene Symbol/Name" = "SYMBOL"),
                             selected = "ENTREZID",
                             multiple = FALSE),
               )
             })
           })
           
-          # Show modal
+          #********************************************************************#
+          # Perform ORA
+          #********************************************************************#
+          
           observeEvent(input$calculate_ORA_rnaseq_raw,{
-            show_modal_spinner(text = "Overrepresentation analysis...",
+            
+            # Show modal
+            shinybusy::show_modal_spinner(text = "Overrepresentation analysis...",
                                color="#0dc5c1")
             
-            # Perform ORA
+            # Perform ORA:
+            
+            # Perform ORA based on logFC/P value threshold(s)
             if (input$topNorThres_rnaseq_raw == "Threshold"){
-              rv$ORA_data <- ORA(top_table = rv$top_table[[input$comparisons_view_ORA_microarray_rnaseq]],
+              rv$ORA_data <- ORA(top_table = rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]],
                                  geneset = input$geneset_ORA_rnaseq_raw,
                                  geneID_col = input$geneID_ORA_rnaseq_raw,
                                  geneID_type = input$selID_ORA_rnaseq_raw,
@@ -1321,6 +1346,8 @@ server <- function(input, output, session){
                                  rawadj = input$rawp_ORA_rnaseq_raw,
                                  p_thres = input$p_thres_ORA_rnaseq_raw,
                                  logFC_thres = input$logFC_thres_ORA_rnaseq_raw)
+              
+              # Perform ORA based on top N most significant genes
             } else{
               rv$ORA_data <- ORA(top_table = rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]],
                                  geneset = input$geneset_ORA_rnaseq_raw,
@@ -1335,12 +1362,17 @@ server <- function(input, output, session){
                                  logFC_thres = NULL)
             }
             
+            
+            #********************************************************************#
+            # Generate ORA output
+            #********************************************************************#
+            
             observe({
               
               # Remove modal
               shinybusy::remove_modal_spinner()
               
-              # Show message
+              # Show error message
               if (is.null(rv$ORA_data)){
                 sendSweetAlert(
                   session = session,
@@ -1348,8 +1380,8 @@ server <- function(input, output, session){
                   text = "No significant genes!",
                   type = "error")
                 
+                # Show success message
               }else{
-                
                 sendSweetAlert(
                   session = session,
                   title = "Info",
@@ -1357,11 +1389,15 @@ server <- function(input, output, session){
               the results as well as view them in interactive plots.",
                   type = "info")
                 
-                # print GO table
+                #--------------------------------------------------------------#
+                # ORA statistics table
+                #--------------------------------------------------------------#
+                
                 output$ORA_table_rnaseq_raw <- DT::renderDataTable({
                   req(input$geneset_ORA_rnaseq_raw)
                   output <- rv$ORA_data@result
                   
+                  # Link to wikipathways website if geneset ID is from WikiPathways
                   if (input$geneset_ORA_rnaseq_raw == "WikiPathways"){
                     output$ID <- paste0(
                       '<a ',
@@ -1377,6 +1413,7 @@ server <- function(input, output, session){
                     )
                   }
                   
+                  # Link to QuickGO website if geneset ID is a GO term
                   if (input$geneset_ORA_rnaseq_raw != "WikiPathways"){
                     output$ID <- paste0(
                       '<a ',
@@ -1424,7 +1461,10 @@ server <- function(input, output, session){
                   return(text)
                 })
                 
+                #--------------------------------------------------------------#
                 # ORA barchart
+                #--------------------------------------------------------------#
+                
                 observeEvent(input$plot_ORAplot_rnaseq_raw, {
                   req(input$nSets_ORAplot_rnaseq_raw)
                   p <- makeORAplot(rv$ORA_data,
@@ -1434,7 +1474,10 @@ server <- function(input, output, session){
                   
                 }, ignoreNULL = FALSE)
                 
+                #--------------------------------------------------------------#
                 # ORA network diagram
+                #--------------------------------------------------------------#
+                
                 observeEvent(input$plot_ORAnetwork_rnaseq_raw, {
                   req(input$layout_network_rnaseq_raw)
                   req(input$nSets_network_rnaseq_raw)
@@ -1448,48 +1491,67 @@ server <- function(input, output, session){
                   
                 }, ignoreNULL = FALSE)
                 
-              }
-            }) # Observe
+              } # EO ifelse
+            }) # EO observe
             
             
             
-            # Render output table
+            #********************************************************************#
+            # UI: ORA output
+            #********************************************************************#
             observe({
               if (!is.null(rv$ORA_data)){
                 output$UI_output_ORA_rnaseq_raw <- renderUI({
                   tagList(
                     tabsetPanel(
                       
-                      #********************************************************************#
-                      # top table tab
-                      #********************************************************************#
-                      
+                      #--------------------------------------------------------------#
+                      # ORA statistics table
+                      #--------------------------------------------------------------#
                       tabPanel("ORA table",
                                icon = icon("fas fa-mouse-pointer"),
                                br(),
+                               
+                               # Title + description of statistics table
                                h3(strong("Statistics table")),
                                h5("The ORA statistics table encompasses the output of the gene 
                               overrepresentation analysis."),
                                hr(),
-                               dataTableOutput(outputId = "ORA_table_rnaseq_raw") %>% 
-                                 withSpinner(color="#0dc5c1"),
+                               
+                               # Statistics table
+                               DT::dataTableOutput(outputId = "ORA_table_rnaseq_raw") %>% 
+                                 shinycssloaders::withSpinner(color="#0dc5c1"),
+                               
+                               # Download button
                                downloadButton("download_ORA_table_rnaseq_raw", 
                                               "Download"),
                                br(),
+                               
+                               # Title + description of gene table
                                htmlOutput("text_ORAgene_table_rnaseq_raw"),
                                h5(paste0("The gene table encompasses the statistics of all genes 
                               from the selected geneset.")),
                                hr(),
-                               dataTableOutput(outputId = "ORAgene_table_rnaseq_raw") %>% 
-                                 withSpinner(color="#0dc5c1")
+                               
+                               # Gene table
+                               DT::dataTableOutput(outputId = "ORAgene_table_rnaseq_raw") %>% 
+                                 shinycssloaders::withSpinner(color="#0dc5c1")
                       ),
                       
+                      
+                      #--------------------------------------------------------------#
+                      # ORA bar chart
+                      #--------------------------------------------------------------#
                       tabPanel("Bar chart",
                                icon = icon("fas fa-mouse-pointer"),
                                br(),
+                               
+                               # Title + description of bar chart
                                h3(strong("ORA bar chart")),
                                h5("The ORA bar chart visualizes the results from the overrepresentation analysis."),
                                hr(),
+                               
+                               # Select number of genesets shown in graph
                                fluidRow(
                                  column(3,
                                         # Number of genesets
@@ -1503,26 +1565,37 @@ server <- function(input, output, session){
                                  )
                                ),
                                hr(),
-                               actionBttn(inputId = "plot_ORAplot_rnaseq_raw", 
+                               
+                               # Actionbutton: press to reload plot
+                               shinyWidgets::actionBttn(inputId = "plot_ORAplot_rnaseq_raw", 
                                           label = "Plot",
                                           style = "jelly",
                                           color = "primary",
                                           icon = icon("sync")),
                                br(),
                                br(),
-                               plotlyOutput("ORAplot_rnaseq_raw") %>% 
-                                 withSpinner(color="#0dc5c1")
+                               
+                               # Interactive plot output
+                               plotly::plotlyOutput("ORAplot_rnaseq_raw") %>% 
+                                 shinycssloaders::withSpinner(color="#0dc5c1")
                       ),
                       
+                      #--------------------------------------------------------------#
+                      # ORA network diagram
+                      #--------------------------------------------------------------#
                       tabPanel("Network diagram",
                                icon = icon("fas fa-mouse-pointer"),
                                br(),
+                               
+                               # Title + description of the network diagram
                                h3(strong("ORA network diagram")),
                                h5("The ORA network diagram visualize the similarity between the most significant genesets."),
                                hr(),
+                               
+                               # Select plotting options
                                fluidRow(
                                  column(3,
-                                        # Number of genesets
+                                        # Select number of genesets in network
                                         numericInput(
                                           inputId = "nSets_network_rnaseq_raw",
                                           label = "Number of genesets (5-20)",
@@ -1532,8 +1605,8 @@ server <- function(input, output, session){
                                           step = 1)
                                  ),
                                  column(3,
-                                        # Network layout
-                                        pickerInput(inputId = "layout_network_rnaseq_raw",
+                                        # Select network layout
+                                        shinyWidgets::pickerInput(inputId = "layout_network_rnaseq_raw",
                                                     label = "Network layout",
                                                     choices = c('star', 'circle', 'gem', 'dh', 'graphopt', 'grid', 'mds', 
                                                                 'randomly', 'fr', 'kk', 'drl', 'lgl'),
@@ -1542,29 +1615,31 @@ server <- function(input, output, session){
                                  )
                                ),
                                hr(),
-                               actionBttn(inputId = "plot_ORAnetwork_rnaseq_raw", 
+                               
+                               # Actionbutton: press to reload plot
+                               shinyWidgets::actionBttn(inputId = "plot_ORAnetwork_rnaseq_raw", 
                                           label = "Plot",
                                           style = "jelly",
                                           color = "primary",
                                           icon = icon("sync")),
                                br(),
                                br(),
+                               
+                               # Make plot
                                plotOutput("ORAnetwork_rnaseq_raw") %>% 
-                                 withSpinner(color="#0dc5c1")
+                                 shinycssloaders::withSpinner(color="#0dc5c1")
                       ),
                       
-                    ) # tabsetpanel
-                  ) # taglist
-                })
-              }# renderUI
-            }) # Observe
+                    ) # EO tabSetPanel
+                  ) # EO tagList
+                }) # EO renderUI
+              }# EO if !is.null(rv$ORA_data)
+            }) # EO observe
             
-            
-            
-          }) #observe event
+          }) # EO observeEvent
           
           
-        } # raw or norm
+        } # EO raw or norm
         
         
         
@@ -1609,13 +1684,21 @@ server <- function(input, output, session){
             # Go to RNA-seq tab
             updateNavbarPage(session, "navbar",
                              selected = "panel_upload_rnaseq_norm")
+            
+            # Example meta data file
+            output$downloadmeta_example_rnaseq_norm <- downloadHandler(
+              filename = "MetaData_example.csv",
+              content = function(file){
+                write.csv(exampleMeta, file, quote = FALSE, row.names = FALSE)
+              }
+            )
           })
           
           #----------------------------------------------------------------------#
           # Upload files
           #----------------------------------------------------------------------#
           
-          observeEvent(input$upload_rnaseq_raq,{
+          observeEvent(input$upload_rnaseq_norm,{
             
             # Show modal
             show_modal_spinner(text = "Reading data...",
@@ -1974,6 +2057,54 @@ server <- function(input, output, session){
             }
           })
           
+          # Automatically select filtering
+          output$UI_filtering_rnaseq_norm <- renderUI({
+            
+            if (checkFiltering(gxMatrix = rv$gxData) == "No filtering"){
+              tagList(
+                materialSwitch(
+                  inputId = "filtering_rnaseq_norm",
+                  label = "Gene filtering?",
+                  value = TRUE, 
+                  status = "danger"),
+                
+                conditionalPanel(
+                  condition = "input.filtering_rnaseq_norm==true",
+                  numericInput(
+                    inputId = "countfilter_rnaseq_norm",
+                    label = "Minimum number of counts in smallest group size",
+                    value = 10)
+                  
+                ),
+                
+                h5(strong("NOTE: "),"Data seems not to be filtered. So, 
+                 (additional) filtering might be needed.")
+                
+              )
+              
+            }else{
+              tagList(
+                materialSwitch(
+                  inputId = "filtering_rnaseq_norm",
+                  label = "Gene filtering?",
+                  value = FALSE, 
+                  status = "danger"),
+                
+                conditionalPanel(
+                  condition = "input.filtering_rnaseq_norm==true",
+                  numericInput(
+                    inputId = "countfilter_rnaseq_norm",
+                    label = "Minimum number of counts in smallest group size",
+                    value = 10)
+                  
+                ),
+                
+                h5(strong("NOTE: "),"Data seems to be already filtered. So, 
+                   additional filtering might not be needed.")
+              )
+            }
+          })
+          
           # 3. pre-process the raw data
           observeEvent(input$start_preprocessing_rnaseq_norm,{
             
@@ -2006,15 +2137,22 @@ server <- function(input, output, session){
               rv$experimentFactor <- factor(make.names(rv$metaData_fil[,input$groupselect_rnaseq_norm]))
             }
             
-            # Get filter
-            rv$filterThreshold <- input$countfilter_rnaseq_norm
-            
             # Normalization
-            rv$normData <- RNASeqNormalization_processed(gxMatrix = rv$gxData_fil,
-                                                         experimentFactor = rv$experimentFactor,
-                                                         transMeth = input$transformation_rnaseq_norm,
-                                                         normMeth = input$normMeth_rnaseq_norm,
-                                                         perGroup_name = input$perGroup_rnaseq_norm)
+            if (isTRUE(input$filtering_rnaseq_norm)){
+              rv$normData <- RNASeqNormalization_processed(gxMatrix = rv$gxData_fil,
+                                                           experimentFactor = rv$experimentFactor,
+                                                           transMeth = input$transformation_rnaseq_norm,
+                                                           normMeth = input$normMeth_rnaseq_norm,
+                                                           perGroup_name = input$perGroup_rnaseq_norm,
+                                                           filterThres = input$input$countfilter_rnaseq_norm)
+            } else{
+              rv$normData <- RNASeqNormalization_processed(gxMatrix = rv$gxData_fil,
+                                                           experimentFactor = rv$experimentFactor,
+                                                           transMeth = input$transformation_rnaseq_norm,
+                                                           normMeth = input$normMeth_rnaseq_norm,
+                                                           perGroup_name = input$perGroup_rnaseq_norm,
+                                                           filterThres = 0)
+            }
             
             
             
@@ -2447,18 +2585,18 @@ server <- function(input, output, session){
               
               pickerInput(inputId = "biomart_filter_rnaseq_norm",
                           label = "Gene ID",
-                          choices = c("ensembl_gene_id",
-                                      "entrezgene_id",
-                                      "gene_name"),
-                          selected = "entrezgene_id",
+                          choices = c("Ensembl Gene ID",
+                                      "Entrez Gene ID",
+                                      "Gene Symbol/Name"),
+                          selected = "Entrez Gene ID",
                           multiple = FALSE),
               
               pickerInput(inputId = "biomart_attributes_rnaseq_norm",
                           label = "Output",
-                          choices = c("ensembl_gene_id",
-                                      "entrezgene_id",
-                                      "gene_name"),
-                          selected = "gene_name",
+                          choices = c("Ensembl Gene ID",
+                                      "Entrez Gene ID",
+                                      "Gene Symbol/Name"),
+                          selected = "Gene Symbol/Name",
                           multiple = TRUE)
             )
             
@@ -2478,35 +2616,35 @@ server <- function(input, output, session){
               
               counts <- 2^rv$normData - 1 
               rv$top_table <- getStatistics_RNASeq_processed(normMatrix = counts, 
-                                                          metaData = rv$metaData_fil, 
-                                                          expFactor = input$expFactor_rnaseq_norm, 
-                                                          covGroups_num = input$covGroups_num_rnaseq_norm, 
-                                                          covGroups_char = input$covGroups_char_rnaseq_norm, 
-                                                          comparisons = input$comparisons_rnaseq_norm,
-                                                          addAnnotation = input$addAnnotation_rnaseq_norm,
-                                                          biomart_dataset = input$biomart_dataset_rnaseq_norm,
-                                                          biomart_attributes = unique(c(input$biomart_filter_rnaseq_norm,
-                                                                                        input$biomart_attributes_rnaseq_norm)),
-                                                          biomart_filters = input$biomart_filter_rnaseq_norm)
-            
-              } else{
-                counts <- 2^rv$normData - 1 
-                rv$top_table <- getStatistics_RNASeq_processed(normMatrix = counts, 
-                                                               metaData = rv$metaData_fil, 
-                                                               expFactor = input$expFactor_rnaseq_norm, 
-                                                               covGroups_num = input$covGroups_num_rnaseq_norm, 
-                                                               covGroups_char = input$covGroups_char_rnaseq_norm, 
-                                                               comparisons = input$comparisons_rnaseq_norm,
-                                                               addAnnotation = input$addAnnotation_rnaseq_norm,
-                                                               biomart_dataset = NULL,
-                                                               biomart_attributes = NULL,
-                                                               biomart_filters = NULL)
-                
+                                                             metaData = rv$metaData_fil, 
+                                                             expFactor = input$expFactor_rnaseq_norm, 
+                                                             covGroups_num = input$covGroups_num_rnaseq_norm, 
+                                                             covGroups_char = input$covGroups_char_rnaseq_norm, 
+                                                             comparisons = input$comparisons_rnaseq_norm,
+                                                             addAnnotation = input$addAnnotation_rnaseq_norm,
+                                                             biomart_dataset = input$biomart_dataset_rnaseq_norm,
+                                                             biomart_attributes = unique(c(input$biomart_filter_rnaseq_norm,
+                                                                                           input$biomart_attributes_rnaseq_norm)),
+                                                             biomart_filters = input$biomart_filter_rnaseq_norm)
+              
+            } else{
+              counts <- 2^rv$normData - 1 
+              rv$top_table <- getStatistics_RNASeq_processed(normMatrix = counts, 
+                                                             metaData = rv$metaData_fil, 
+                                                             expFactor = input$expFactor_rnaseq_norm, 
+                                                             covGroups_num = input$covGroups_num_rnaseq_norm, 
+                                                             covGroups_char = input$covGroups_char_rnaseq_norm, 
+                                                             comparisons = input$comparisons_rnaseq_norm,
+                                                             addAnnotation = input$addAnnotation_rnaseq_norm,
+                                                             biomart_dataset = NULL,
+                                                             biomart_attributes = NULL,
+                                                             biomart_filters = NULL)
+              
             }
             
             # Select comparison for output
             observe({
-            
+              
               
               if (!is.null(rv$top_table)){
                 # Remove modal
@@ -2785,9 +2923,9 @@ server <- function(input, output, session){
                 
                 pickerInput(inputId = "selID_ORA_rnaseq_norm",
                             label = "Which gene ID to use?",
-                            choices = c("ensembl_gene_id" = "ENSEMBL", 
-                                        "entrezgene_id" = "ENTREZID", 
-                                        "gene_name" = "SYMBOL"),
+                            choices = c("Ensembl Gene ID" = "ENSEMBL", 
+                                        "Entrez Gene ID" = "ENTREZID", 
+                                        "Gene Symbol/Name" = "SYMBOL"),
                             selected = "ENTREZID",
                             multiple = FALSE),
               )
@@ -2934,8 +3072,8 @@ server <- function(input, output, session){
                                       nSets = input$nSets_network_rnaseq_norm)
                   
                   output$ORAnetwork_rnaseq_norm <- renderPlot(p,
-                                                             height = 500, 
-                                                             width = 800)
+                                                              height = 500, 
+                                                              width = 800)
                   
                 }, ignoreNULL = FALSE)
                 
@@ -3112,6 +3250,14 @@ server <- function(input, output, session){
             # Go to microarray (raw) upload tab
             updateNavbarPage(session, "navbar",
                              selected = "panel_upload_microarray_raw")
+            
+            # Example meta data file
+            output$downloadmeta_example_microarray_raw <- downloadHandler(
+              filename = "MetaData_example.csv",
+              content = function(file){
+                write.csv(exampleMeta, file, quote = FALSE, row.names = FALSE)
+              }
+            )
           })
           
           #----------------------------------------------------------------------#
@@ -3126,24 +3272,25 @@ server <- function(input, output, session){
                                           color="#0dc5c1")
             
             # Select (raw) CEL files
+            rv$zippath <- input$uploadCEL_microarray_raw$datapath
             rv$celfiles <- getCELs(zippath = input$uploadCEL_microarray_raw)
             
             # Get metadata
-            req(rv$celfiles) # CEL files are required for the metadata table
+            #req(rv$celfiles) # CEL files are required for the metadata table
             if(length(rv$celfiles)>0){
               
               # Metadata in tsv or csv format
-              if (input$MetaFileType==".tsv/.csv file"){
+              if (input$MetaFileType_microarray_raw==".tsv/.csv file"){
                 rv$metaData <- getMetaData(path = input$uploadMeta_microarray_raw_tsv$datapath,
                                            celfiles = rv$celfiles,
-                                           filetype = input$MetaFileType)
+                                           filetype = input$MetaFileType_microarray_raw)
               }
               
               # Metadata in Series Matrix File format
-              if (input$MetaFileType=="Series Matrix File"){
+              if (input$MetaFileType_microarray_raw=="Series Matrix File"){
                 rv$metaData <- getMetaData(path = input$uploadMeta_microarray_raw_smf$datapath,
                                            celfiles = rv$celfiles,
-                                           filetype = input$MetaFileType)
+                                           filetype = input$MetaFileType_microarray_raw)
               }
             } else {
               
@@ -3153,6 +3300,8 @@ server <- function(input, output, session){
                 title = "Error!!",
                 text = "No expression data",
                 type = "error")
+              
+              shinybusy::remove_modal_spinner()
             }
             
             # Read raw expression data
@@ -3161,7 +3310,9 @@ server <- function(input, output, session){
               
               # Read data
               rv$celfiles_fil <- rv$celfiles[stringr::str_remove(basename(rv$celfiles),"\\.CEL.*") %in% rownames(rv$metaData)]
-              rv$gxData <- readCELs(rv$celfiles_fil)
+              rv$gxData <- readCELs(rv$celfiles_fil, 
+                                    zippath = rv$zippath, 
+                                    rm = FALSE)
               
               # Check whether all expression samples have meta data available
               if (nrow(rv$metaData) < length(rv$celfiles)){
@@ -3207,14 +3358,14 @@ server <- function(input, output, session){
                              h5("These are the first six entries of the expression matrix. Please check if the data 
                has been correctly imported."),
                              hr(),
-                             dataTableOutput(outputId = "exprTable_upload_microarray_raw") %>% 
+                             DT::dataTableOutput(outputId = "exprTable_upload_microarray_raw") %>% 
                                withSpinner(color="#0dc5c1")),
                     tabPanel("Meta data",                  # Meta table
                              h3(strong("Meta data")),
                              h5("This is a preview of the meta data. Please check if the data 
                has been correctly imported."),
                              hr(),
-                             dataTableOutput(outputId = "metaTable_microarray_raw") %>% 
+                             DT::dataTableOutput(outputId = "metaTable_microarray_raw") %>% 
                                withSpinner(color="#0dc5c1")),
                   )
                 )
@@ -3233,7 +3384,7 @@ server <- function(input, output, session){
                 
                 # Show message
                 if (nrow(rv$metaData) >= length(rv$celfiles)){
-                  sendSweetAlert(
+                  shinyWidgets::sendSweetAlert(
                     session = session,
                     title = "Info",
                     text = "The data has been uploaded. Please check the tables on this 
@@ -3245,11 +3396,11 @@ server <- function(input, output, session){
                 tagList(
                   hr(),
                   h2(strong("Continue your analysis")),
-                  actionBttn(inputId = "next_upload_microarray_raw",
-                             label = "Next",
-                             style = "jelly",
-                             color = "danger",
-                             icon = icon("arrow-right"))
+                  shinyWidgets::actionBttn(inputId = "next_upload_microarray_raw",
+                                           label = "Next",
+                                           style = "jelly",
+                                           color = "danger",
+                                           icon = icon("arrow-right"))
                 )
               })
               
@@ -3279,7 +3430,8 @@ server <- function(input, output, session){
                                           color="#0dc5c1")
             
             # Select (raw) CEL files
-            rv$celfiles <- getCELs(zippath = "Data/Microarray/GSE6955_RAW.zip",
+            rv$zippath <- "Data/Microarray/GSE6955_RAW.zip"
+            rv$celfiles <- getCELs(zippath = rv$zippath,
                                    shiny_upload = FALSE)
             
             # Get metadata
@@ -3287,11 +3439,9 @@ server <- function(input, output, session){
             if(length(rv$celfiles)>0){
               
               # Metadata in tsv or csv format
-              if (input$MetaFileType==".tsv/.csv file"){
-                rv$metaData <- getMetaData(path = "Data/Microarray/metaData_GSE6955.csv",
-                                           celfiles = rv$celfiles,
-                                           filetype = ".tsv/.csv file")
-              }
+              rv$metaData <- getMetaData(path = "Data/Microarray/metaData_GSE6955.csv",
+                                         celfiles = rv$celfiles,
+                                         filetype = ".tsv/.csv file")
             } else {
               # Send error message if there is no expression data
               shinyWidgets::sendSweetAlert(
@@ -3307,7 +3457,9 @@ server <- function(input, output, session){
               
               # Read data
               rv$celfiles_fil <- rv$celfiles[stringr::str_remove(basename(rv$celfiles),"\\.CEL.*") %in% rownames(rv$metaData)]
-              rv$gxData <- readCELs(rv$celfiles_fil)
+              rv$gxData <- readCELs(rv$celfiles_fil, 
+                                    zippath = rv$zippath,
+                                    rm = FALSE)
               
               # Check whether all expression samples have meta data available
               if (nrow(rv$metaData) < length(rv$celfiles)){
@@ -3438,14 +3590,17 @@ server <- function(input, output, session){
             rv$Organism <- getOrganism(gxData = rv$gxData)
           })
           
+          #------------------------------------------------------------------#
+          # Dynamic UI
+          #------------------------------------------------------------------#
           
           # 1. Select outliers
           output$UI_outlier_microarray_raw <- renderUI({
             
             # If outliers are checked, show possible sample to select as outliers
-            if(!input$outlier){
+            if(!input$outlier_microarray_raw){
               samples <- rownames(rv$metaData)
-              pickerInput(inputId = "select_outliers",
+              shinyWidgets::pickerInput(inputId = "select_outliers_microarray_raw",
                           label = tags$span(
                             "Select samples to be removed", 
                             tags$span(
@@ -3467,7 +3622,7 @@ server <- function(input, output, session){
           
           # 2. Select experimental groups
           output$UI_groupselect_microarray_raw <- renderUI({
-            shinyWidgets::pickerInput(inputId = "groupselect",
+            shinyWidgets::pickerInput(inputId = "groupselect_microarray_raw",
                                       label = NULL,
                                       choices = colnames(rv$metaData),
                                       selected = autoGroup(rv$metaData),
@@ -3476,14 +3631,14 @@ server <- function(input, output, session){
           
           # print the experimental levels
           output$experimentallevels <- renderText({
-            req(input$groupselect)
+            req(input$groupselect_microarray_raw)
             
-            if(length(input$groupselect) > 1){
+            if(length(input$groupselect_microarray_raw) > 1){
               # If more than one metadata column is selected: concatenate  the vectors
-              experimentFactor <- make.names(apply(rv$metaData[,input$groupselect], 1, paste, collapse = "_" ))
+              experimentFactor <- make.names(apply(rv$metaData[,input$groupselect_microarray_raw], 1, paste, collapse = "_" ))
             } else{
               # If only one metadata column is selected: nothing to do!
-              experimentFactor <- make.names(rv$metaData[,input$groupselect])
+              experimentFactor <- make.names(rv$metaData[,input$groupselect_microarray_raw])
             }
             
             # Show the levels of the selected experimental factor
@@ -3499,7 +3654,12 @@ server <- function(input, output, session){
             
           })
           
-          # Get organism
+          # 3. Normalization
+          # -
+          
+          # 4. Select Annotation
+          
+          # Select Organism
           output$UI_species_microarray_raw <- renderUI({
             selectInput(inputId = "species_microarray_raw",
                         label = "Species",
@@ -3522,11 +3682,15 @@ server <- function(input, output, session){
                         selected = rv$Organism)
           })
           
+          #------------------------------------------------------------------#
+          # Perform pre-processing
+          #------------------------------------------------------------------#
           
-          # 3. Pre-process the raw data
+          # 5. Pre-process the raw data
           observeEvent(input$start_preprocessing_microarray_raw,{
             
-            rv$annotations <- input$annotations_microarray 
+            # Get Probeset annotation
+            rv$annotations <- input$annotations_microarray_raw 
             if (rv$annotations == "Custom annotations"){
               rv$ProbeAnnotation <- input$CDFtype_microarray 
               rv$Organism <- input$species_microarray_raw 
@@ -3539,8 +3703,8 @@ server <- function(input, output, session){
                                           color="#0dc5c1")
             
             # Select outlier
-            if (!isTRUE(input$outier)){
-              rv$outlier <- input$select_outliers
+            if (!isTRUE(input$outier_microarray_raw)){
+              rv$outlier <- input$select_outliers_microarray_raw
             } else{
               rv$outlier <- NULL
             }
@@ -3554,14 +3718,16 @@ server <- function(input, output, session){
             }
             
             # Filter metadata and expression data (and put samples in correct order)
-            rv$gxData_fil <- readCELs(rv$celfiles_sel)
+            rv$gxData_fil <- readCELs(celfiles= rv$celfiles_sel, 
+                                      zippath = rv$zippath, 
+                                      rm = TRUE)
             rv$metaData_fil <- rv$metaData[stringr::str_remove(colnames(Biobase::exprs(rv$gxData_fil)),"\\.CEL.*"),]
             
             # Experiment factor
-            if(length(input$groupselect) > 1){
-              rv$experimentFactor <- factor(make.names(apply(rv$metaData_fil[,input$groupselect], 1, paste, collapse = "_" )))
+            if(length(input$groupselect_microarray_raw) > 1){
+              rv$experimentFactor <- factor(make.names(apply(rv$metaData_fil[,input$groupselect_microarray_raw], 1, paste, collapse = "_" )))
             } else{
-              rv$experimentFactor <- factor(make.names(rv$metaData_fil[,input$groupselect]))
+              rv$experimentFactor <- factor(make.names(rv$metaData_fil[,input$groupselect_microarray_raw]))
             }
             
             # If the data object is of a "geneFeatureSet" class, only RMA
@@ -3574,19 +3740,37 @@ server <- function(input, output, session){
               Currently only RMA normalization without custom probeset annotation 
               is supported. So, the pre-processing will be performed accordingly.",
                 type = "info")
+              
               rv$annotations <- "No annotations"
               rv$ProbeAnnotation <- NULL 
             }
             
+            # Collect chosen pre-processing settings into a dataframe
+            rv$processingSettings <- data.frame(
+              Option = c("Removed samples",
+                       "Experimental group",
+                       "Experimental levels",
+                       "Normalization method",
+                       "Annotation"),
+              Selected = c(paste(rv$outlier, collapse = "; "),
+                          paste(input$groupselect_microarray_raw, collapse = "; "),
+                          paste(unique(rv$experimentFactor), collapse = "; "),
+                          paste(input$normMeth_microarray_raw,"; ",input$perGroup_microarray_raw),
+                          paste0(rv$annotations,
+                                 ifelse(rv$annotations == "Custom annotations", paste0("; ",input$CDFtype_microarray_raw),""), 
+                                 ifelse(rv$annotations == "Custom annotations", paste0("; ",input$species_microarray_raw), ""))
+                          )
+            )
+            
             # Perform normalization
             rv$normData <- microarrayNormalization(gxData = rv$gxData_fil,
                                                    experimentFactor = rv$experimentFactor,
-                                                   normMeth = input$normMeth_microarray,
-                                                   CDFtype = input$CDFtype_microarray,
+                                                   normMeth = input$normMeth_microarray_raw,
+                                                   CDFtype = input$CDFtype_microarray_raw,
                                                    species = input$species_microarray_raw,
                                                    annotations = rv$annotations,
-                                                   perGroup_name = input$perGroup_microarray,
-                                                   annot_file_datapath = input$annot_file_microarray$datapath)
+                                                   perGroup_name = input$perGroup_microarray_raw,
+                                                   annot_file_datapath = input$annot_file_microarray_raw$datapath)
             
             # Get expression values
             normMatrix <- Biobase::exprs(rv$normData)
@@ -3602,13 +3786,13 @@ server <- function(input, output, session){
             rm(normMatrix)
             
             
-            #======================================================================#
-            # QC
-            #======================================================================#
+            #------------------------------------------------------------------#
+            #Generate output: QC tables/plots
+            #------------------------------------------------------------------#
             
-            #********************************************************************#
-            # Expression values
-            #********************************************************************#
+            #******************************************************************#
+            # Output 1: Table with normalized expression values
+            #******************************************************************#
             
             # Print expression table
             output$exprTable_microarray_raw <- DT::renderDataTable({
@@ -3706,7 +3890,7 @@ server <- function(input, output, session){
             })
             
             #********************************************************************#
-            # Boxplots
+            # Output 2: Boxplots
             #********************************************************************#
             
             # Boxplots of all genes together
@@ -3716,7 +3900,7 @@ server <- function(input, output, session){
             },deleteFile = TRUE)
             
             #********************************************************************#
-            # Densityplots
+            # Output 3: Densityplots
             #********************************************************************#
             
             # Densityplots of all genes together
@@ -3727,7 +3911,7 @@ server <- function(input, output, session){
             })
             
             #********************************************************************#
-            # Heatmap
+            # Output 4: Sample-sample correlation heatmap
             #********************************************************************#
             
             # Heatmap of sample-sample correlations
@@ -3740,7 +3924,7 @@ server <- function(input, output, session){
             })
             
             #********************************************************************#
-            # PCA
+            # Output 5: PCA score plot
             #********************************************************************#
             
             #Perform PCA
@@ -3769,14 +3953,35 @@ server <- function(input, output, session){
                        xyz = input$xyz_microarray_raw)
               
             })
+            
             #********************************************************************#
-            # UI
+            # Output 6: Overview of pre-processing settings
             #********************************************************************#
+            # Print table with settings
+            output$processingSettings_microarray_raw <- DT::renderDataTable({
+              return(rv$processingSettings)
+            },options = list(pageLength = 10),
+            selection = "none")
+            
+            # Download button
+            output$downloadProcessingSettings_microarray_raw <- downloadHandler(
+              filename = "preprocessingSettings.csv",
+              content = function(file){
+                write.csv(rv$processingSettings, file, quote = FALSE, row.names = FALSE)
+              }
+            )
+              
+              
+            #------------------------------------------------------------------#
+            # Display output: QC tables/plots
+            #------------------------------------------------------------------#
             
             # Render UI for main tab
             output$UI_QC_microarray_raw <- renderUI({
               tagList(
                 tabsetPanel(
+                  
+                  # Expression table
                   tabPanel("Expression values",
                            icon = icon("fas fa-mouse-pointer"),
                            h3(strong("Normalized expression values")),
@@ -3789,6 +3994,8 @@ server <- function(input, output, session){
                            plotly::plotlyOutput("ExprBoxplot_microarray")%>% 
                              withSpinner(color="#0dc5c1")
                   ),
+                  
+                  # Boxplots
                   tabPanel("Boxplots",
                            icon = icon("fas fa-file"),
                            h3(strong("Boxplots")),
@@ -3798,6 +4005,7 @@ server <- function(input, output, session){
                              shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
+                  # Density plot
                   tabPanel("Density plots",
                            icon = icon("fas fa-mouse-pointer"),
                            h3(strong("Density plots")),
@@ -3807,6 +4015,7 @@ server <- function(input, output, session){
                              shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
+                  # Sample-sample correlation heatmap
                   tabPanel("Correlation plot", 
                            icon = icon("fas fa-mouse-pointer"),
                            
@@ -3845,6 +4054,7 @@ server <- function(input, output, session){
                            dropdownButton(
                              tags$h3("Theme"),
                              
+                             # Color theme
                              selectInput(inputId = 'heatmaptheme_microarray_raw',
                                          label = NULL,
                                          choices = c("Default", 
@@ -3859,6 +4069,7 @@ server <- function(input, output, session){
                              
                            ),
                            
+                           # Heatmap
                            plotly::plotlyOutput("heatmap_microarray_raw", 
                                                 width = "1000px", 
                                                 height="600px") %>% 
@@ -3866,6 +4077,8 @@ server <- function(input, output, session){
                                                           proxy.height = "400px")
                            
                   ),
+                  
+                  # PCA score plot
                   tabPanel("PCA",
                            icon = icon("fas fa-mouse-pointer"),
                            # Title + text
@@ -3935,10 +4148,22 @@ server <- function(input, output, session){
                                shinycssloaders::withSpinner(color="#0dc5c1")
                            ) 
                            
-                  ) # PCA tabpanel
-                ) # tabsetpanel
-              ) # taglist
-            }) # renderUI
+                  ), 
+                  # Settings table
+                  tabPanel("Settings overview",
+                           icon = icon("fas fa-file"),
+                           h3(strong("Pre-processing settings")),
+                           h5("Here you can see an overview of the chosen pre-processing settings."),
+                           hr(),
+                           DT::dataTableOutput(outputId = "processingSettings_microarray_raw") %>% 
+                             withSpinner(color="#0dc5c1"),
+                           downloadButton("downloadProcessingSettings_microarray_raw", 
+                                          "Download"),
+                           
+                  ) # EO Settings tabPanel
+                ) # EO tabsetPanel
+              ) # EO tagList
+            }) # EO renderUI
             
             # Allow user to go to next tab
             output$UI_next_preprocessing_microarray_raw <- renderUI({
@@ -3951,15 +4176,14 @@ server <- function(input, output, session){
                                          style = "jelly",
                                          color = "danger",
                                          icon = icon("arrow-right"))
-              )
-            })
-            
-          }) # observeEvent
+              ) # EO tagList
+            }) # EO renderUI
+          }) # EO observeEvent
           
+          #====================================================================#
+          # TAB 3: Statistical analysis
+          #====================================================================#
           
-          #======================================================================#
-          # Statistical analysis
-          #======================================================================#
           # Go to data upload tab
           observeEvent(input$next_preprocessing_microarray_raw,{
             
@@ -4077,10 +4301,10 @@ server <- function(input, output, session){
               
               shinyWidgets::pickerInput(inputId = "biomart_attributes_microarray_raw",
                                         label = "Output",
-                                        choices = c("ensembl_gene_id",
-                                                    "entrezgene_id",
-                                                    "gene_name"),
-                                        selected = "gene_name",
+                                        choices = c("Ensembl Gene ID",
+                                                    "Entrez Gene ID",
+                                                    "Gene Symbol/Name"),
+                                        selected = "Gene Symbol/Name",
                                         multiple = TRUE)
             )
             
@@ -4449,10 +4673,10 @@ server <- function(input, output, session){
             req(rv$top_table)
             output$UI_comparisons_view_ORA_microarray_raw <- renderUI({
               shinyWidgets::pickerInput(inputId = "comparisons_view_ORA_microarray_raw",
-                          label = NULL,
-                          choices = names(rv$top_table),
-                          selected = names(rv$top_table)[1],
-                          multiple = FALSE)
+                                        label = NULL,
+                                        choices = names(rv$top_table),
+                                        selected = names(rv$top_table)[1],
+                                        multiple = FALSE)
             })
           })
           
@@ -4486,18 +4710,18 @@ server <- function(input, output, session){
                 
                 # Select column with gene IDs
                 shinyWidgets::pickerInput(inputId = "geneID_ORA_microarray_raw",
-                            label = "Which column of the top table contains the gene IDs?",
-                            choices = colnames(rv$top_table[[input$comparisons_view_ORA_microarray_raw]])[col_choice],
-                            selected = colnames(rv$top_table[[input$comparisons_view_ORA_microarray_raw]])[1],
-                            multiple = FALSE),
+                                          label = "Which column of the top table contains the gene IDs?",
+                                          choices = colnames(rv$top_table[[input$comparisons_view_ORA_microarray_raw]])[col_choice],
+                                          selected = colnames(rv$top_table[[input$comparisons_view_ORA_microarray_raw]])[1],
+                                          multiple = FALSE),
                 
                 shinyWidgets::pickerInput(inputId = "selID_ORA_microarray_raw",
-                            label = "Which gene ID to use?",
-                            choices = c("ensembl_gene_id" = "ENSEMBL", 
-                                        "entrezgene_id" = "ENTREZID", 
-                                        "gene_name" = "SYMBOL"),
-                            selected = selID(rv$ProbeAnnotation),
-                            multiple = FALSE),
+                                          label = "Which gene ID to use?",
+                                          choices = c("Ensembl Gene ID" = "ENSEMBL", 
+                                                      "Entrez Gene ID" = "ENTREZID", 
+                                                      "Gene Symbol/Name" = "SYMBOL"),
+                                          selected = selID(rv$ProbeAnnotation),
+                                          multiple = FALSE),
               )
             })
           })
@@ -4505,7 +4729,7 @@ server <- function(input, output, session){
           # Show modal
           observeEvent(input$calculate_ORA_microarray_raw,{
             shinybusy::show_modal_spinner(text = "Overrepresentation analysis...",
-                               color="#0dc5c1")
+                                          color="#0dc5c1")
             
             # Perform ORA
             if (input$topNorThres_microarray_raw == "Threshold"){
@@ -4843,6 +5067,14 @@ server <- function(input, output, session){
             # Go to microarray (norm) tab
             updateNavbarPage(session, "navbar",
                              selected = "panel_upload_microarray_norm")
+            
+            # Example meta data file
+            output$downloadmeta_example_microarray_norm <- downloadHandler(
+              filename = "MetaData_example.csv",
+              content = function(file){
+                write.csv(exampleMeta, file, quote = FALSE, row.names = FALSE)
+              }
+            )
           })
           
           #----------------------------------------------------------------------#
@@ -4852,8 +5084,8 @@ server <- function(input, output, session){
           observeEvent(input$upload_microarray_norm,{
             
             # Show modal
-            show_modal_spinner(text = "Reading data...",
-                               color="#0dc5c1")
+            shinybusy::show_modal_spinner(text = "Reading data...",
+                                          color="#0dc5c1")
             
             # Read expression data
             rv$gxData <- getGEO(filename=input$uploadExprData_microarray_norm_smf$datapath)
@@ -4862,15 +5094,15 @@ server <- function(input, output, session){
             rv$Organism <- getOrganism(gxData = rv$gxData)
             
             # Get metadata
-            if (input$MetaFileType_norm==".tsv/.csv file"){
+            if (input$MetaFileType_microarray_norm==".tsv/.csv file"){
               rv$metaData <- getMetaData(path = input$uploadMeta_microarray_norm_tsv$datapath,
                                          celfiles = colnames(exprs(rv$gxData)),
-                                         filetype = input$MetaFileType_norm)
+                                         filetype = input$MetaFileType_microarray_norm)
             }
-            if (input$MetaFileType_norm=="Series Matrix File"){
+            if (input$MetaFileType_microarray_norm=="Series Matrix File"){
               rv$metaData <- getMetaData(path = input$uploadMeta_microarray_norm_smf$datapath,
                                          celfiles =  colnames(exprs(rv$gxData)),
-                                         filetype = input$MetaFileType_norm)
+                                         filetype = input$MetaFileType_microarray_norm)
             }
             
             # Read raw expression data
@@ -4878,8 +5110,8 @@ server <- function(input, output, session){
             if(nrow(rv$metaData)>0){
               
               # check if some samples are removed
-              if (nrow(rv$metaData) != ncol(exprs(rv$gxData))){
-                sendSweetAlert(
+              if (nrow(rv$metaData) != ncol(Biobase::exprs(rv$gxData))){
+                shinyWidgets::sendSweetAlert(
                   session = session,
                   title = "Warning!",
                   text = "One or more samples in the expression data file do not have meta
@@ -4888,7 +5120,7 @@ server <- function(input, output, session){
               }
               
               # Filter expression data for samples with metadata
-              rv$gxData <- ExpressionSet(assayData = exprs(rv$gxData)[,rownames(rv$metaData)])
+              rv$gxData <- Biobase::ExpressionSet(assayData = Biobase::exprs(rv$gxData)[,rownames(rv$metaData)])
               
               
               #------------------------------------------------------------------#
@@ -4896,23 +5128,35 @@ server <- function(input, output, session){
               #------------------------------------------------------------------#
               
               # Set tables to zero
-              output$exprTable_upload_microarray_norm <- renderDataTable(NULL)
-              output$metaTable_microarray_norm <- renderDataTable(NULL)
+              output$exprTable_upload_microarray_norm <- DT::renderDataTable(NULL)
+              output$metaTable_microarray_norm <- DT::renderDataTable(NULL)
               
               # Print expression table
-              output$exprTable_upload_microarray_norm <- renderDataTable({
+              output$exprTable_upload_microarray_norm <- DT::renderDataTable({
                 req(rv$gxData)
-                output <- head(exprs(rv$gxData),6)
-                colnames(output) <- str_remove(colnames(output),"\\.CEL.*")
+                output <- head(Biobase::exprs(rv$gxData),6)
+                colnames(output) <- stringr::str_remove(colnames(output),"\\.CEL.*")
                 return(output)
                 
               }, options = list(pageLength = 6))
               
               # Print meta table
-              output$metaTable_microarray_norm <- renderDataTable({
-                req(rv$metaData)
-                return(rv$metaData)
-              }, options = list(pageLength = 6))
+              # output$metaTable_microarray_norm <- DT::renderDataTable({
+              #   req(rv$metaData)
+              #   return(rv$metaData)
+              # }, options = list(pageLength = 6))
+              
+              output$metaTable_microarray_norm <- DT::renderDT({
+                DT::datatable(rv$metaData, editable = TRUE)
+              })
+              
+              
+              observeEvent(input$metaTable_microarray_norm_cell_edit, {
+                row  <- input$metaTable_microarray_norm_cell_edit$row
+                clmn <- input$metaTable_microarray_norm_cell_edit$col
+                rv$metaData[row, clmn] <- input$metaTable_microarray_norm_cell_edit$value
+              })
+              
               
               # Render UI for main tab
               output$UI_upload_microarray_norm <- renderUI({
@@ -4923,15 +5167,15 @@ server <- function(input, output, session){
                              h5("These are the first six entries of the expression matrix. Please check if the data 
                has been correctly imported."),
                              hr(),
-                             dataTableOutput(outputId = "exprTable_upload_microarray_norm") %>% 
-                               withSpinner(color="#0dc5c1")),
+                             DT::dataTableOutput(outputId = "exprTable_upload_microarray_norm") %>% 
+                               shinycssloaders::withSpinner(color="#0dc5c1")),
                     tabPanel("Meta data",                  # Meta table
                              h3(strong("Meta data")),
                              h5("This is a preview of the meta data. Please check if the data 
                has been correctly imported."),
                              hr(),
-                             dataTableOutput(outputId = "metaTable_microarray_norm") %>% 
-                               withSpinner(color="#0dc5c1")),
+                             DT::dataTableOutput(outputId = "metaTable_microarray_norm") %>% 
+                               shinycssloaders::withSpinner(color="#0dc5c1")),
                   )
                 )
               })
@@ -4942,14 +5186,14 @@ server <- function(input, output, session){
                 req(rv$gxData)
                 
                 # Remove modal
-                remove_modal_spinner()
+                shinybusy::remove_modal_spinner()
                 
                 # Show RNA-seq upload tab
                 showTab("navbar", target = "panel_preprocessing_microarray_norm")
                 
                 # Show message
                 if (nrow(rv$metaData) >= ncol(exprs(rv$gxData))){
-                  sendSweetAlert(
+                  shinyWidgets::sendSweetAlert(
                     session = session,
                     title = "Info",
                     text = "The data has been uploaded. Please check the tables on this 
@@ -4961,23 +5205,23 @@ server <- function(input, output, session){
                 tagList(
                   hr(),
                   h2(strong("Continue your analysis")),
-                  actionBttn(inputId = "next_upload_microarray_norm",
-                             label = "Next",
-                             style = "jelly",
-                             color = "danger",
-                             icon = icon("arrow-right"))
+                  shinyWidgets::actionBttn(inputId = "next_upload_microarray_norm",
+                                           label = "Next",
+                                           style = "jelly",
+                                           color = "danger",
+                                           icon = icon("arrow-right"))
                 )
               })
               
             } else {
               # No common samples between meta data and expression data
-              sendSweetAlert(
+              shinyWidgets::sendSweetAlert(
                 session = session,
                 title = "Error!!",
                 text = "No common samples",
                 type = "error")
               
-              remove_modal_spinner()
+              shinybusy::remove_modal_spinner()
             }
             
           }) # Observe event
@@ -4989,8 +5233,8 @@ server <- function(input, output, session){
           observeEvent(input$example_microarray_norm,{
             
             # Show modal
-            show_modal_spinner(text = "Reading data...",
-                               color="#0dc5c1")
+            shinybusy::show_modal_spinner(text = "Reading data...",
+                                          color="#0dc5c1")
             
             # Read expression data
             rv$gxData <- getGEO(filename="Data/Microarray/GSE6955_series_matrix.txt.gz")
@@ -5000,7 +5244,7 @@ server <- function(input, output, session){
             
             # Get metadata
             rv$metaData <- getMetaData(path = "Data/Microarray/metaData_GSE6955.csv",
-                                       celfiles = colnames(exprs(rv$gxData)),
+                                       celfiles = colnames(Biobase::exprs(rv$gxData)),
                                        filetype = ".tsv/.csv file")
             
             
@@ -5010,7 +5254,7 @@ server <- function(input, output, session){
               
               # check if some samples are removed
               if (nrow(rv$metaData) != ncol(exprs(rv$gxData))){
-                sendSweetAlert(
+                shinyWidgets::sendSweetAlert(
                   session = session,
                   title = "Warning!",
                   text = "One or more samples in the expression data file do not have meta
@@ -5019,7 +5263,7 @@ server <- function(input, output, session){
               }
               
               # Filter expression data for samples with metadata
-              rv$gxData <- ExpressionSet(assayData = exprs(rv$gxData)[,rownames(rv$metaData)])
+              rv$gxData <- Biobase::ExpressionSet(assayData = Biobase::exprs(rv$gxData)[,rownames(rv$metaData)])
               
               
               #------------------------------------------------------------------#
@@ -5027,20 +5271,20 @@ server <- function(input, output, session){
               #------------------------------------------------------------------#
               
               # Set tables to zero
-              output$exprTable_upload_microarray_norm <- renderDataTable(NULL)
-              output$metaTable_microarray_norm <- renderDataTable(NULL)
+              output$exprTable_upload_microarray_norm <- DT::renderDataTable(NULL)
+              output$metaTable_microarray_norm <- DT::renderDataTable(NULL)
               
               # Print expression table
-              output$exprTable_upload_microarray_norm <- renderDataTable({
+              output$exprTable_upload_microarray_norm <- DT::renderDataTable({
                 req(rv$gxData)
-                output <- head(exprs(rv$gxData),6)
-                colnames(output) <- str_remove(colnames(output),"\\.CEL.*")
+                output <- head(Biobase::exprs(rv$gxData),6)
+                colnames(output) <- stringr::str_remove(colnames(output),"\\.CEL.*")
                 return(output)
                 
               }, options = list(pageLength = 6))
               
               # Print meta table
-              output$metaTable_microarray_norm <- renderDataTable({
+              output$metaTable_microarray_norm <- DT::renderDataTable({
                 req(rv$metaData)
                 return(rv$metaData)
               }, options = list(pageLength = 6))
@@ -5054,15 +5298,15 @@ server <- function(input, output, session){
                              h5("These are the first six entries of the expression matrix. Please check if the data 
                has been correctly imported."),
                              hr(),
-                             dataTableOutput(outputId = "exprTable_upload_microarray_norm") %>% 
-                               withSpinner(color="#0dc5c1")),
+                             DT::dataTableOutput(outputId = "exprTable_upload_microarray_norm") %>% 
+                               shinycssloaders::withSpinner(color="#0dc5c1")),
                     tabPanel("Meta data",                  # Meta table
                              h3(strong("Meta data")),
                              h5("This is a preview of the meta data. Please check if the data 
                has been correctly imported."),
                              hr(),
-                             dataTableOutput(outputId = "metaTable_microarray_norm") %>% 
-                               withSpinner(color="#0dc5c1")),
+                             DT::dataTableOutput(outputId = "metaTable_microarray_norm") %>% 
+                               shinycssloaders::withSpinner(color="#0dc5c1")),
                   )
                 )
               })
@@ -5073,14 +5317,14 @@ server <- function(input, output, session){
                 req(rv$gxData)
                 
                 # Remove modal
-                remove_modal_spinner()
+                shinybusy::remove_modal_spinner()
                 
                 # Show RNA-seq upload tab
                 showTab("navbar", target = "panel_preprocessing_microarray_norm")
                 
                 # Show message
-                if (nrow(rv$metaData) >= ncol(exprs(rv$gxData))){
-                  sendSweetAlert(
+                if (nrow(rv$metaData) >= ncol(Biobase::exprs(rv$gxData))){
+                  shinyWidgets::sendSweetAlert(
                     session = session,
                     title = "Info",
                     text = "The data has been uploaded. Please check the tables on this 
@@ -5092,23 +5336,23 @@ server <- function(input, output, session){
                 tagList(
                   hr(),
                   h2(strong("Continue your analysis")),
-                  actionBttn(inputId = "next_upload_microarray_norm",
-                             label = "Next",
-                             style = "jelly",
-                             color = "danger",
-                             icon = icon("arrow-right"))
+                  shinyWidgets::actionBttn(inputId = "next_upload_microarray_norm",
+                                           label = "Next",
+                                           style = "jelly",
+                                           color = "danger",
+                                           icon = icon("arrow-right"))
                 )
               })
               
             } else {
               # No common samples between meta data and expression data
-              sendSweetAlert(
+              shinyWidgets::sendSweetAlert(
                 session = session,
                 title = "Error!!",
                 text = "No common samples",
                 type = "error")
               
-              remove_modal_spinner()
+              shinybusy::remove_modal_spinner()
             }
             
           }) # Observe event
@@ -5477,10 +5721,10 @@ server <- function(input, output, session){
                            ),
                            
                            plotly::plotlyOutput("heatmap_microarray_norm", 
-                                        width = "1000px", 
-                                        height="600px") %>% 
+                                                width = "1000px", 
+                                                height="600px") %>% 
                              shinycssloaders::withSpinner(color="#0dc5c1", 
-                                         proxy.height = "400px")
+                                                          proxy.height = "400px")
                            
                   ),
                   tabPanel("PCA",
@@ -5497,10 +5741,10 @@ server <- function(input, output, session){
                              column(3,
                                     # Color by which factor?
                                     shinyWidgets::pickerInput(inputId = "colorFactor_microarray_norm",
-                                                label = "Color by:",
-                                                choices = colnames(rv$metaData_fil),
-                                                selected = autoGroup(rv$metaData_fil),
-                                                multiple = TRUE)
+                                                              label = "Color by:",
+                                                              choices = colnames(rv$metaData_fil),
+                                                              selected = autoGroup(rv$metaData_fil),
+                                                              multiple = TRUE)
                              ),
                              column(3,
                                     br(),
@@ -5693,10 +5937,10 @@ server <- function(input, output, session){
               
               pickerInput(inputId = "biomart_attributes_microarray_norm",
                           label = "Output",
-                          choices = c("ensembl_gene_id",
-                                      "entrezgene_id",
-                                      "gene_name"),
-                          selected = "gene_name",
+                          choices = c("Ensembl Gene ID",
+                                      "Entrez Gene ID",
+                                      "Gene Symbol/Name"),
+                          selected = "Gene Symbol/Name",
                           multiple = TRUE)
             )
             
@@ -6020,9 +6264,9 @@ server <- function(input, output, session){
                 
                 pickerInput(inputId = "selID_ORA_microarray_norm",
                             label = "Which gene ID to use?",
-                            choices = c("ensembl_gene_id" = "ENSEMBL", 
-                                        "entrezgene_id" = "ENTREZID", 
-                                        "gene_name" = "SYMBOL"),
+                            choices = c("Ensembl Gene ID" = "ENSEMBL", 
+                                        "Entrez Gene ID" = "ENTREZID", 
+                                        "Gene Symbol/Name" = "SYMBOL"),
                             selected = selID(rv$ProbeAnnotation),
                             multiple = FALSE),
               )
