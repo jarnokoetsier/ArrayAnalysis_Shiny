@@ -103,8 +103,14 @@ readCELs <- function(celfiles, zippath, rm = FALSE){
 getMetaData <- function(path, celfiles, filetype){
   
   if (filetype == ".tsv/.csv file"){
+    
     # Read .tsv/.csv file
-    metaData <- as.data.frame(data.table::fread(path))
+    if (str_detect(path, ".tsv")){
+      metaData <- as.data.frame(data.table::fread(path, sep = "\t"))
+    } else{
+      metaData <- as.data.frame(data.table::fread(path))
+    }
+
   }
   
   if (filetype == "Series Matrix File"){
@@ -202,30 +208,33 @@ getMetaData <- function(path, celfiles, filetype){
 # metaData: meta data object (dataframe)
 
 autoGroup <- function(metaData){
-  
-  term_col <- NULL
-  len_col <- NULL
-  for (i in 1:ncol(metaData)){
-    if (length(grep("control|non|healthy|treat", metaData[,i], ignore.case = TRUE)) > 0){
-      term_col <- c(term_col,i)
+  tryCatch({
+    term_col <- NULL
+    len_col <- NULL
+    for (i in 1:ncol(metaData)){
+      if (length(grep("control|non|healthy|treat", metaData[,i], ignore.case = TRUE)) > 0){
+        term_col <- c(term_col,i)
+      }
+      
+      if (((length(unique(metaData[,i])) > 1) & (length(unique(metaData[,i])) < ncol(metaData)))|(min(nchar(metaData[,i])) > 50)){
+        len_col <- c(len_col, i)
+      }
     }
     
-    if (((length(unique(metaData[,i])) > 1) & (length(unique(metaData[,i])) < ncol(metaData)))|(min(nchar(metaData[,i])) > 50)){
-      len_col <- c(len_col, i)
+    
+    exp_col <- intersect(term_col, len_col)
+    if (is.null(exp_col)){
+      exp_col <- len_col
     }
-  }
-  
-  
-  exp_col <- intersect(term_col, len_col)
-  if (is.null(exp_col)){
-    exp_col <- len_col
-  }
-  
-  if (!is.null(exp_col)){
-    return(colnames(metaData)[exp_col[1]])
-  } else {
+    
+    if (!is.null(exp_col)){
+      return(colnames(metaData)[exp_col[1]])
+    } else {
+      return(colnames(metaData)[1])
+    }
+  }, error = function(cond){
     return(colnames(metaData)[1])
-  }
+  })
   
 }
 
@@ -1836,7 +1845,7 @@ RNASeqNormalization <- function(gxData,
                                 smallestGroupSize){
   
   # Generate DESeqDataSet object
-  dds <- DESeqDataSetFromMatrix(countData = gxData,
+  dds <- DESeq2::DESeqDataSetFromMatrix(countData = gxData,
                                 colData = metaData,
                                 design = ~0)
   
@@ -1845,7 +1854,7 @@ RNASeqNormalization <- function(gxData,
   dds <- dds[keep,]
   
   # estimate size factors (for normalization)
-  dds <- estimateSizeFactors(dds)
+  dds <- BiocGenerics::estimateSizeFactors(dds)
   
   # Return normalized counts
   normalized_counts <- log2(counts(dds, normalized=TRUE)+1)

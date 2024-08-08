@@ -199,10 +199,21 @@ server <- function(input, output, session){
               }, options = list(pageLength = 6))
               
               # Print meta table
-              output$metaTable_rnaseq_raw <- DT::renderDataTable({
-                req(rv$metaData)
-                return(rv$metaData)
-              }, options = list(pageLength = 6))
+              # output$metaTable_rnaseq_raw <- DT::renderDataTable({
+              #   req(rv$metaData)
+              #   return(rv$metaData)
+              # }, options = list(pageLength = 6))
+              
+              output$metaTable_rnaseq_raw <- DT::renderDT({
+                DT::datatable(rv$metaData, editable = TRUE)
+              })
+              
+              observeEvent(input$metaTable_rnaseq_raw_cell_edit, {
+                row  <- input$metaTable_rnaseq_raw_cell_edit$row
+                clmn <- input$metaTable_rnaseq_raw_cell_edit$col
+                rv$metaData[row, clmn] <- input$metaTable_rnaseq_raw_cell_edit$value
+              })
+              
               
               # Render UI for main tab
               output$UI_upload_rnaseq_raw <- renderUI({
@@ -326,10 +337,15 @@ server <- function(input, output, session){
               }, options = list(pageLength = 6))
               
               # Print meta table
-              output$metaTable_rnaseq_raw <- DT::renderDataTable({
-                req(rv$metaData)
-                return(rv$metaData)
-              }, options = list(pageLength = 6))
+              output$metaTable_rnaseq_raw <- DT::renderDT({
+                DT::datatable(rv$metaData, editable = TRUE)
+              })
+              
+              observeEvent(input$metaTable_rnaseq_raw_cell_edit, {
+                row  <- input$metaTable_rnaseq_raw_cell_edit$row
+                clmn <- input$metaTable_rnaseq_raw_cell_edit$col
+                rv$metaData[row, clmn] <- input$metaTable_rnaseq_raw_cell_edit$value
+              })
               
               # Render UI for main tab
               output$UI_upload_rnaseq_raw <- renderUI({
@@ -416,7 +432,7 @@ server <- function(input, output, session){
           
           # 1. Select outliers
           output$UI_outlier_rnaseq_raw <- renderUI({
-            if(!input$outlier_norm){
+            if(!input$outlier_rnaseq_raw){
               samples <- rownames(rv$metaData)
               
               shinyWidgets::pickerInput(inputId = "select_outliers_rnaseq_raw",
@@ -1754,10 +1770,15 @@ server <- function(input, output, session){
               }, options = list(pageLength = 6))
               
               # Print meta table
-              output$metaTable_rnaseq_norm <- DT::renderDataTable({
-                req(rv$metaData)
-                return(rv$metaData)
-              }, options = list(pageLength = 6))
+              output$metaTable_rnaseq_norm <- DT::renderDT({
+                DT::datatable(rv$metaData, editable = TRUE)
+              })
+              
+              observeEvent(input$metaTable_rnaseq_norm_cell_edit, {
+                row  <- input$metaTable_rnaseq_norm_cell_edit$row
+                clmn <- input$metaTable_rnaseq_norm_cell_edit$col
+                rv$metaData[row, clmn] <- input$metaTable_rnaseq_norm_cell_edit$value
+              })
               
               # Render UI for main tab
               output$UI_upload_rnaseq_norm <- renderUI({
@@ -1881,10 +1902,16 @@ server <- function(input, output, session){
               }, options = list(pageLength = 6))
               
               # Print meta table
-              output$metaTable_rnaseq_norm <- DT::renderDataTable({
-                req(rv$metaData)
-                return(rv$metaData)
-              }, options = list(pageLength = 6))
+              output$metaTable_rnaseq_norm <- DT::renderDT({
+                DT::datatable(rv$metaData, editable = TRUE)
+              })
+              
+              observeEvent(input$metaTable_rnaseq_norm_cell_edit, {
+                row  <- input$metaTable_rnaseq_norm_cell_edit$row
+                clmn <- input$metaTable_rnaseq_norm_cell_edit$col
+                rv$metaData[row, clmn] <- input$metaTable_rnaseq_norm_cell_edit$value
+              })
+              
               
               # Render UI for main tab
               output$UI_upload_rnaseq_norm <- renderUI({
@@ -3344,10 +3371,20 @@ server <- function(input, output, session){
               }, options = list(pageLength = 6))
               
               # Print meta table
-              output$metaTable_microarray_raw <- renderDataTable({
-                req(rv$metaData)
-                return(rv$metaData)
-              }, options = list(pageLength = 6))
+              # output$metaTable_microarray_raw <- renderDataTable({
+              #   req(rv$metaData)
+              #   return(rv$metaData)
+              # }, options = list(pageLength = 6))
+              
+              output$metaTable_microarray_raw <- DT::renderDT({
+                DT::datatable(rv$metaData, editable = TRUE)
+              })
+              
+              observeEvent(input$metaTable_microarray_raw_cell_edit, {
+                row  <- input$metaTable_microarray_raw_cell_edit$row
+                clmn <- input$metaTable_microarray_raw_cell_edit$col
+                rv$metaData[row, clmn] <- input$metaTable_microarray_raw_cell_edit$value
+              })
               
               # Render UI for main tab
               output$UI_upload_microarray_raw <- renderUI({
@@ -3491,10 +3528,20 @@ server <- function(input, output, session){
               }, options = list(pageLength = 6))
               
               # Print meta table
-              output$metaTable_microarray_raw <- DT::renderDataTable({
-                req(rv$metaData)
-                return(rv$metaData)
-              }, options = list(pageLength = 6))
+              # output$metaTable_microarray_raw <- DT::renderDataTable({
+              #   req(rv$metaData)
+              #   return(rv$metaData)
+              # }, options = list(pageLength = 6))
+              
+              output$metaTable_microarray_raw <- DT::renderDT({
+                DT::datatable(rv$metaData, editable = TRUE)
+              })
+              
+              observeEvent(input$metaTable_microarray_raw_cell_edit, {
+                row  <- input$metaTable_microarray_raw_cell_edit$row
+                clmn <- input$metaTable_microarray_raw_cell_edit$col
+                rv$metaData[row, clmn] <- input$metaTable_microarray_raw_cell_edit$value
+              })
               
               # Render UI for main tab
               output$UI_upload_microarray_raw <- renderUI({
@@ -5284,10 +5331,17 @@ server <- function(input, output, session){
               }, options = list(pageLength = 6))
               
               # Print meta table
-              output$metaTable_microarray_norm <- DT::renderDataTable({
-                req(rv$metaData)
-                return(rv$metaData)
-              }, options = list(pageLength = 6))
+              output$metaTable_microarray_norm <- DT::renderDT({
+                DT::datatable(rv$metaData, editable = TRUE)
+              })
+              
+              
+              observeEvent(input$metaTable_microarray_norm_cell_edit, {
+                row  <- input$metaTable_microarray_norm_cell_edit$row
+                clmn <- input$metaTable_microarray_norm_cell_edit$col
+                rv$metaData[row, clmn] <- input$metaTable_microarray_norm_cell_edit$value
+              })
+              
               
               # Render UI for main tab
               output$UI_upload_microarray_norm <- renderUI({

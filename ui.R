@@ -1465,7 +1465,7 @@ ui <- tagList(
                           br(),
                           
                           h4(strong(tags$span(
-                            "2. Add covariated",
+                            "2. Add covariates",
                             tags$span(
                               icon(
                                 name = "question-circle",
