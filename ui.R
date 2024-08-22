@@ -158,7 +158,7 @@ ui <- tagList(
                           # Description upload expression data
                           h4(strong("1. Upload expression data")),
                           h5("The expression data should be supplied as an ", 
-                             em(".zip"), " folder containing all ", em(".CEL.gz"), 
+                             em(".zip"), " folder containing all ", em(".CEL / .CEL.gz"), 
                              " files. The file names should match with
                            the sample IDs in the metadata table."),
                           
