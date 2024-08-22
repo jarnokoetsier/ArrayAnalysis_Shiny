@@ -2814,67 +2814,72 @@ server <- function(input, output, session){
             # top table
             #********************************************************************#
             
-            # print top table
-            output$top_table_rnaseq_norm <- DT::renderDataTable({
+            observe({
               req(input$comparisons_view_rnaseq_norm)
+              # print top table
+              output$top_table_rnaseq_norm <- DT::renderDataTable({
+                
+                output <- rv$top_table[[input$comparisons_view_rnaseq_norm]]
+                
+                return(output)
+              },options = list(pageLength = 6),
+              selection = list(mode = "single", selected = 1), escape = FALSE)
               
-              output <- rv$top_table[[input$comparisons_view_rnaseq_norm]]
-              
-              return(output)
-            },options = list(pageLength = 6),
-            selection = list(mode = "single", selected = 1), escape = FALSE)
-            
-            # Download button
-            output$download_top_table_rnaseq_norm <- downloadHandler(
-              filename = paste0("topTable_",input$comparisons_view_rnaseq_norm,".csv"),
-              content = function(file){
-                write.csv(rv$top_table[[input$comparisons_view_rnaseq_norm]], file, quote = FALSE, row.names = FALSE)
-              }
-            )
-            
-            # Boxplot of single gene
-            output$ExprBoxplot_statistics_rnaseq_norm <- plotly::renderPlotly({
-              
-              req(input$top_table_rnaseq_norm_rows_selected)
-              req(input$comparisons_view_rnaseq_norm)
-              
-              # Set colors
-              myPalette <- colorsByFactor(rv$experimentFactor)
-              legendColors <- myPalette$legendColors
-              
-              # Prepare expression data frame
-              gene <- rv$top_table[[input$comparisons_view_rnaseq_norm]]$GeneID[input$top_table_rnaseq_norm_rows_selected]
-              plotExpr <- data.frame(
-                logExpr = rv$normData[as.character(rownames(rv$normData)) %in% as.character(gene),],
-                Grouping = rv$experimentFactor
+              # Download button
+              output$download_top_table_rnaseq_norm <- downloadHandler(
+                filename = paste0("topTable_",input$comparisons_view_rnaseq_norm,".csv"),
+                content = function(file){
+                  write.csv(rv$top_table[[input$comparisons_view_rnaseq_norm]], file, quote = FALSE, row.names = FALSE)
+                }
               )
               
-              # make interactive plot
-              plotExpr %>%
-                plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                                color = ~Grouping, colors = legendColors, type = "box") %>%
-                plotly::layout(xaxis = list(title = " "),
-                               yaxis = list(title = 'log expression'),
-                               legend = list(title=list(text='Group')),
-                               showlegend = FALSE)
-              
+              # Boxplot of single gene
+              output$ExprBoxplot_statistics_rnaseq_norm <- plotly::renderPlotly({
+                
+                req(input$top_table_rnaseq_norm_rows_selected)
+                req(input$comparisons_view_rnaseq_norm)
+                
+                # Set colors
+                myPalette <- colorsByFactor(rv$experimentFactor)
+                legendColors <- myPalette$legendColors
+                
+                # Prepare expression data frame
+                gene <- rv$top_table[[input$comparisons_view_rnaseq_norm]]$GeneID[input$top_table_rnaseq_norm_rows_selected]
+                plotExpr <- data.frame(
+                  logExpr = rv$normData[as.character(rownames(rv$normData)) %in% as.character(gene),],
+                  Grouping = rv$experimentFactor
+                )
+                
+                # make interactive plot
+                plotExpr %>%
+                  plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
+                                  color = ~Grouping, colors = legendColors, type = "box") %>%
+                  plotly::layout(xaxis = list(title = " "),
+                                 yaxis = list(title = 'log expression'),
+                                 legend = list(title=list(text='Group')),
+                                 showlegend = FALSE)
+                
+              })
             })
             
             #********************************************************************#
             # Histograms
             #********************************************************************#
-            output$Phistogram_rnaseq_norm <- plotly::renderPlotly({
-              req(rv$top_table)
-              p <- makePHistogram(rv$top_table[[input$comparisons_view_rnaseq_norm]][,"p-value"])
-              return(p)
+            observe({
+              output$Phistogram_rnaseq_norm <- plotly::renderPlotly({
+                req(rv$top_table)
+                p <- makePHistogram(rv$top_table[[input$comparisons_view_rnaseq_norm]][,"p-value"])
+                return(p)
+              })
+              
+              output$logFChistogram_rnaseq_norm <- renderPlotly({
+                req(rv$top_table)
+                p <- makelogFCHistogram(rv$top_table[[input$comparisons_view_rnaseq_norm]][,"log2FC"])
+                return(p)
+              })
+              
             })
-            
-            output$logFChistogram_rnaseq_norm <- renderPlotly({
-              req(rv$top_table)
-              p <- makelogFCHistogram(rv$top_table[[input$comparisons_view_rnaseq_norm]][,"log2FC"])
-              return(p)
-            })
-            
+
             #********************************************************************#
             # Volcano plot
             #********************************************************************#
