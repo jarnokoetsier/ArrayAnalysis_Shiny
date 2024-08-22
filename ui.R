@@ -870,7 +870,7 @@ ui <- tagList(
                           
                           uiOutput("UI_groupselect_microarray_norm"),
                           
-                          htmlOutput("experimentallevels_norm"),
+                          htmlOutput("experimentallevels_microarray_norm"),
                           br(),
                           
                           #Transformation

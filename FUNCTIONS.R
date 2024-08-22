@@ -1021,28 +1021,33 @@ getStatistics <- function(normMatrix,
   tryCatch({
     
     # Replace name of biomaRt filter
-    biomart_filters <- tryCatch({
-      switch(biomart_filters,
-             "Gene Symbol/Name" = "gene_name",
-             "Entrez Gene ID" = "entrezgene_id",
-             "Ensembl Gene ID" = "ensembl_gene_id",
-      )
-    }, error = function(cond){
-      return(biomart_filters)
-    })
-    
-    # Replace name(s) of biomaRt attributes
-    for (a in 1:length(biomart_attributes)){
-      biomart_attributes[a] <- tryCatch({
-        switch(biomart_attributes[a],
+    if (biomart_filters %in% c("Ensembl Gene ID",
+                               "Entrez Gene ID",
+                               "Gene Symbol/Name")){
+      biomart_filters <- tryCatch({
+        switch(biomart_filters,
                "Gene Symbol/Name" = "gene_name",
                "Entrez Gene ID" = "entrezgene_id",
                "Ensembl Gene ID" = "ensembl_gene_id",
         )
       }, error = function(cond){
-        return(biomart_attributes[a])
+        return(biomart_filters)
       })
     }
+    
+    # Replace name(s) of biomaRt attributes
+    for (a in 1:length(biomart_attributes)){
+      if (biomart_attributes[a] %in% c("Ensembl Gene ID",
+                                       "Entrez Gene ID",
+                                       "Gene Symbol/Name")){
+        biomart_attributes[a] <- switch(biomart_attributes[a],
+                                        "Gene Symbol/Name" = "gene_name",
+                                        "Entrez Gene ID" = "entrezgene_id",
+                                        "Ensembl Gene ID" = "ensembl_gene_id",
+        )
+      }
+    }
+    
     # Get experiment factor
     if(length(expFactor) > 1){
       experimentFactor <- factor(apply(metaData[,expFactor], 1, paste, collapse = "_" ))

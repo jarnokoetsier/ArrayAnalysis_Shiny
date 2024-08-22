@@ -464,6 +464,7 @@ server <- function(input, output, session){
                         multiple = TRUE)
           })
           
+          
           # print the experimental levels
           output$experimentallevels_rnaseq_raw <- renderText({
             req(input$groupselect_rnaseq_raw)
@@ -514,8 +515,10 @@ server <- function(input, output, session){
             # Experiment factor
             if(length(input$groupselect_rnaseq_raw) > 1){
               rv$experimentFactor <- factor(make.names(apply(rv$metaData_fil[,input$groupselect_rnaseq_raw], 1, paste, collapse = "_" )))
+              rv$experimentName <- input$groupselect_rnaseq_raw
             } else{
               rv$experimentFactor <- factor(make.names(rv$metaData_fil[,input$groupselect_rnaseq_raw]))
+              rv$experimentName <- input$groupselect_rnaseq_raw
             }
             
             # Get filter
@@ -525,16 +528,27 @@ server <- function(input, output, session){
             rv$normData <- RNASeqNormalization(gxData = rv$gxData_fil,
                                                metaData = rv$metaData_fil,
                                                filterThres = rv$filterThreshold,
-                                               smallestGroupSize = length(unique(rv$experimentFactor)))
+                                               smallestGroupSize = min(table(rv$experimentFactor)))
             
             
-            
+            # Collect chosen pre-processing settings into a dataframe
+            rv$processingSettings <- data.frame(
+              Option = c("Removed samples",
+                         "Experimental group",
+                         "Experimental levels",
+                         "Filter threshold"),
+              Selected = c(paste(rv$outlier, collapse = "; "),
+                           paste(input$groupselect_rnaseq_raw, collapse = "; "),
+                           paste(unique(rv$experimentFactor), collapse = "; "),
+                           rv$filterThreshold
+              )
+            )
             #======================#
             # Make QC plots/tables
             #======================#
             
             #********************************************************************#
-            # Expression values
+            # Output 1: Expression values
             #********************************************************************#
             
             # Print expression table
@@ -594,7 +608,7 @@ server <- function(input, output, session){
             })
             
             #********************************************************************#
-            # Boxplots
+            # Output 2: Boxplots
             #********************************************************************#
             
             # Boxplots of all genes together
@@ -606,7 +620,7 @@ server <- function(input, output, session){
             },deleteFile = TRUE)
             
             #********************************************************************#
-            # Densityplots
+            # Output 3: Density plots
             #********************************************************************#
             
             # Densityplots of all genes together
@@ -618,7 +632,7 @@ server <- function(input, output, session){
             })
             
             #********************************************************************#
-            # Heatmap
+            # Output 4: Heatmap
             #********************************************************************#
             
             # Heatmap of sample-sample correlations
@@ -632,7 +646,7 @@ server <- function(input, output, session){
             
             
             #********************************************************************#
-            # PCA
+            # Output 5: PCA
             #********************************************************************#
             
             #Perform PCA
@@ -661,6 +675,24 @@ server <- function(input, output, session){
                        xyz = input$xyz_rnaseq_raw)
               
             })
+            
+            #********************************************************************#
+            # Output 6: Overview of pre-processing settings
+            #********************************************************************#
+            # Print table with settings
+            output$processingSettings_rnaseq_raw <- DT::renderDataTable({
+              return(rv$processingSettings)
+            },options = list(pageLength = 10),
+            selection = "none")
+            
+            # Download button
+            output$downloadProcessingSettings_rnaseq_raw <- downloadHandler(
+              filename = "preprocessingSettings.csv",
+              content = function(file){
+                write.csv(rv$processingSettings, file, quote = FALSE, row.names = FALSE)
+              }
+            )
+            
             #======================#
             # UI
             #======================#
@@ -783,7 +815,7 @@ server <- function(input, output, session){
                                     shinyWidgets::pickerInput(inputId = "colorFactor_rnaseq_raw",
                                                 label = "Color by:",
                                                 choices = colnames(rv$metaData_fil),
-                                                selected = autoGroup(rv$metaData_fil),
+                                                selected = rv$experimentName,
                                                 multiple = TRUE)
                              ),
                              column(3,
@@ -836,11 +868,24 @@ server <- function(input, output, session){
                                shinycssloaders::withSpinner(color="#0dc5c1")
                            ) 
                            
-                  ) # EO PCA tabpanel
-                ) # EO tabSetPanel
+                  ), # EO PCA tabpanel
+                  
+                  # TAB6: Settings table
+                  tabPanel("Settings overview",
+                           icon = icon("fas fa-file"),
+                           h3(strong("Pre-processing settings")),
+                           h5("Here you can see an overview of the chosen pre-processing settings."),
+                           hr(),
+                           DT::dataTableOutput(outputId = "processingSettings_rnaseq_raw") %>% 
+                             withSpinner(color="#0dc5c1"),
+                           downloadButton("downloadProcessingSettings_rnaseq_raw", 
+                                          "Download"),
+                           
+                  ) # EO Settings tabPanel
+                ) # EO tabsetPanel
               ) # EO tagList
             }) # EO renderUI
-            
+
             # Allow user to go to next tab
             output$UI_next_preprocessing_rnaseq_raw <- renderUI({
               req(rv$normData)
@@ -879,7 +924,7 @@ server <- function(input, output, session){
               shinyWidgets::pickerInput(inputId = "expFactor_rnaseq_raw",
                           label = "Experiment factor:",
                           choices = colnames(rv$metaData_fil),
-                          selected = autoGroup(rv$metaData_fil),
+                          selected = rv$experimentName,
                           multiple = TRUE)
             )
           })
@@ -1073,68 +1118,72 @@ server <- function(input, output, session){
             # TAB1: top table
             #********************************************************************#
             
-            # print top table
-            output$top_table_rnaseq_raw <- DT::renderDataTable({
+            observe({
               req(input$comparisons_view_rnaseq_raw)
               
-              output <- rv$top_table[[input$comparisons_view_rnaseq_raw]]
+              # print top table
+              output$top_table_rnaseq_raw <- DT::renderDataTable({
+                
+                output <- rv$top_table[[input$comparisons_view_rnaseq_raw]]
+                
+                return(output)
+              },options = list(pageLength = 6),
+              selection = list(mode = "single", selected = 1), escape = FALSE)
               
-              return(output)
-            },options = list(pageLength = 6),
-            selection = list(mode = "single", selected = 1), escape = FALSE)
-            
-            # Download button
-            output$download_top_table_rnaseq_raw <- downloadHandler(
-              filename = paste0("topTable_",input$comparisons_view_rnaseq_raw,".csv"),
-              content = function(file){
-                write.csv(rv$top_table[[input$comparisons_view_rnaseq_raw]], file, quote = FALSE, row.names = FALSE)
-              }
-            )
-            
-            # Boxplot of single gene
-            output$ExprBoxplot_statistics_rnaseq_raw <- plotly::renderPlotly({
-              
-              req(input$top_table_rnaseq_raw_rows_selected)
-              req(input$comparisons_view_rnaseq_raw)
-              
-              # Set colors
-              myPalette <- colorsByFactor(rv$experimentFactor)
-              legendColors <- myPalette$legendColors
-              
-              # Prepare expression data frame
-              gene <- rv$top_table[[input$comparisons_view_rnaseq_raw]]$GeneID[input$top_table_rnaseq_raw_rows_selected]
-              plotExpr <- data.frame(
-                logExpr = rv$normData[as.character(rownames(rv$normData)) %in% as.character(gene),],
-                Grouping = rv$experimentFactor
+              # Download button
+              output$download_top_table_rnaseq_raw <- downloadHandler(
+                filename = paste0("topTable_",input$comparisons_view_rnaseq_raw,".csv"),
+                content = function(file){
+                  write.csv(rv$top_table[[input$comparisons_view_rnaseq_raw]], file, quote = FALSE, row.names = FALSE)
+                }
               )
               
-              # make interactive plot
-              plotExpr %>%
-                plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                                color = ~Grouping, colors = legendColors, type = "box") %>%
-                plotly::layout(xaxis = list(title = " "),
-                               yaxis = list(title = 'log expression'),
-                               legend = list(title=list(text='Group')),
-                               showlegend = FALSE)
-              
+              # Boxplot of single gene
+              output$ExprBoxplot_statistics_rnaseq_raw <- plotly::renderPlotly({
+                
+                req(input$top_table_rnaseq_raw_rows_selected)
+                req(input$comparisons_view_rnaseq_raw)
+                
+                # Set colors
+                myPalette <- colorsByFactor(rv$experimentFactor)
+                legendColors <- myPalette$legendColors
+                
+                # Prepare expression data frame
+                gene <- rv$top_table[[input$comparisons_view_rnaseq_raw]]$GeneID[input$top_table_rnaseq_raw_rows_selected]
+                plotExpr <- data.frame(
+                  logExpr = rv$normData[as.character(rownames(rv$normData)) %in% as.character(gene),],
+                  Grouping = rv$experimentFactor
+                )
+                
+                # make interactive plot
+                plotExpr %>%
+                  plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
+                                  color = ~Grouping, colors = legendColors, type = "box") %>%
+                  plotly::layout(xaxis = list(title = " "),
+                                 yaxis = list(title = 'log expression'),
+                                 legend = list(title=list(text='Group')),
+                                 showlegend = FALSE)
+                
+              })
             })
-            
             #********************************************************************#
             # TAB2: P value and logFC histograms
             #********************************************************************#
             
-            # P value histogram
-            output$Phistogram_rnaseq_raw <- plotly::renderPlotly({
-              req(rv$top_table)
-              p <- makePHistogram(rv$top_table[[input$comparisons_view_rnaseq_raw]][,"p-value"])
-              return(p)
-            })
-            
-            # logFC histrogram
-            output$logFChistogram_rnaseq_raw <- plotly::renderPlotly({
-              req(rv$top_table)
-              p <- makelogFCHistogram(rv$top_table[[input$comparisons_view_rnaseq_raw]][,"log2FC"])
-              return(p)
+            observe({
+              # P value histogram
+              output$Phistogram_rnaseq_raw <- plotly::renderPlotly({
+                req(rv$top_table)
+                p <- makePHistogram(rv$top_table[[input$comparisons_view_rnaseq_raw]][,"p-value"])
+                return(p)
+              })
+              
+              # logFC histrogram
+              output$logFChistogram_rnaseq_raw <- plotly::renderPlotly({
+                req(rv$top_table)
+                p <- makelogFCHistogram(rv$top_table[[input$comparisons_view_rnaseq_raw]][,"log2FC"])
+                return(p)
+              })
             })
             
             #********************************************************************#
@@ -2160,8 +2209,10 @@ server <- function(input, output, session){
             # Experiment factor
             if(length(input$groupselect_rnaseq_norm) > 1){
               rv$experimentFactor <- factor(make.names(apply(rv$metaData_fil[,input$groupselect_rnaseq_norm], 1, paste, collapse = "_" )))
+              rv$experimentName <- input$groupselect_rnaseq_norm
             } else{
               rv$experimentFactor <- factor(make.names(rv$metaData_fil[,input$groupselect_rnaseq_norm]))
+              rv$experimentName <- input$groupselect_rnaseq_norm
             }
             
             # Normalization
@@ -2171,7 +2222,7 @@ server <- function(input, output, session){
                                                            transMeth = input$transformation_rnaseq_norm,
                                                            normMeth = input$normMeth_rnaseq_norm,
                                                            perGroup_name = input$perGroup_rnaseq_norm,
-                                                           filterThres = input$input$countfilter_rnaseq_norm)
+                                                           filterThres = input$countfilter_rnaseq_norm)
             } else{
               rv$normData <- RNASeqNormalization_processed(gxMatrix = rv$gxData_fil,
                                                            experimentFactor = rv$experimentFactor,
@@ -2181,7 +2232,24 @@ server <- function(input, output, session){
                                                            filterThres = 0)
             }
             
-            
+            # Collect chosen pre-processing settings into a dataframe
+            rv$processingSettings <- data.frame(
+              Option = c("Removed samples",
+                         "Experimental group",
+                         "Experimental levels",
+                         "Normalization method",
+                         "Transformation method",
+                         "Filter threshold",
+                         "Smallest group size"),
+              Selected = c(paste(rv$outlier, collapse = "; "),
+                           paste(input$groupselect_rnaseq_norm, collapse = "; "),
+                           paste(unique(rv$experimentFactor), collapse = "; "),
+                           paste(input$normMeth_rnaseq_norm, input$perGroup_rnaseq_norm, collapse = "; "),
+                           input$transformation_rnaseq_norm,
+                           ifelse(input$filtering_rnaseq_norm, input$countfilter_rnaseq_norm,0),
+                           min(table(rv$experimentFactor))
+              )
+            )
             
             #======================================================================#
             # QC
@@ -2314,6 +2382,24 @@ server <- function(input, output, session){
                        xyz = input$xyz_rnaseq_norm)
               
             })
+            
+            #********************************************************************#
+            # Output 6: Overview of pre-processing settings
+            #********************************************************************#
+            # Print table with settings
+            output$processingSettings_rnaseq_norm <- DT::renderDataTable({
+              return(rv$processingSettings)
+            },options = list(pageLength = 10),
+            selection = "none")
+            
+            # Download button
+            output$downloadProcessingSettings_rnaseq_norm <- downloadHandler(
+              filename = "preprocessingSettings.csv",
+              content = function(file){
+                write.csv(rv$processingSettings, file, quote = FALSE, row.names = FALSE)
+              }
+            )
+            
             #********************************************************************#
             # UI
             #********************************************************************#
@@ -2427,7 +2513,7 @@ server <- function(input, output, session){
                                     pickerInput(inputId = "colorFactor_rnaseq_norm",
                                                 label = "Color by:",
                                                 choices = colnames(rv$metaData_fil),
-                                                selected = autoGroup(rv$metaData_fil),
+                                                selected = rv$experimentName,
                                                 multiple = TRUE)
                              ),
                              column(3,
@@ -2480,10 +2566,23 @@ server <- function(input, output, session){
                                withSpinner(color="#0dc5c1")
                            ) 
                            
-                  ) # PCA tabpanel
-                ) # tabsetpanel
-              ) # taglist
-            }) # renderUI
+                  ), # EO PCA tabPanel
+                  
+                  # TAB6: Settings table
+                  tabPanel("Settings overview",
+                           icon = icon("fas fa-file"),
+                           h3(strong("Pre-processing settings")),
+                           h5("Here you can see an overview of the chosen pre-processing settings."),
+                           hr(),
+                           DT::dataTableOutput(outputId = "processingSettings_rnaseq_norm") %>% 
+                             withSpinner(color="#0dc5c1"),
+                           downloadButton("downloadProcessingSettings_rnaseq_norm", 
+                                          "Download"),
+                           
+                  ) # EO Settings tabPanel
+                ) # EO tabsetPanel
+              ) # EO tagList
+            }) # EO renderUI
             
             # Allow user to go to next tab
             output$UI_next_preprocessing_rnaseq_norm <- renderUI({
@@ -2523,7 +2622,7 @@ server <- function(input, output, session){
               pickerInput(inputId = "expFactor_rnaseq_norm",
                           label = "Experiment factor:",
                           choices = colnames(rv$metaData_fil),
-                          selected = autoGroup(rv$metaData_fil),
+                          selected = rv$experimentName,
                           multiple = TRUE)
             )
           })
@@ -3371,15 +3470,11 @@ server <- function(input, output, session){
               }, options = list(pageLength = 6))
               
               # Print meta table
-              # output$metaTable_microarray_raw <- renderDataTable({
-              #   req(rv$metaData)
-              #   return(rv$metaData)
-              # }, options = list(pageLength = 6))
-              
               output$metaTable_microarray_raw <- DT::renderDT({
                 DT::datatable(rv$metaData, editable = TRUE)
               })
               
+              # Allow the user to adjust meta data
               observeEvent(input$metaTable_microarray_raw_cell_edit, {
                 row  <- input$metaTable_microarray_raw_cell_edit$row
                 clmn <- input$metaTable_microarray_raw_cell_edit$col
@@ -3528,15 +3623,11 @@ server <- function(input, output, session){
               }, options = list(pageLength = 6))
               
               # Print meta table
-              # output$metaTable_microarray_raw <- DT::renderDataTable({
-              #   req(rv$metaData)
-              #   return(rv$metaData)
-              # }, options = list(pageLength = 6))
-              
               output$metaTable_microarray_raw <- DT::renderDT({
                 DT::datatable(rv$metaData, editable = TRUE)
               })
               
+              # Allow the user to adjust the meta data
               observeEvent(input$metaTable_microarray_raw_cell_edit, {
                 row  <- input$metaTable_microarray_raw_cell_edit$row
                 clmn <- input$metaTable_microarray_raw_cell_edit$col
@@ -3773,8 +3864,10 @@ server <- function(input, output, session){
             # Experiment factor
             if(length(input$groupselect_microarray_raw) > 1){
               rv$experimentFactor <- factor(make.names(apply(rv$metaData_fil[,input$groupselect_microarray_raw], 1, paste, collapse = "_" )))
+              rv$experimentName <- input$groupselect_microarray_raw
             } else{
               rv$experimentFactor <- factor(make.names(rv$metaData_fil[,input$groupselect_microarray_raw]))
+              rv$experimentName <- input$groupselect_microarray_raw
             }
             
             # If the data object is of a "geneFeatureSet" class, only RMA
@@ -4142,7 +4235,7 @@ server <- function(input, output, session){
                                     shinyWidgets::pickerInput(inputId = "colorFactor_microarray_raw",
                                                               label = "Color by:",
                                                               choices = colnames(rv$metaData_fil),
-                                                              selected = autoGroup(rv$metaData_fil),
+                                                              selected = rv$experimentName,
                                                               multiple = TRUE)
                              ),
                              column(3,
@@ -4247,7 +4340,7 @@ server <- function(input, output, session){
               shinyWidgets::pickerInput(inputId = "expFactor_microarray_raw",
                                         label = "Experiment factor:",
                                         choices = colnames(rv$metaData_fil),
-                                        selected = autoGroup(rv$metaData_fil),
+                                        selected = rv$experimentName,
                                         multiple = TRUE)
             )
           })
@@ -5452,7 +5545,7 @@ server <- function(input, output, session){
           
           # 2. Select experimental groups
           output$UI_groupselect_microarray_norm <- renderUI({
-            pickerInput(inputId = "groupselect_norm",
+            pickerInput(inputId = "groupselect_microarray_norm",
                         label = NULL,
                         choices = colnames(rv$metaData),
                         selected = autoGroup(rv$metaData),
@@ -5460,13 +5553,13 @@ server <- function(input, output, session){
           })
           
           # print the experimental levels
-          output$experimentallevels_norm <- renderText({
-            req(input$groupselect_norm)
+          output$experimentallevels_microarray_norm <- renderText({
+            req(input$groupselect_microarray_norm)
             
             if(length(input$groupselect_norm) > 1){
-              experimentFactor <- make.names(apply(rv$metaData[,input$groupselect_norm], 1, paste, collapse = "_" ))
+              experimentFactor <- make.names(apply(rv$metaData[,input$groupselect_microarray__norm], 1, paste, collapse = "_" ))
             } else{
-              experimentFactor <- make.names(rv$metaData[,input$groupselect_norm])
+              experimentFactor <- make.names(rv$metaData[,input$groupselect_microarray_norm])
             }
             levels <- unique(experimentFactor)
             if (length(levels) <= 6){
@@ -5542,26 +5635,44 @@ server <- function(input, output, session){
             
             # Experiment factor
             if(length(input$groupselect) > 1){
-              rv$experimentFactor <- factor(make.names(apply(rv$metaData_fil[,input$groupselect_norm], 1, paste, collapse = "_" )))
+              rv$experimentFactor <- factor(make.names(apply(rv$metaData_fil[,input$groupselect_microarray_norm], 1, paste, collapse = "_" )))
+              rv$experimentName <- input$groupselect_microarray_norm
             } else{
-              rv$experimentFactor <- factor(make.names(rv$metaData_fil[,input$groupselect_norm]))
+              rv$experimentFactor <- factor(make.names(rv$metaData_fil[,input$groupselect_microarray_norm]))
+              rv$experimentName <- input$groupselect_microarray_norm
+              
             }
             
             # Normalization
             rv$normData <- microarrayNormalization_processed(gxData = rv$gxData_fil,
-                                                             experimentFactor = rv$experimentFactor_norm,
+                                                             experimentFactor = rv$experimentFactor,
                                                              transMeth = input$transformation_microarray_norm,
                                                              normMeth = input$normMeth_microarray_norm,
                                                              perGroup_name = input$perGroup_microarray_norm)
             
             rv$normMatrix <- exprs(rv$normData)
             
+            # Collect chosen pre-processing settings into a dataframe
+            rv$processingSettings <- data.frame(
+              Option = c("Removed samples",
+                         "Experimental group",
+                         "Experimental levels",
+                         "Normalization method",
+                         "Transformation"),
+              Selected = c(paste(rv$outlier, collapse = "; "),
+                           paste(input$groupselect_microarray_norm, collapse = "; "),
+                           paste(unique(rv$experimentFactor), collapse = "; "),
+                           paste(input$normMeth_microarray_norm,"; ",input$perGroup_microarray_norm),
+                           input$transformation_microarray_norm
+              )
+            )
+            
             #======================================================================#
             # QC
             #======================================================================#
             
             #********************************************************************#
-            # Expression values
+            # Output 1: Expression values
             #********************************************************************#
             
             # Print expression table
@@ -5621,7 +5732,7 @@ server <- function(input, output, session){
             })
             
             #********************************************************************#
-            # Boxplots
+            # Output 2: Boxplots
             #********************************************************************#
             
             # Boxplots of all genes together
@@ -5631,7 +5742,7 @@ server <- function(input, output, session){
             },deleteFile = TRUE)
             
             #********************************************************************#
-            # Densityplots
+            # Output 3: Densityplots
             #********************************************************************#
             
             # Densityplots of all genes together
@@ -5642,7 +5753,7 @@ server <- function(input, output, session){
             })
             
             #********************************************************************#
-            # Heatmap
+            # Output 4: Heatmap
             #********************************************************************#
             
             # Heatmap of sample-sample correlations
@@ -5656,7 +5767,7 @@ server <- function(input, output, session){
             
             
             #********************************************************************#
-            # PCA
+            # Output 5: PCA
             #********************************************************************#
             
             #Perform PCA
@@ -5684,6 +5795,25 @@ server <- function(input, output, session){
                        xyz = input$xyz_microarray_norm)
               
             })
+            
+            #********************************************************************#
+            # Output 6: Overview of pre-processing settings
+            #********************************************************************#
+            
+            # Print table with settings
+            output$processingSettings_microarray_norm <- DT::renderDataTable({
+              return(rv$processingSettings)
+            },options = list(pageLength = 10),
+            selection = "none")
+            
+            # Download button
+            output$downloadProcessingSettings_microarray_norm <- downloadHandler(
+              filename = "preprocessingSettings.csv",
+              content = function(file){
+                write.csv(rv$processingSettings, file, quote = FALSE, row.names = FALSE)
+              }
+            )
+            
             #********************************************************************#
             # UI
             #********************************************************************#
@@ -5797,7 +5927,7 @@ server <- function(input, output, session){
                                     shinyWidgets::pickerInput(inputId = "colorFactor_microarray_norm",
                                                               label = "Color by:",
                                                               choices = colnames(rv$metaData_fil),
-                                                              selected = autoGroup(rv$metaData_fil),
+                                                              selected = rv$experimentName,
                                                               multiple = TRUE)
                              ),
                              column(3,
@@ -5850,10 +5980,24 @@ server <- function(input, output, session){
                                withSpinner(color="#0dc5c1")
                            ) 
                            
-                  ) # PCA tabpanel
-                ) # tabsetpanel
-              ) # taglist
-            }) # renderUI
+                  ), # PCA tabpanel
+                  
+                  # Settings table
+                  tabPanel("Settings overview",
+                           icon = icon("fas fa-file"),
+                           h3(strong("Pre-processing settings")),
+                           h5("Here you can see an overview of the chosen pre-processing settings."),
+                           hr(),
+                           DT::dataTableOutput(outputId = "processingSettings_microarray_norm") %>% 
+                             withSpinner(color="#0dc5c1"),
+                           downloadButton("downloadProcessingSettings_microarray_norm", 
+                                          "Download")
+                           
+                  ) # EO Settings tabPanel
+                ) # EO tabsetPanel
+              ) # EO tagList
+            }) # EO renderUI
+            
             
             # Allow user to go to next tab
             output$UI_next_preprocessing_microarray_norm <- renderUI({
@@ -5891,7 +6035,7 @@ server <- function(input, output, session){
               pickerInput(inputId = "expFactor_microarray_norm",
                           label = "Experiment factor:",
                           choices = colnames(rv$metaData_fil),
-                          selected = autoGroup(rv$metaData_fil),
+                          selected = rv$experimentName,
                           multiple = TRUE)
             )
           })
