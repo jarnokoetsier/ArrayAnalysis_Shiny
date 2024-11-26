@@ -13,60 +13,50 @@ source("FUNCTIONS.R")
 #CRAN packages
 #******************************************************************************#
 
-#Required CRAN packages:
-CRANpackages <- c("tidyverse", 
-                  "fuzzyjoin", 
-                  "plotly", 
-                  "gplots", 
-                  "heatmaply",
-                  "ggvenn",
-                  "data.table",
-                  "DT",
-                  "shiny",
-                  "shinyWidgets",
-                  "shinycssloaders",
-                  "shinybusy",
-                  "purrr",
-                  "prompter",
-                  "htmlwidgets",
-                  "igraph",
-                  "ggraph")
+# Get required CRAN packages
+CRANpackages <- read.table("Objects/CRANpackages.txt", header = TRUE)
+
+# Install remotes package
+if (!requireNamespace("remotes", quietly = TRUE)){
+  install.packages("remotes", ask = FALSE)
+}
+require("remotes", character.only = TRUE)
 
 #Install (if not yet installed) and load the required packages: 
-for (pkg in CRANpackages) {
-  if (!requireNamespace(pkg, quietly = TRUE))
-    install.packages(pkg, ask = FALSE)
-  require(as.character(pkg), character.only = TRUE)
+for (pkg in 1:nrow(CRANpackages)) {
+  
+  # Install package if not installed
+  if (!requireNamespace(CRANpackages$name[pkg], quietly = TRUE)){
+    #install.packages(CRANpackages$name[pkg], ask = FALSE)
+    remotes::install_version(CRANpackages$name[pkg], 
+                              version = CRANpackages$version[pkg], 
+                              repos = "http://cran.us.r-project.org")
+  } else {
+    
+    #Install package if package version is incorrect
+    if (packageVersion(CRANpackages$name[pkg]) != CRANpackages$version[pkg]){
+      remotes::install_version(CRANpackages$name[pkg],
+                               CRANpackages$version[pkg])
+    }
+  }
+  require(as.character(CRANpackages$name[pkg]), character.only = TRUE)
 }
-
-
-
+    
 #******************************************************************************#
 #Bioconductor packages
 #******************************************************************************#
 
-#Required Bioconductor packages:
-BiocPackages <- c("biomaRt",
-                  "GEOquery",
-                  "limma",
-                  "makecdfenv",
-                  "bioDist",
-                  "gcrma",
-                  "plier",
-                  "clusterProfiler",
-                  "affy",
-                  "oligo",
-                  "DESeq2",
-                  "apeglm")
-
+# Get required Bioconductor packages:
+BiocPackages <- read.table("Objects/Bioconductorpackages.txt", header = TRUE)
 
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager", ask = F)
 
-for (pkg in BiocPackages) {
-  if (!requireNamespace(pkg, quietly = TRUE))
-    BiocManager::install(pkg, ask = FALSE)
-  require(as.character(pkg), character.only = TRUE)
+for (pkg in 1:nrow(BiocPackages)) {
+  if (!requireNamespace(BiocPackages$name[pkg], quietly = TRUE)){
+    BiocManager::install(BiocPackages$name[pkg], ask = FALSE, version = "3.20")
+  }
+  require(as.character(BiocPackages$name[pkg]), character.only = TRUE)
 }
 
 
@@ -74,7 +64,7 @@ for (pkg in BiocPackages) {
 # Example metadata
 #******************************************************************************#
 
-exampleMeta <- as.data.frame(fread("Data/Microarray/metaData_GSE6955.csv"))
+exampleMeta <- as.data.frame(data.table::fread("Data/Microarray/metaData_GSE6955.csv"))
 
 #******************************************************************************#
 # FilterList for biomaRt annotations

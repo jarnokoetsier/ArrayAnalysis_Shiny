@@ -150,19 +150,51 @@ server <- function(input, output, session){
                                color="#0dc5c1")
             
             # Read expression data
-            rv$gxData <- readRNASeq(path=input$uploadExprData_rnaseq_raw$datapath)
+            if (!is.null(input$uploadExprData_rnaseq_raw)){
+              rv$gxData <- readRNASeq(path=input$uploadExprData_rnaseq_raw$datapath)
+            } else{
+              shinyWidgets::sendSweetAlert(
+                session = session,
+                title = "Error!!",
+                text = "You forgot to upload an expression and/or metadata file",
+                type = "error")
+              shinybusy::remove_modal_spinner()
+              
+            }
             
-            # Get metadata
-            if (input$MetaFileType_rnaseq_raw ==".tsv/.csv file"){
-              rv$metaData <- getMetaData(path = input$uploadMeta_rnaseq_raw_tsv$datapath,
-                                         celfiles = colnames(rv$gxData),
-                                         filetype = input$MetaFileType_rnaseq_raw)
+            # Read metadata
+            if (!is.null(input$uploadMeta_rnaseq_raw_tsv)){
+              if (input$MetaFileType_rnaseq_raw ==".tsv/.csv file"){
+                rv$metaData <- getMetaData(path = input$uploadMeta_rnaseq_raw_tsv$datapath,
+                                           celfiles = colnames(rv$gxData),
+                                           filetype = input$MetaFileType_rnaseq_raw)
+              }
+            }else{
+              shinyWidgets::sendSweetAlert(
+                session = session,
+                title = "Error!!",
+                text = "You forgot to upload an expression and/or metadata file",
+                type = "error")
+              shinybusy::remove_modal_spinner()
+              
             }
-            if (input$MetaFileType_rnaseq_raw =="Series Matrix File"){
-              rv$metaData <- getMetaData(path = input$uploadMeta_rnaseq_raw_smf$datapath,
-                                         celfiles =  colnames(rv$gxData),
-                                         filetype = input$MetaFileType_rnaseq_raw)
+            
+            if (!is.null(input$uploadMeta_rnaseq_raw_smf)){ 
+              if (input$MetaFileType_rnaseq_raw =="Series Matrix File"){
+                rv$metaData <- getMetaData(path = input$uploadMeta_rnaseq_raw_smf$datapath,
+                                           celfiles =  colnames(rv$gxData),
+                                           filetype = input$MetaFileType_rnaseq_raw)
+              }
+            }else{
+              shinyWidgets::sendSweetAlert(
+                session = session,
+                title = "Error!!",
+                text = "You forgot to upload an expression and/or metadata file",
+                type = "error")
+              shinybusy::remove_modal_spinner()
+              
             }
+            
             
             # Read raw expression data
             req(rv$metaData)
@@ -918,46 +950,13 @@ server <- function(input, output, session){
           
           # SIDEPANEL:
           
-          # Select experimental group
-          output$UI_expFactor_rnaseq_raw <- renderUI({
-            tagList(
-              shinyWidgets::pickerInput(inputId = "expFactor_rnaseq_raw",
-                          label = "Experiment factor:",
-                          choices = colnames(rv$metaData_fil),
-                          selected = rv$experimentName,
-                          multiple = TRUE)
-            )
-          })
-          
-          # print the experimental levels
-          output$expFactor_levels_rnaseq_raw <- renderText({
-            req(input$expFactor_rnaseq_raw)
-            
-            if(length(input$expFactor_rnaseq_raw) > 1){
-              rv$experimentFactor <- factor(make.names(apply(rv$metaData_fil[,input$expFactor_rnaseq_raw], 1, paste, collapse = "_" )))
-            } else{
-              rv$experimentFactor <- factor(make.names(rv$metaData_fil[,input$expFactor_rnaseq_raw]))
-            }
-            levels <- unique(rv$experimentFactor)
-            if (length(levels) <= 6){
-              text <- paste0("<p><b>Levels (",length(levels),"):</b> ", paste(levels, collapse = ", "),
-                             "</p>")
-            } else {
-              text <- paste0("<p><b>Levels (",length(levels),"):</b> ", paste(head(levels), collapse = ", "),
-                             "...</p>")
-            }
-            return(text)
-            
-          })
-          
           # Select continuous covariates
           output$UI_covGroups_num_rnaseq_raw <- renderUI({
-            req(input$expFactor_rnaseq_raw)
             tagList(
               shinyWidgets::pickerInput(inputId = "covGroups_num_rnaseq_raw",
                           label = "Continuous covariates (e.g., age):",
                           choices = setdiff(colnames(rv$metaData_fil),
-                                            input$expFactor_rnaseq_raw),
+                                            rv$experimentName),
                           selected = NULL,
                           multiple = TRUE)
             )
@@ -965,12 +964,11 @@ server <- function(input, output, session){
           
           # Select discrete covariates
           output$UI_covGroups_char_rnaseq_raw <- renderUI({
-            req(input$expFactor_rnaseq_raw)
             tagList(
               shinyWidgets::pickerInput(inputId = "covGroups_char_rnaseq_raw",
                           label = "Discrete covariates (e.g., sex):",
                           choices = setdiff(colnames(rv$metaData_fil),
-                                            input$expFactor_rnaseq_raw),
+                                            rv$experimentName),
                           selected = NULL,
                           multiple = TRUE)
             )
@@ -978,7 +976,6 @@ server <- function(input, output, session){
           
           # Select comparisons
           output$UI_comparisons_rnaseq_raw <- renderUI({
-            req(input$expFactor_rnaseq_raw)
             
             tagList(
               shinyWidgets::multiInput(
@@ -1043,7 +1040,7 @@ server <- function(input, output, session){
             if (isTRUE(input$addAnnotation_rnaseq_raw)){
               rv$top_table <- getStatistics_RNASeq(rawMatrix = rv$gxData_fil, 
                                                    metaData = rv$metaData_fil, 
-                                                   expFactor = input$expFactor_rnaseq_raw, 
+                                                   expFactor = rv$experimentName,
                                                    covGroups_num = input$covGroups_num_rnaseq_raw,
                                                    covGroups_char = input$covGroups_char_rnaseq_raw,
                                                    comparisons = input$comparisons_rnaseq_raw,
@@ -1058,7 +1055,7 @@ server <- function(input, output, session){
             } else{
               rv$top_table <- getStatistics_RNASeq(rawMatrix = rv$gxData_fil, 
                                                    metaData = rv$metaData_fil, 
-                                                   expFactor = input$expFactor_rnaseq_raw, 
+                                                   expFactor = rv$experimentName, 
                                                    covGroups_num = input$covGroups_num_rnaseq_raw,
                                                    covGroups_char = input$covGroups_char_rnaseq_raw,
                                                    comparisons = input$comparisons_rnaseq_raw,
@@ -1493,6 +1490,8 @@ server <- function(input, output, session){
                       '</a>'
                     )
                   }
+                  output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
+                  output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
                   
                   return(output)
                 },options = list(pageLength = 6),
@@ -1515,6 +1514,12 @@ server <- function(input, output, session){
                                                top_table = rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]],
                                                geneID_col = input$geneID_ORA_rnaseq_raw,
                                                sel_row_ORA = input$ORA_table_rnaseq_raw_rows_selected)
+                  
+                  output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
+                  output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
+                  output$meanExpr <- round(output$meanExpr,3)
+                  output$log2FC <- round(output$log2FC,3)
+                  output$`log2FC SE` <- round(output$`log2FC SE`,3)
                   
                   return(output)
                 }, options = list(pageLength = 6), escape = FALSE)
@@ -1770,18 +1775,46 @@ server <- function(input, output, session){
                                color="#0dc5c1")
             
             # Read expression data
-            rv$gxData <- readRNASeq(path=input$uploadExprData_rnaseq_norm$datapath)
-            
-            # Get metadata
-            if (input$MetaFileType_rnaseq_norm ==".tsv/.csv file"){
-              rv$metaData <- getMetaData(path = input$uploadMeta_rnaseq_norm_tsv$datapath,
-                                         celfiles = colnames(rv$gxData),
-                                         filetype = input$MetaFileType_rnaseq_norm)
+            if (!is.null(input$uploadExprData_rnaseq_norm)){
+              rv$gxData <- readRNASeq(path=input$uploadExprData_rnaseq_norm$datapath)
+            }else{
+              shinyWidgets::sendSweetAlert(
+                session = session,
+                title = "Error!!",
+                text = "You forgot to upload an expression and/or metadata file",
+                type = "error")
+              shinybusy::remove_modal_spinner()
             }
-            if (input$MetaFileType_rnaseq_norm =="Series Matrix File"){
-              rv$metaData <- getMetaData(path = input$uploadMeta_rnaseq_norm_smf$datapath,
-                                         celfiles =  colnames(rv$gxData),
-                                         filetype = input$MetaFileType_rnaseq_norm)
+              
+            
+            # Read metadata
+            if (!is.null(input$uploadMeta_rnaseq_norm_tsv)){
+              if (input$MetaFileType_rnaseq_norm ==".tsv/.csv file"){
+                rv$metaData <- getMetaData(path = input$uploadMeta_rnaseq_norm_tsv$datapath,
+                                           celfiles = colnames(rv$gxData),
+                                           filetype = input$MetaFileType_rnaseq_norm)
+              }
+            }else{
+              shinyWidgets::sendSweetAlert(
+                session = session,
+                title = "Error!!",
+                text = "You forgot to upload an expression and/or metadata file",
+                type = "error")
+              shinybusy::remove_modal_spinner()
+            }
+            if (!is.null(input$uploadMeta_rnaseq_norm_smf)){
+              if (input$MetaFileType_rnaseq_norm =="Series Matrix File"){
+                rv$metaData <- getMetaData(path = input$uploadMeta_rnaseq_norm_smf$datapath,
+                                           celfiles =  colnames(rv$gxData),
+                                           filetype = input$MetaFileType_rnaseq_norm)
+              }
+            }else{
+              shinyWidgets::sendSweetAlert(
+                session = session,
+                title = "Error!!",
+                text = "You forgot to upload an expression and/or metadata file",
+                type = "error")
+              shinybusy::remove_modal_spinner()
             }
             
             # Read raw expression data
@@ -2616,46 +2649,13 @@ server <- function(input, output, session){
           
           # SIDEPANEL:
           
-          # Select experimental group
-          output$UI_expFactor_rnaseq_norm <- renderUI({
-            tagList(
-              pickerInput(inputId = "expFactor_rnaseq_norm",
-                          label = "Experiment factor:",
-                          choices = colnames(rv$metaData_fil),
-                          selected = rv$experimentName,
-                          multiple = TRUE)
-            )
-          })
-          
-          # print the experimental levels
-          output$expFactor_levels_rnaseq_norm <- renderText({
-            req(input$expFactor_rnaseq_norm)
-            
-            if(length(input$expFactor_rnaseq_norm) > 1){
-              rv$experimentFactor <- factor(make.names(apply(rv$metaData_fil[,input$expFactor_rnaseq_norm], 1, paste, collapse = "_" )))
-            } else{
-              rv$experimentFactor <- factor(make.names(rv$metaData_fil[,input$expFactor_rnaseq_norm]))
-            }
-            levels <- unique(rv$experimentFactor)
-            if (length(levels) <= 6){
-              text <- paste0("<p><b>Levels (",length(levels),"):</b> ", paste(levels, collapse = ", "),
-                             "</p>")
-            } else {
-              text <- paste0("<p><b>Levels (",length(levels),"):</b> ", paste(head(levels), collapse = ", "),
-                             "...</p>")
-            }
-            return(text)
-            
-          })
-          
           # Select continuous covariates
           output$UI_covGroups_num_rnaseq_norm <- renderUI({
-            req(input$expFactor_rnaseq_norm)
             tagList(
               pickerInput(inputId = "covGroups_num_rnaseq_norm",
                           label = "Continuous covariates (e.g., age):",
                           choices = setdiff(colnames(rv$metaData_fil),
-                                            input$expFactor_rnaseq_norm),
+                                            rv$experimentName),
                           selected = NULL,
                           multiple = TRUE)
             )
@@ -2663,12 +2663,11 @@ server <- function(input, output, session){
           
           # Select discrete covariates
           output$UI_covGroups_char_rnaseq_norm <- renderUI({
-            req(input$expFactor_rnaseq_norm)
             tagList(
               pickerInput(inputId = "covGroups_char_rnaseq_norm",
                           label = "Discrete covariates (e.g., sex):",
                           choices = setdiff(colnames(rv$metaData_fil),
-                                            input$expFactor_rnaseq_norm),
+                                            rv$experimentName),
                           selected = NULL,
                           multiple = TRUE)
             )
@@ -2676,7 +2675,6 @@ server <- function(input, output, session){
           
           # Select comparisons
           output$UI_comparisons_rnaseq_norm <- renderUI({
-            req(input$expFactor_rnaseq_norm)
             
             tagList(
               multiInput(
@@ -2743,7 +2741,7 @@ server <- function(input, output, session){
               counts <- 2^rv$normData - 1 
               rv$top_table <- getStatistics_RNASeq_processed(normMatrix = counts, 
                                                              metaData = rv$metaData_fil, 
-                                                             expFactor = input$expFactor_rnaseq_norm, 
+                                                             expFactor = rv$experimentName, 
                                                              covGroups_num = input$covGroups_num_rnaseq_norm, 
                                                              covGroups_char = input$covGroups_char_rnaseq_norm, 
                                                              comparisons = input$comparisons_rnaseq_norm,
@@ -2757,7 +2755,7 @@ server <- function(input, output, session){
               counts <- 2^rv$normData - 1 
               rv$top_table <- getStatistics_RNASeq_processed(normMatrix = counts, 
                                                              metaData = rv$metaData_fil, 
-                                                             expFactor = input$expFactor_rnaseq_norm, 
+                                                             expFactor = rv$experimentName, 
                                                              covGroups_num = input$covGroups_num_rnaseq_norm, 
                                                              covGroups_char = input$covGroups_char_rnaseq_norm, 
                                                              comparisons = input$comparisons_rnaseq_norm,
@@ -3151,6 +3149,8 @@ server <- function(input, output, session){
                       '</a>'
                     )
                   }
+                  output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
+                  output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
                   
                   return(output)
                 },options = list(pageLength = 6),
@@ -3173,6 +3173,12 @@ server <- function(input, output, session){
                                                top_table = rv$top_table[[input$comparisons_view_ORA_rnaseq_norm]],
                                                geneID_col = input$geneID_ORA_rnaseq_norm,
                                                sel_row_ORA = input$ORA_table_rnaseq_norm_rows_selected)
+                  
+                  output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
+                  output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
+                  output$meanExpr <- round(output$meanExpr,3)
+                  output$log2FC <- round(output$log2FC,3)
+                  output$`log2FC SE` <- round(output$`log2FC SE`,3)
                   
                   return(output)
                 }, options = list(pageLength = 6), escape = FALSE)
@@ -3429,9 +3435,8 @@ server <- function(input, output, session){
               shinyWidgets::sendSweetAlert(
                 session = session,
                 title = "Error!!",
-                text = "No expression data",
+                text = "You forgot to upload an expression and/or metadata file",
                 type = "error")
-              
               shinybusy::remove_modal_spinner()
             }
             
@@ -4339,46 +4344,13 @@ server <- function(input, output, session){
           
           # SIDEPANEL:
           
-          # Select experimental group
-          output$UI_expFactor_microarray_raw <- renderUI({
-            tagList(
-              shinyWidgets::pickerInput(inputId = "expFactor_microarray_raw",
-                                        label = "Experiment factor:",
-                                        choices = colnames(rv$metaData_fil),
-                                        selected = rv$experimentName,
-                                        multiple = TRUE)
-            )
-          })
-          
-          # print the experimental levels
-          output$expFactor_levels_micorarray_raw <- renderText({
-            req(input$expFactor_microarray_raw)
-            
-            if(length(input$expFactor_microarray_raw) > 1){
-              rv$experimentFactor <- factor(make.names(apply(rv$metaData_fil[,input$expFactor_microarray_raw], 1, paste, collapse = "_" )))
-            } else{
-              rv$experimentFactor <- factor(make.names(rv$metaData_fil[,input$expFactor_microarray_raw]))
-            }
-            levels <- unique(rv$experimentFactor)
-            if (length(levels) <= 6){
-              text <- paste0("<p><b>Levels (",length(levels),"):</b> ", paste(levels, collapse = ", "),
-                             "</p>")
-            } else {
-              text <- paste0("<p><b>Levels (",length(levels),"):</b> ", paste(head(levels), collapse = ", "),
-                             "...</p>")
-            }
-            return(text)
-            
-          })
-          
           # Select continuous covariates
           output$UI_covGroups_num_microarray_raw <- renderUI({
-            req(input$expFactor_microarray_raw)
             tagList(
               shinyWidgets::pickerInput(inputId = "covGroups_num_microarray_raw",
                                         label = "Continuous covariates (e.g., age):",
                                         choices = setdiff(colnames(rv$metaData_fil),
-                                                          input$expFactor_microarray_raw),
+                                                          rv$experimentName),
                                         selected = NULL,
                                         multiple = TRUE)
             )
@@ -4386,12 +4358,11 @@ server <- function(input, output, session){
           
           # Select discrete covariates
           output$UI_covGroups_char_microarray_raw <- renderUI({
-            req(input$expFactor_microarray_raw)
             tagList(
               shinyWidgets::pickerInput(inputId = "covGroups_char_microarray_raw",
                                         label = "Discrete covariates (e.g., sex):",
                                         choices = setdiff(colnames(rv$metaData_fil),
-                                                          input$expFactor_microarray_raw),
+                                                          rv$experimentName),
                                         selected = NULL,
                                         multiple = TRUE)
             )
@@ -4399,8 +4370,6 @@ server <- function(input, output, session){
           
           # Select comparisons
           output$UI_comparisons_microarray_raw <- renderUI({
-            req(input$expFactor_microarray_raw)
-            
             tagList(
               shinyWidgets::multiInput(
                 inputId = "comparisons_microarray_raw",
@@ -4468,7 +4437,7 @@ server <- function(input, output, session){
             if (isTRUE(input$addAnnotation_microarray_raw)){
               rv$top_table <- getStatistics(normMatrix = rv$normMatrix, 
                                             metaData = rv$metaData_fil, 
-                                            expFactor = input$expFactor_microarray_raw, 
+                                            expFactor = rv$experimentName, 
                                             covGroups_num = input$covGroups_num_microarray_raw,
                                             covGroups_char = input$covGroups_char_microarray_raw,
                                             comparisons = input$comparisons_microarray_raw,
@@ -4481,7 +4450,7 @@ server <- function(input, output, session){
             } else{
               rv$top_table <- getStatistics(normMatrix = rv$normMatrix, 
                                             metaData = rv$metaData_fil, 
-                                            expFactor = input$expFactor_microarray_raw, 
+                                            expFactor = rv$experimentName, 
                                             covGroups_num = input$covGroups_num_microarray_raw,
                                             covGroups_char = input$covGroups_char_microarray_raw,
                                             comparisons = input$comparisons_microarray_raw,
@@ -4620,6 +4589,7 @@ server <- function(input, output, session){
                 logExpr = rv$normMatrix[as.character(rownames(rv$normMatrix)) %in% as.character(gene),],
                 Grouping = rv$experimentFactor
               )
+              
               
               # make interactive plot
               plotExpr %>%
@@ -4959,6 +4929,8 @@ server <- function(input, output, session){
                       '</a>'
                     )
                   }
+                  output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
+                  output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
                   
                   return(output)
                 },options = list(pageLength = 6),
@@ -5016,6 +4988,11 @@ server <- function(input, output, session){
                       )
                     }
                   }
+                  output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
+                  output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
+                  output$meanExpr <- round(output$meanExpr,3)
+                  output$log2FC <- round(output$log2FC,3)
+                  output$`log2FC SE` <- round(output$`log2FC SE`,3)
                   
                   return(output)
                 }, options = list(pageLength = 6), escape = FALSE)
@@ -5233,21 +5210,48 @@ server <- function(input, output, session){
                                           color="#0dc5c1")
             
             # Read expression data
-            rv$gxData <- getGEO(filename=input$uploadExprData_microarray_norm_smf$datapath)
-            
-            # Guess the organism
-            rv$Organism <- getOrganism(gxData = rv$gxData)
+            if (!is.null(input$uploadExprData_microarray_norm_smf)){
+              rv$gxData <- getGEO(filename=input$uploadExprData_microarray_norm_smf$datapath)
+              # Guess the organism
+              rv$Organism <- getOrganism(gxData = rv$gxData)
+              } else{
+              shinyWidgets::sendSweetAlert(
+                session = session,
+                title = "Error!!",
+                text = "You forgot to upload an expression and/or metadata file",
+                type = "error")
+              shinybusy::remove_modal_spinner()
+            }
             
             # Get metadata
-            if (input$MetaFileType_microarray_norm==".tsv/.csv file"){
-              rv$metaData <- getMetaData(path = input$uploadMeta_microarray_norm_tsv$datapath,
-                                         celfiles = colnames(exprs(rv$gxData)),
-                                         filetype = input$MetaFileType_microarray_norm)
+            if (!is.null(input$uploadMeta_microarray_norm_tsv)){
+              if (input$MetaFileType_microarray_norm==".tsv/.csv file"){
+                rv$metaData <- getMetaData(path = input$uploadMeta_microarray_norm_tsv$datapath,
+                                           celfiles = colnames(exprs(rv$gxData)),
+                                           filetype = input$MetaFileType_microarray_norm)
+              }
+            }else{
+              shinyWidgets::sendSweetAlert(
+                session = session,
+                title = "Error!!",
+                text = "You forgot to upload an expression and/or metadata file",
+                type = "error")
+              shinybusy::remove_modal_spinner()
             }
-            if (input$MetaFileType_microarray_norm=="Series Matrix File"){
-              rv$metaData <- getMetaData(path = input$uploadMeta_microarray_norm_smf$datapath,
-                                         celfiles =  colnames(exprs(rv$gxData)),
-                                         filetype = input$MetaFileType_microarray_norm)
+            
+            if (!is.null(input$uploadMeta_microarray_norm_smf)){
+              if (input$MetaFileType_microarray_norm=="Series Matrix File"){
+                rv$metaData <- getMetaData(path = input$uploadMeta_microarray_norm_smf$datapath,
+                                           celfiles =  colnames(exprs(rv$gxData)),
+                                           filetype = input$MetaFileType_microarray_norm)
+              }
+            }else{
+              shinyWidgets::sendSweetAlert(
+                session = session,
+                title = "Error!!",
+                text = "You forgot to upload an expression and/or metadata file",
+                type = "error")
+              shinybusy::remove_modal_spinner()
             }
             
             # Read raw expression data
@@ -6034,46 +6038,14 @@ server <- function(input, output, session){
           
           # SIDEPANEL:
           
-          # Select experimental group
-          output$UI_expFactor_microarray_norm <- renderUI({
-            tagList(
-              pickerInput(inputId = "expFactor_microarray_norm",
-                          label = "Experiment factor:",
-                          choices = colnames(rv$metaData_fil),
-                          selected = rv$experimentName,
-                          multiple = TRUE)
-            )
-          })
-          
-          # print the experimental levels
-          output$expFactor_levels_micorarray_norm <- renderText({
-            req(input$expFactor_microarray_norm)
-            
-            if(length(input$expFactor_microarray_norm) > 1){
-              rv$experimentFactor <- factor(make.names(apply(rv$metaData_fil[,input$expFactor_microarray_norm], 1, paste, collapse = "_" )))
-            } else{
-              rv$experimentFactor <- factor(make.names(rv$metaData_fil[,input$expFactor_microarray_norm]))
-            }
-            levels <- unique(rv$experimentFactor)
-            if (length(levels) <= 6){
-              text <- paste0("<p><b>Levels (",length(levels),"):</b> ", paste(levels, collapse = ", "),
-                             "</p>")
-            } else {
-              text <- paste0("<p><b>Levels (",length(levels),"):</b> ", paste(head(levels), collapse = ", "),
-                             "...</p>")
-            }
-            return(text)
-            
-          })
           
           # Select continuous covariates
           output$UI_covGroups_num_microarray_norm <- renderUI({
-            req(input$expFactor_microarray_norm)
             tagList(
               pickerInput(inputId = "covGroups_num_microarray_norm",
                           label = "Continuous covariates (e.g., age):",
                           choices = setdiff(colnames(rv$metaData_fil),
-                                            input$expFactor_microarray_norm),
+                                            rv$experimentName),
                           selected = NULL,
                           multiple = TRUE)
             )
@@ -6081,12 +6053,11 @@ server <- function(input, output, session){
           
           # Select discrete covariates
           output$UI_covGroups_char_microarray_norm <- renderUI({
-            req(input$expFactor_microarray_norm)
             tagList(
               pickerInput(inputId = "covGroups_char_microarray_norm",
                           label = "Discrete covariates (e.g., sex):",
                           choices = setdiff(colnames(rv$metaData_fil),
-                                            input$expFactor_microarray_norm),
+                                            rv$experimentName),
                           selected = NULL,
                           multiple = TRUE)
             )
@@ -6094,7 +6065,6 @@ server <- function(input, output, session){
           
           # Select comparisons
           output$UI_comparisons_microarray_norm <- renderUI({
-            req(input$expFactor_microarray_norm)
             
             tagList(
               multiInput(
@@ -6162,7 +6132,7 @@ server <- function(input, output, session){
             if (isTRUE(input$addAnnotation_microarray_norm)){
               rv$top_table <- getStatistics(normMatrix = rv$normMatrix, 
                                             metaData = rv$metaData_fil, 
-                                            expFactor = input$expFactor_microarray_norm, 
+                                            expFactor = rv$experimentName, 
                                             covGroups_num = input$covGroups_num_microarray_norm,
                                             covGroups_char = input$covGroups_char_microarray_norm,
                                             comparisons = input$comparisons_microarray_norm,
@@ -6175,7 +6145,7 @@ server <- function(input, output, session){
             } else{
               rv$top_table <- getStatistics(normMatrix = rv$normMatrix, 
                                             metaData = rv$metaData_fil, 
-                                            expFactor = input$expFactor_microarray_norm, 
+                                            expFactor = rv$experimentName, 
                                             covGroups_num = input$covGroups_num_microarray_norm,
                                             covGroups_char = input$covGroups_char_microarray_norm,
                                             comparisons = input$comparisons_microarray_norm,
@@ -6264,7 +6234,7 @@ server <- function(input, output, session){
               gene <- rv$top_table[[input$comparisons_view_microarray_norm]]$GeneID[input$top_table_microarray_norm_rows_selected]
               plotExpr <- data.frame(
                 logExpr = rv$normMatrix[as.character(rownames(rv$normMatrix)) %in% as.character(gene),],
-                Grouping = factor(rv$metaData_fil[,input$expFactor_microarray_norm])
+                Grouping = rv$experimentFactor
               )
               
               # make interactive plot
@@ -6564,6 +6534,8 @@ server <- function(input, output, session){
                       '</a>'
                     )
                   }
+                  output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
+                  output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
                   
                   return(output)
                 },options = list(pageLength = 6),
@@ -6586,6 +6558,12 @@ server <- function(input, output, session){
                                                top_table = rv$top_table[[input$comparisons_view_ORA_microarray_norm]],
                                                geneID_col = input$geneID_ORA_microarray_norm,
                                                sel_row_ORA = input$ORA_table_microarray_norm_rows_selected)
+                  
+                  output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
+                  output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
+                  output$meanExpr <- round(output$meanExpr,3)
+                  output$log2FC <- round(output$log2FC,3)
+                  output$`log2FC SE` <- round(output$`log2FC SE`,3)
                   
                   return(output)
                 }, options = list(pageLength = 6), escape = FALSE)

@@ -1,0 +1,13 @@
+name	version
+biomaRt	2.58.2
+GEOquery	2.70.0
+limma	3.58.1
+makecdfenv	1.78.0
+bioDist	1.74.0
+gcrma	2.74.0
+plier	1.72.0
+clusterProfiler	4.10.1
+affy	1.80.0
+oligo	1.66.0
+DESeq2	1.42.1
+apeglm	1.24.0

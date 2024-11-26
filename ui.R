@@ -38,7 +38,13 @@ ui <- tagList(
     prompter::use_prompt(),
     
     # Make a page with a navigation bar
-    navbarPage(title = "ArrayAnalysis", id = "navbar",
+    navbarPage(title = div(img(src="logo_navbar.PNG", 
+                               style="margin-top: -14px;
+                               padding-right:10px;
+                               padding-bottom:10px",
+                               height = 60)),
+               windowTitle = "ArrayAnalysis",
+               id = "navbar",
                
                ###################################################################
                
@@ -64,13 +70,13 @@ ui <- tagList(
                           
                           column(6, offset = 3, 
                                  align = "center", 
-                                 style = "background-color:#FFFFFF;",
+                                 style = "background-color:rgba(255, 255, 255, 0.95); border-radius: 15px;",
                                  
                                  # Line break
                                  br(),
                                  
                                  # ArrayAnalysis logo
-                                 img(src = "logo.png", width = "100%"),
+                                 img(src = "logo_main.png", width = "100%"),
                                  
                                  # Welcome message
                                  h1(strong(span(style = "color:#000000", 
@@ -85,19 +91,19 @@ ui <- tagList(
                                  shinyWidgets::radioGroupButtons(
                                    inputId = "microarray_or_rnaseq",
                                    label = NULL,
-                                   choices = c("Microarray analysis" = "Microarray", 
+                                   choices = c("Microarray analysis" = "Microarray",
                                                "RNA-Seq analysis" = "RNA-Seq"),
-                                   status = "danger",
+                                   status = "info",
                                    selected = "Microarray"
                                  ),
-                                 
+
                                  # Analyse raw or processed data?
                                  shinyWidgets::prettyRadioButtons(
                                    inputId = "raw_or_norm",
-                                   label = NULL, 
+                                   label = NULL,
                                    choices = c("Raw data", "Processed data"),
-                                   inline = TRUE, 
-                                   status = "danger",
+                                   inline = TRUE,
+                                   status = "info",
                                    fill = TRUE),
                                  
                                  # Line break
@@ -107,7 +113,7 @@ ui <- tagList(
                                  shinyWidgets::actionBttn(inputId = "startAnalysis",
                                             label = "Start Analysis",
                                             style = "simple",
-                                            color = "primary",
+                                            color = "warning",
                                             icon = icon("arrow-right")),
                                  
                                  # Line breaks
@@ -1459,9 +1465,7 @@ ui <- tagList(
                                          position = "right",
                                          size = "large")
                           ))),
-                          uiOutput("UI_expFactor_rnaseq_raw"),
                           uiOutput("UI_comparisons_rnaseq_raw"),
-                          htmlOutput("expFactor_levels_rnaseq_raw"),
                           br(),
                           
                           h4(strong(tags$span(
@@ -1771,8 +1775,7 @@ ui <- tagList(
                           
                           
                           uiOutput("next_upload_rnaseq_norm")
-                          
-                        ), # End of side panel
+                          ), # End of side panel
                         
                         # Main panel
                         mainPanel(
@@ -1978,9 +1981,7 @@ ui <- tagList(
                                          position = "right",
                                          size = "large")
                           ))),
-                          uiOutput("UI_expFactor_rnaseq_norm"),
                           uiOutput("UI_comparisons_rnaseq_norm"),
-                          htmlOutput("expFactor_levels_rnaseq_norm"),
                           br(),
                           
                           h4(strong(tags$span(

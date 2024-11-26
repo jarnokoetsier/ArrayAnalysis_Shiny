@@ -1590,7 +1590,7 @@ ORA <- function(top_table,
     # make term names shorter
     output$Description[nchar(output$Description)>50] <- paste0(substring(output$Description[nchar(output$Description)>50],1,47),"...")
     
-    ORA_data@result <- output
+    ORA_data@result <- arrange(output, by = `p-value`)
     
     return(ORA_data)
   }, error = function(cond){
@@ -2096,9 +2096,9 @@ getStatistics_RNASeq <- function(rawMatrix,
         annotations[annotations == " "] <- NA
         
         # Combine annotations with top table
-        annotations[,biomart_filters] <- as.character(annotations[,biomart_filters])
+        annotations[,biomart_filters1] <- as.character(annotations[,biomart_filters1])
         top_table_ann <- dplyr::left_join(top_table[[t]], annotations,
-                                          by = c("GeneID" = biomart_filters))
+                                          by = c("GeneID" = biomart_filters1))
         
         colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "gene_name"
         colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "gene_name"
@@ -2252,15 +2252,21 @@ getStatistics_RNASeq_processed <- function(normMatrix,
     # Add annotations to table if this option is selected
     if (addAnnotation == TRUE){
       
-      # Change attribute name
+      # Change attribute and filter name
       if (biomart_dataset == "hsapiens_gene_ensembl"){
         biomart_attributes1 <- stringr::str_replace(biomart_attributes,
                                                     "gene_name",
                                                     "hgnc_symbol")
+        biomart_filters1 <- stringr::str_replace(biomart_filters,
+                                                 "gene_name",
+                                                 "hgnc_symbol")
       } else{
         biomart_attributes1 <- stringr::str_replace(biomart_attributes,
                                                     "gene_name",
                                                     "external_gene_name")
+        biomart_filters1 <- stringr::str_replace(biomart_filters,
+                                                 "gene_name",
+                                                 "external_gene_name")
       }
       
       
@@ -2276,7 +2282,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
         ensembl <- biomaRt::useMart("ensembl")
         ensembl <- biomaRt::useDataset(biomart_dataset, mart=ensembl)
         annotations <- biomaRt::getBM(attributes=biomart_attributes1, 
-                                      filters = biomart_filters,
+                                      filters = biomart_filters1,
                                       values = top_table[[t]]$GeneID,
                                       mart = ensembl)
         
@@ -2288,9 +2294,9 @@ getStatistics_RNASeq_processed <- function(normMatrix,
         annotations[annotations == " "] <- NA
         
         # Combine annotations with top table
-        annotations[,biomart_filters] <- as.character(annotations[,biomart_filters])
+        annotations[,biomart_filters] <- as.character(annotations[,biomart_filters1])
         top_table_ann <- dplyr::left_join(top_table[[t]], annotations,
-                                          by = c("GeneID" = biomart_filters))
+                                          by = c("GeneID" = biomart_filters1))
         
         colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "gene_name"
         colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "gene_name"
