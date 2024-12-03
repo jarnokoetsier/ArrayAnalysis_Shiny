@@ -1,18 +1,18 @@
-name	version
-tidyverse	2.0.0
-fuzzyjoin	0.1.6
-plotly		4.10.4
-gplots	3.2.0
-heatmaply	1.5.0
-ggvenn	0.1.10
-data.table	1.16.2
-DT	0.33
-shiny	1.9.1
-shinyWidgets	0.8.7	
-shinycssloaders	1.1.0
-shinybusy	0.3.3
-purrr	1.0.2
-prompter	1.2.0
-htmlwidgets	1.6.4
-igraph	2.1.1
-ggraph	2.2.1
+name	version	direction
+tidyverse	2.0.0	smaller
+fuzzyjoin	0.1.6	smaller
+plotly		4.10.4	smaller
+gplots	3.2.0	smaller
+heatmaply	1.5.0	smaller
+ggvenn	0.1.10	smaller
+data.table	1.16.2	smaller
+DT	0.33	smaller
+shiny	1.9.1	smaller
+shinyWidgets	0.8.7	smaller
+shinycssloaders	1.1.0	smaller
+shinybusy	0.3.3	smaller
+purrr	1.0.2	smaller
+prompter	1.2.0	smaller
+htmlwidgets	1.6.4	smaller
+igraph	2.1.1	smaller
+ggraph	2.2.1	smaller

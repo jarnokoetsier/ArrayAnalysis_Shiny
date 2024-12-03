@@ -27,17 +27,28 @@ for (pkg in 1:nrow(CRANpackages)) {
   
   # Install package if not installed
   if (!requireNamespace(CRANpackages$name[pkg], quietly = TRUE)){
-    #install.packages(CRANpackages$name[pkg], ask = FALSE)
     remotes::install_version(CRANpackages$name[pkg], 
                               version = CRANpackages$version[pkg], 
                               repos = "http://cran.us.r-project.org")
   } else {
     
-    #Install package if package version is incorrect
-    if (packageVersion(CRANpackages$name[pkg]) != CRANpackages$version[pkg]){
-      remotes::install_version(CRANpackages$name[pkg],
-                               CRANpackages$version[pkg])
+    #Install package if package version is incorrect:
+    
+    # Install if package version is smaller than needed
+    if (CRANpackages$direction[pkg] == "smaller"){
+      if (packageVersion(CRANpackages$name[pkg]) < CRANpackages$version[pkg]){
+        remotes::install_version(CRANpackages$name[pkg],
+                                 CRANpackages$version[pkg])
+      }
     }
+    # Install if package version is different than needed
+    if (CRANpackages$direction[pkg] == "unequal"){
+      if (packageVersion(CRANpackages$name[pkg]) != CRANpackages$version[pkg]){
+        remotes::install_version(CRANpackages$name[pkg],
+                                 CRANpackages$version[pkg])
+      }
+    }
+
   }
   require(as.character(CRANpackages$name[pkg]), character.only = TRUE)
 }
@@ -55,6 +66,10 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 for (pkg in 1:nrow(BiocPackages)) {
   if (!requireNamespace(BiocPackages$name[pkg], quietly = TRUE)){
     BiocManager::install(BiocPackages$name[pkg], ask = FALSE, version = "3.20")
+  } else{
+    if (packageVersion(BiocPackages$name[pkg]) < BiocPackages$version[pkg]){
+      BiocManager::install(BiocPackages$name[pkg], ask = FALSE, version = "3.20")
+    }
   }
   require(as.character(BiocPackages$name[pkg]), character.only = TRUE)
 }

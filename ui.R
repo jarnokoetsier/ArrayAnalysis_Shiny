@@ -9,22 +9,31 @@ ui <- tagList(
   # Set the style of the UI
   tags$head(tags$style(HTML("
                            .navbar-nav {
-                           float: none !important;
+                           float: none;
+                           width: 100%;
+                           margin: 0;
+                           padding: 0;
                            }
                             .navbar-nav > li:nth-child(18) {
                            float: right;
                            }
                            .my_style_1{ 
                              background-image: url(background.jpg);
+                             background-size: cover; 
+                             background-repeat: no-repeat; 
+                             background-attachment: fixed;
                            }
-                           
-                           .my_style_1 { margin-top: -20px; }
-                           
-                           .my_style_1 { width: 100%; }
-                           
-                           .container-fluid { padding-left: 0; padding-right: 0; }
-                           
-                           .my_style_1 { position: absolute; left: 0; }
+                           .my_style_1 { 
+                            width: 100%; 
+                            height: 100vh;
+                           margin-top: -20px; 
+                           margin-right: 0; 
+                           padding: 0;
+                           }
+                           .container-fluid { 
+                           padding-left: 0; 
+                           padding-right: 0;
+                           }
                            
                            "))),
   
@@ -122,20 +131,9 @@ ui <- tagList(
                                  br()
                                  
                           ) # EO column
-                        ), # EO fluidRow
+                        ) # EO fluidRow
                         
-                        # Set spacing between bottom of page and text box
-                        br(),
-                        br(),
-                        br(),
-                        br(),
-                        br(),
-                        br(),
-                        br(),
-                        br(),
-                        br(),
-                        br(),
-                        br()
+  
                ), # EO home panel
                
                ###################################################################
@@ -2221,146 +2219,153 @@ ui <- tagList(
                ###################################################################
                tabPanel("Documentation", value = "documentation", 
                         icon = icon("question-circle"),
-                        mainPanel(
-                          tags$div(
-                            h1(strong("Documentation")),
-                            HTML("<details>
-                                 <summary>
-                                 <h2>
-                                 <p>&#11166; Microarray - raw</p>
-                                 <p>&emsp;...</p>
-                                 </h2>
-                                 </summary>
-                                 
-                                 <h4>
-                                 <p><b>Data upload</b></p>
-                                 </h4>
-                                 <p>Description data upload</p>
-                                 <br>
-                                 
-                                 <h4>
-                                 <p><b>Pre-processing</b></p>
-                                 </h4>
-                                 <p>Description data pre-processing</p>
-                                 <br>
-                                 
-                                 <h4>
-                                 <p><b>Statistical analysis</b></p>
-                                 </h4>
-                                 <p>Description statistical analysis</p>
-                                 <br>
-                                 
-                                 <h4>
-                                 <p><b>ORA</b></p>
-                                 </h4>
-                                 <p>Description ORA</p>
-                                 <br>
-                                 
-                                 </details>"),
-                            HTML("<details>
-                                 <summary>
-                                 <h2>
-                                 <p>&#11166; Microarray - processed</p>
-                                 <p>&emsp;...</p>
-                                 </h2>
-                                   </summary>
-                                 
-                                 <h4>
-                                 <p><b>Data upload</b></p>
-                                 </h4>
-                                 <p>Description data upload</p>
-                                 <br>
-                                 
-                                 <h4>
-                                 <p><b>Pre-processing</b></p>
-                                 </h4>
-                                 <p>Description data pre-processing</p>
-                                 <br>
-                                 
-                                 <h4>
-                                 <p><b>Statistical analysis</b></p>
-                                 </h4>
-                                 <p>Description statistical analysis</p>
-                                 <br>
-                                 
-                                 <h4>
-                                 <p><b>ORA</b></p>
-                                 </h4>
-                                 <p>Description ORA</p>
-                                 <br>
-                                 
-                                 </details>"),
-                            HTML("<details>
-                                 <summary>
-                                 <h2>
-                                 <p>&#11166; RNA-seq - raw</p>
-                                 <p>&emsp;...</p>
-                                 </h2>
-                                   </summary>
-                                 
-                                 <h4>
-                                 <p><b>Data upload</b></p>
-                                 </h4>
-                                 <p>Description data upload</p>
-                                 <br>
-                                 
-                                 <h4>
-                                 <p><b>Pre-processing</b></p>
-                                 </h4>
-                                 <p>Description data pre-processing</p>
-                                 <br>
-                                 
-                                 <h4>
-                                 <p><b>Statistical analysis</b></p>
-                                 </h4>
-                                 <p>Description statistical analysis</p>
-                                 <br>
-                                 
-                                 <h4>
-                                 <p><b>ORA</b></p>
-                                 </h4>
-                                 <p>Description ORA</p>
-                                 <br>
-                                 
-                                 </details>"),
-                            HTML("<details>
-                                 <summary>
-                                 <h2>
-                                 <p>&#11166; RNA-seq - processed</p>
-                                 <p>&emsp;...</p>
-                                 </h2>
-                                   </summary>
-                                 
-                                 <h4>
-                                 <p><b>Data upload</b></p>
-                                 </h4>
-                                 <p>Description data upload</p>
-                                 <br>
-                                 
-                                 <h4>
-                                 <p><b>Pre-processing</b></p>
-                                 </h4>
-                                 <p>Description data pre-processing</p>
-                                 <br>
-                                 
-                                 <h4>
-                                 <p><b>Statistical analysis</b></p>
-                                 </h4>
-                                 <p>Description statistical analysis</p>
-                                 <br>
-                                 
-                                 <h4>
-                                 <p><b>ORA</b></p>
-                                 </h4>
-                                 <p>Description ORA</p>
-                                 <br>
-                                 
-                                 </details>")
-                            
-                        )
-
-                          
-                        )
+                        
+                          tags$iframe(src="test.html",
+                                      width="100%",
+                                      style="height: 85vh;",
+                                      scrolling="yes",
+                                      frameborder="0")
+                        
+                        # mainPanel(
+                        #   tags$div(
+                        #     h1(strong("Documentation")),
+                        #     HTML("<details>
+                        #          <summary>
+                        #          <h2>
+                        #          <p>&#11166; Microarray - raw</p>
+                        #          <p>&emsp;...</p>
+                        #          </h2>
+                        #          </summary>
+                        #          
+                        #          <h4>
+                        #          <p><b>Data upload</b></p>
+                        #          </h4>
+                        #          <p>Description data upload</p>
+                        #          <br>
+                        #          
+                        #          <h4>
+                        #          <p><b>Pre-processing</b></p>
+                        #          </h4>
+                        #          <p>Description data pre-processing</p>
+                        #          <br>
+                        #          
+                        #          <h4>
+                        #          <p><b>Statistical analysis</b></p>
+                        #          </h4>
+                        #          <p>Description statistical analysis</p>
+                        #          <br>
+                        #          
+                        #          <h4>
+                        #          <p><b>ORA</b></p>
+                        #          </h4>
+                        #          <p>Description ORA</p>
+                        #          <br>
+                        #          
+                        #          </details>"),
+                        #     HTML("<details>
+                        #          <summary>
+                        #          <h2>
+                        #          <p>&#11166; Microarray - processed</p>
+                        #          <p>&emsp;...</p>
+                        #          </h2>
+                        #            </summary>
+                        #          
+                        #          <h4>
+                        #          <p><b>Data upload</b></p>
+                        #          </h4>
+                        #          <p>Description data upload</p>
+                        #          <br>
+                        #          
+                        #          <h4>
+                        #          <p><b>Pre-processing</b></p>
+                        #          </h4>
+                        #          <p>Description data pre-processing</p>
+                        #          <br>
+                        #          
+                        #          <h4>
+                        #          <p><b>Statistical analysis</b></p>
+                        #          </h4>
+                        #          <p>Description statistical analysis</p>
+                        #          <br>
+                        #          
+                        #          <h4>
+                        #          <p><b>ORA</b></p>
+                        #          </h4>
+                        #          <p>Description ORA</p>
+                        #          <br>
+                        #          
+                        #          </details>"),
+                        #     HTML("<details>
+                        #          <summary>
+                        #          <h2>
+                        #          <p>&#11166; RNA-seq - raw</p>
+                        #          <p>&emsp;...</p>
+                        #          </h2>
+                        #            </summary>
+                        #          
+                        #          <h4>
+                        #          <p><b>Data upload</b></p>
+                        #          </h4>
+                        #          <p>Description data upload</p>
+                        #          <br>
+                        #          
+                        #          <h4>
+                        #          <p><b>Pre-processing</b></p>
+                        #          </h4>
+                        #          <p>Description data pre-processing</p>
+                        #          <br>
+                        #          
+                        #          <h4>
+                        #          <p><b>Statistical analysis</b></p>
+                        #          </h4>
+                        #          <p>Description statistical analysis</p>
+                        #          <br>
+                        #          
+                        #          <h4>
+                        #          <p><b>ORA</b></p>
+                        #          </h4>
+                        #          <p>Description ORA</p>
+                        #          <br>
+                        #          
+                        #          </details>"),
+                        #     HTML("<details>
+                        #          <summary>
+                        #          <h2>
+                        #          <p>&#11166; RNA-seq - processed</p>
+                        #          <p>&emsp;...</p>
+                        #          </h2>
+                        #            </summary>
+                        #          
+                        #          <h4>
+                        #          <p><b>Data upload</b></p>
+                        #          </h4>
+                        #          <p>Description data upload</p>
+                        #          <br>
+                        #          
+                        #          <h4>
+                        #          <p><b>Pre-processing</b></p>
+                        #          </h4>
+                        #          <p>Description data pre-processing</p>
+                        #          <br>
+                        #          
+                        #          <h4>
+                        #          <p><b>Statistical analysis</b></p>
+                        #          </h4>
+                        #          <p>Description statistical analysis</p>
+                        #          <br>
+                        #          
+                        #          <h4>
+                        #          <p><b>ORA</b></p>
+                        #          </h4>
+                        #          <p>Description ORA</p>
+                        #          <br>
+                        #          
+                        #          </details>")
+                        #     
+                        # )
+                        # 
+                        #   
+                        # )
                ) # Tab panel
                
                
