@@ -169,17 +169,7 @@ server <- function(input, output, session){
                                            celfiles = colnames(rv$gxData),
                                            filetype = input$MetaFileType_rnaseq_raw)
               }
-            }else{
-              shinyWidgets::sendSweetAlert(
-                session = session,
-                title = "Error!!",
-                text = "You forgot to upload an expression and/or metadata file",
-                type = "error")
-              shinybusy::remove_modal_spinner()
-              
-            }
-            
-            if (!is.null(input$uploadMeta_rnaseq_raw_smf)){ 
+            }else if(!is.null(input$uploadMeta_rnaseq_raw_smf)){ 
               if (input$MetaFileType_rnaseq_raw =="Series Matrix File"){
                 rv$metaData <- getMetaData(path = input$uploadMeta_rnaseq_raw_smf$datapath,
                                            celfiles =  colnames(rv$gxData),
@@ -1794,15 +1784,7 @@ server <- function(input, output, session){
                                            celfiles = colnames(rv$gxData),
                                            filetype = input$MetaFileType_rnaseq_norm)
               }
-            }else{
-              shinyWidgets::sendSweetAlert(
-                session = session,
-                title = "Error!!",
-                text = "You forgot to upload an expression and/or metadata file",
-                type = "error")
-              shinybusy::remove_modal_spinner()
-            }
-            if (!is.null(input$uploadMeta_rnaseq_norm_smf)){
+            }else if (!is.null(input$uploadMeta_rnaseq_norm_smf)){
               if (input$MetaFileType_rnaseq_norm =="Series Matrix File"){
                 rv$metaData <- getMetaData(path = input$uploadMeta_rnaseq_norm_smf$datapath,
                                            celfiles =  colnames(rv$gxData),

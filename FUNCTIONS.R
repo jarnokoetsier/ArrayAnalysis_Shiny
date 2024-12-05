@@ -1575,7 +1575,9 @@ ORA <- function(top_table,
       }
     }
     
-    output <- ORA_data@result
+    output <- ORA_data@result[,c("ID", "Description", "GeneRatio",
+                                 "BgRatio", "pvalue", "p.adjust",
+                                 "qvalue", "geneID", "Count")]
     
     output$pvalue <- signif(output$pvalue,3)
     output$p.adjust <- signif(output$p.adjust,3)
