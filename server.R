@@ -1131,26 +1131,28 @@ server <- function(input, output, session){
                 req(input$top_table_rnaseq_raw_rows_selected)
                 req(input$comparisons_view_rnaseq_raw)
                 
-                # Set colors
-                myPalette <- colorsByFactor(rv$experimentFactor)
-                legendColors <- myPalette$legendColors
-                
-                # Prepare expression data frame
-                gene <- rv$top_table[[input$comparisons_view_rnaseq_raw]]$GeneID[input$top_table_rnaseq_raw_rows_selected]
-                plotExpr <- data.frame(
-                  logExpr = rv$normData[as.character(rownames(rv$normData)) %in% as.character(gene),],
-                  Grouping = rv$experimentFactor
-                )
-                
-                # make interactive plot
-                plotExpr %>%
-                  plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                                  color = ~Grouping, colors = legendColors, type = "box") %>%
-                  plotly::layout(xaxis = list(title = " "),
-                                 yaxis = list(title = 'log expression'),
-                                 legend = list(title=list(text='Group')),
-                                 showlegend = FALSE)
-                
+                if (input$comparisons_view_rnaseq_raw %in% names(rv$top_table)){
+                  # Set colors
+                  myPalette <- colorsByFactor(rv$experimentFactor)
+                  legendColors <- myPalette$legendColors
+                  
+                  # Prepare expression data frame
+                  gene <- rv$top_table[[input$comparisons_view_rnaseq_raw]]$GeneID[input$top_table_rnaseq_raw_rows_selected]
+                  plotExpr <- data.frame(
+                    logExpr = rv$normData[as.character(rownames(rv$normData)) %in% as.character(gene),],
+                    Grouping = rv$experimentFactor
+                  )
+                  
+                  # make interactive plot
+                  plotExpr %>%
+                    plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
+                                    color = ~Grouping, colors = legendColors, type = "box") %>%
+                    plotly::layout(xaxis = list(title = " "),
+                                   yaxis = list(title = 'log expression'),
+                                   legend = list(title=list(text='Group')),
+                                   showlegend = FALSE)
+                  
+                }
               })
             })
             #********************************************************************#
@@ -1158,19 +1160,23 @@ server <- function(input, output, session){
             #********************************************************************#
             
             observe({
-              # P value histogram
-              output$Phistogram_rnaseq_raw <- plotly::renderPlotly({
-                req(rv$top_table)
-                p <- makePHistogram(rv$top_table[[input$comparisons_view_rnaseq_raw]][,"p-value"])
-                return(p)
-              })
+              req(input$comparisons_view_rnaseq_raw)
               
-              # logFC histrogram
-              output$logFChistogram_rnaseq_raw <- plotly::renderPlotly({
-                req(rv$top_table)
-                p <- makelogFCHistogram(rv$top_table[[input$comparisons_view_rnaseq_raw]][,"log2FC"])
-                return(p)
-              })
+              if (input$comparisons_view_rnaseq_raw %in% names(rv$top_table)){
+                # P value histogram
+                output$Phistogram_rnaseq_raw <- plotly::renderPlotly({
+                  req(rv$top_table)
+                  p <- makePHistogram(rv$top_table[[input$comparisons_view_rnaseq_raw]][,"p-value"])
+                  return(p)
+                })
+                
+                # logFC histrogram
+                output$logFChistogram_rnaseq_raw <- plotly::renderPlotly({
+                  req(rv$top_table)
+                  p <- makelogFCHistogram(rv$top_table[[input$comparisons_view_rnaseq_raw]][,"log2FC"])
+                  return(p)
+                })
+              }
             })
             
             #********************************************************************#
@@ -1182,12 +1188,16 @@ server <- function(input, output, session){
               req(input$rawp_volcano_rnaseq_raw)
               req(input$p_thres_volcano_rnaseq_raw)
               req(input$logFC_thres_volcano_rnaseq_raw)
-              p <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_rnaseq_raw]], 
-                               p = input$rawp_volcano_rnaseq_raw, 
-                               p_threshold = input$p_thres_volcano_rnaseq_raw, 
-                               logFC_threshold = input$logFC_thres_volcano_rnaseq_raw)
+              req(input$comparisons_view_rnaseq_raw)
               
-              output$volcano_rnaseq_raw <- plotly::renderPlotly(p)
+              if (input$comparisons_view_rnaseq_raw %in% names(rv$top_table)){
+                p <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_rnaseq_raw]], 
+                                 p = input$rawp_volcano_rnaseq_raw, 
+                                 p_threshold = input$p_thres_volcano_rnaseq_raw, 
+                                 logFC_threshold = input$logFC_thres_volcano_rnaseq_raw)
+                
+                output$volcano_rnaseq_raw <- plotly::renderPlotly(p)
+              }
             }, ignoreNULL = FALSE) 
             # ignoreNULL: generate plot even if action button is not pressed
             
@@ -2819,25 +2829,27 @@ server <- function(input, output, session){
                 req(input$top_table_rnaseq_norm_rows_selected)
                 req(input$comparisons_view_rnaseq_norm)
                 
-                # Set colors
-                myPalette <- colorsByFactor(rv$experimentFactor)
-                legendColors <- myPalette$legendColors
-                
-                # Prepare expression data frame
-                gene <- rv$top_table[[input$comparisons_view_rnaseq_norm]]$GeneID[input$top_table_rnaseq_norm_rows_selected]
-                plotExpr <- data.frame(
-                  logExpr = rv$normData[as.character(rownames(rv$normData)) %in% as.character(gene),],
-                  Grouping = rv$experimentFactor
-                )
-                
-                # make interactive plot
-                plotExpr %>%
-                  plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                                  color = ~Grouping, colors = legendColors, type = "box") %>%
-                  plotly::layout(xaxis = list(title = " "),
-                                 yaxis = list(title = 'log expression'),
-                                 legend = list(title=list(text='Group')),
-                                 showlegend = FALSE)
+                if (input$comparisons_view_rnaseq_norm %in% names(rv$top_table)){
+                  # Set colors
+                  myPalette <- colorsByFactor(rv$experimentFactor)
+                  legendColors <- myPalette$legendColors
+                  
+                  # Prepare expression data frame
+                  gene <- rv$top_table[[input$comparisons_view_rnaseq_norm]]$GeneID[input$top_table_rnaseq_norm_rows_selected]
+                  plotExpr <- data.frame(
+                    logExpr = rv$normData[as.character(rownames(rv$normData)) %in% as.character(gene),],
+                    Grouping = rv$experimentFactor
+                  )
+                  
+                  # make interactive plot
+                  plotExpr %>%
+                    plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
+                                    color = ~Grouping, colors = legendColors, type = "box") %>%
+                    plotly::layout(xaxis = list(title = " "),
+                                   yaxis = list(title = 'log expression'),
+                                   legend = list(title=list(text='Group')),
+                                   showlegend = FALSE)
+                }
                 
               })
             })
@@ -2846,20 +2858,23 @@ server <- function(input, output, session){
             # Histograms
             #********************************************************************#
             observe({
-              output$Phistogram_rnaseq_norm <- plotly::renderPlotly({
-                req(rv$top_table)
-                p <- makePHistogram(rv$top_table[[input$comparisons_view_rnaseq_norm]][,"p-value"])
-                return(p)
-              })
+              req(input$comparisons_view_rnaseq_norm)
               
-              output$logFChistogram_rnaseq_norm <- renderPlotly({
-                req(rv$top_table)
-                p <- makelogFCHistogram(rv$top_table[[input$comparisons_view_rnaseq_norm]][,"log2FC"])
-                return(p)
-              })
-              
+              if (input$comparisons_view_rnaseq_norm %in% names(rv$top_table)){
+                output$Phistogram_rnaseq_norm <- plotly::renderPlotly({
+                  req(rv$top_table)
+                  p <- makePHistogram(rv$top_table[[input$comparisons_view_rnaseq_norm]][,"p-value"])
+                  return(p)
+                })
+                
+                output$logFChistogram_rnaseq_norm <- renderPlotly({
+                  req(rv$top_table)
+                  p <- makelogFCHistogram(rv$top_table[[input$comparisons_view_rnaseq_norm]][,"log2FC"])
+                  return(p)
+                })
+              }
             })
-
+            
             #********************************************************************#
             # Volcano plot
             #********************************************************************#
@@ -2868,12 +2883,16 @@ server <- function(input, output, session){
               req(input$rawp_volcano_rnaseq_norm)
               req(input$p_thres_volcano_rnaseq_norm)
               req(input$logFC_thres_volcano_rnaseq_norm)
-              p <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_rnaseq_norm]], 
-                               p = input$rawp_volcano_rnaseq_norm, 
-                               p_threshold = input$p_thres_volcano_rnaseq_norm, 
-                               logFC_threshold = input$logFC_thres_volcano_rnaseq_norm)
+              req(input$comparisons_view_rnaseq_norm)
               
-              output$volcano_rnaseq_norm <- plotly::renderPlotly(p)
+              if (input$comparisons_view_rnaseq_norm %in% names(rv$top_table)){
+                p <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_rnaseq_norm]], 
+                                 p = input$rawp_volcano_rnaseq_norm, 
+                                 p_threshold = input$p_thres_volcano_rnaseq_norm, 
+                                 logFC_threshold = input$logFC_thres_volcano_rnaseq_norm)
+                
+                output$volcano_rnaseq_norm <- plotly::renderPlotly(p)
+              }
             }, ignoreNULL = FALSE)
             
             
@@ -3822,7 +3841,7 @@ server <- function(input, output, session){
             # Get Probeset annotation
             rv$annotations <- input$annotations_microarray_raw 
             if (rv$annotations == "Custom annotations"){
-              rv$ProbeAnnotation <- input$CDFtype_microarray 
+              rv$ProbeAnnotation <- input$CDFtype_microarray_raw 
               rv$Organism <- input$species_microarray_raw 
             } else{
               rv$ProbeAnnotation <- NULL
@@ -4503,7 +4522,7 @@ server <- function(input, output, session){
               # Required: selected comparison
               req(input$comparisons_view_microarray_raw)
               
-              # Get statistics of selectec comparison
+              # Get statistics of selected comparison
               output <- rv$top_table[[input$comparisons_view_microarray_raw]]
               
               # Add link to ENSEMBL or NCBI website if custom annotations is selected
@@ -4544,6 +4563,7 @@ server <- function(input, output, session){
                 }
               }
               return(output)
+              
             },options = list(pageLength = 6),
             selection = list(mode = "single", selected = 1), escape = FALSE)
             
@@ -4561,45 +4581,53 @@ server <- function(input, output, session){
               req(input$top_table_microarray_raw_rows_selected)
               req(input$comparisons_view_microarray_raw)
               
-              # Set colors
-              myPalette <- colorsByFactor(rv$experimentFactor)
-              legendColors <- myPalette$legendColors
-              
-              # Prepare expression data frame
-              gene <- rv$top_table[[input$comparisons_view_microarray_raw]]$GeneID[input$top_table_microarray_raw_rows_selected]
-              plotExpr <- data.frame(
-                logExpr = rv$normMatrix[as.character(rownames(rv$normMatrix)) %in% as.character(gene),],
-                Grouping = rv$experimentFactor
-              )
-              
-              
-              # make interactive plot
-              plotExpr %>%
-                plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                        color = ~Grouping, colors = legendColors, type = "box") %>%
-                layout(xaxis = list(title = " "),
-                       yaxis = list(title = 'log intensity'),
-                       legend = list(title=list(text='Group')),
-                       showlegend = FALSE)
+              if (input$comparisons_view_microarray_raw %in% names(rv$top_table)){
+                # Set colors
+                myPalette <- colorsByFactor(rv$experimentFactor)
+                legendColors <- myPalette$legendColors
+                
+                # Prepare expression data frame
+                gene <- rv$top_table[[input$comparisons_view_microarray_raw]]$GeneID[input$top_table_microarray_raw_rows_selected]
+                plotExpr <- data.frame(
+                  logExpr = rv$normMatrix[as.character(rownames(rv$normMatrix)) %in% as.character(gene),],
+                  Grouping = rv$experimentFactor
+                )
+                
+                
+                # make interactive plot
+                plotExpr %>%
+                  plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
+                          color = ~Grouping, colors = legendColors, type = "box") %>%
+                  layout(xaxis = list(title = " "),
+                         yaxis = list(title = 'log intensity'),
+                         legend = list(title=list(text='Group')),
+                         showlegend = FALSE)
+              }
               
             })
             
             #********************************************************************#
             # Histograms
             #********************************************************************#
-            
-            # Make P value histrogram
-            output$Phistogram_microarray_raw <- renderPlotly({
-              req(rv$top_table)
-              p <- makePHistogram(rv$top_table[[input$comparisons_view_microarray_raw]][,"p-value"])
-              return(p)
-            })
-            
-            # Make log2FC histogram
-            output$logFChistogram_microarray_raw <- renderPlotly({
-              req(rv$top_table)
-              p <- makelogFCHistogram(rv$top_table[[input$comparisons_view_microarray_raw]][,"log2FC"])
-              return(p)
+            observe({
+              req(input$comparisons_view_microarray_raw)
+              
+              if (input$comparisons_view_microarray_raw %in% names(rv$top_table)){
+                # Make P value histrogram
+                output$Phistogram_microarray_raw <- renderPlotly({
+                  req(rv$top_table)
+                  p <- makePHistogram(rv$top_table[[input$comparisons_view_microarray_raw]][,"p-value"])
+                  return(p)
+                })
+                
+                # Make log2FC histogram
+                output$logFChistogram_microarray_raw <- renderPlotly({
+                  req(rv$top_table)
+                  p <- makelogFCHistogram(rv$top_table[[input$comparisons_view_microarray_raw]][,"log2FC"])
+                  return(p)
+                })
+                
+              }
             })
             
             #********************************************************************#
@@ -4616,15 +4644,19 @@ server <- function(input, output, session){
               req(input$rawp_volcano_microarray_raw) # raw or adj. P value?
               req(input$p_thres_volcano_microarray_raw) # P value threshold?
               req(input$logFC_thres_volcano_microarray_raw) # log2FC threshold?
+              req(input$comparisons_view_microarray_raw)
               
-              # Make plot
-              p <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_microarray_raw]], 
-                               p = input$rawp_volcano_microarray_raw, 
-                               p_threshold = input$p_thres_volcano_microarray_raw, 
-                               logFC_threshold = input$logFC_thres_volcano_microarray_raw)
-              
-              # Render plot
-              output$volcano_microarray_raw <- renderPlotly(p)
+              if (input$comparisons_view_microarray_raw %in% names(rv$top_table)){
+                
+                # Make plot
+                p <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_microarray_raw]], 
+                                 p = input$rawp_volcano_microarray_raw, 
+                                 p_threshold = input$p_thres_volcano_microarray_raw, 
+                                 logFC_threshold = input$logFC_thres_volcano_microarray_raw)
+                
+                # Render plot
+                output$volcano_microarray_raw <- renderPlotly(p)
+              }
               
             }, ignoreNULL = FALSE) 
             
@@ -6208,41 +6240,49 @@ server <- function(input, output, session){
               req(input$top_table_microarray_norm_rows_selected)
               req(input$comparisons_view_microarray_norm)
               
-              # Set colors
-              myPalette <- colorsByFactor(rv$experimentFactor)
-              legendColors <- myPalette$legendColors
-              
-              # Prepare expression data frame
-              gene <- rv$top_table[[input$comparisons_view_microarray_norm]]$GeneID[input$top_table_microarray_norm_rows_selected]
-              plotExpr <- data.frame(
-                logExpr = rv$normMatrix[as.character(rownames(rv$normMatrix)) %in% as.character(gene),],
-                Grouping = rv$experimentFactor
-              )
-              
-              # make interactive plot
-              plotExpr %>%
-                plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                        color = ~Grouping, colors = legendColors, type = "box") %>%
-                layout(xaxis = list(title = " "),
-                       yaxis = list(title = 'log intensity'),
-                       legend = list(title=list(text='Group')),
-                       showlegend = FALSE)
+              if (input$comparisons_view_microarray_norm %in% names(rv$top_table)){
+                # Set colors
+                myPalette <- colorsByFactor(rv$experimentFactor)
+                legendColors <- myPalette$legendColors
+                
+                # Prepare expression data frame
+                gene <- rv$top_table[[input$comparisons_view_microarray_norm]]$GeneID[input$top_table_microarray_norm_rows_selected]
+                plotExpr <- data.frame(
+                  logExpr = rv$normMatrix[as.character(rownames(rv$normMatrix)) %in% as.character(gene),],
+                  Grouping = rv$experimentFactor
+                )
+                
+                # make interactive plot
+                plotExpr %>%
+                  plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
+                          color = ~Grouping, colors = legendColors, type = "box") %>%
+                  layout(xaxis = list(title = " "),
+                         yaxis = list(title = 'log intensity'),
+                         legend = list(title=list(text='Group')),
+                         showlegend = FALSE)
+              }
               
             })
             
             #********************************************************************#
             # Histograms
             #********************************************************************#
-            output$Phistogram_microarray_norm <- renderPlotly({
-              req(rv$top_table)
-              p <- makePHistogram(rv$top_table[[input$comparisons_view_microarray_norm]][,"p-value"])
-              return(p)
-            })
-            
-            output$logFChistogram_microarray_norm <- renderPlotly({
-              req(rv$top_table)
-              p <- makelogFCHistogram(rv$top_table[[input$comparisons_view_microarray_norm]][,"log2FC"])
-              return(p)
+            observe({
+              req(input$comparisons_view_microarray_norm)
+              
+              if (input$comparisons_view_microarray_norm %in% names(rv$top_table)){
+                output$Phistogram_microarray_norm <- renderPlotly({
+                  req(rv$top_table)
+                  p <- makePHistogram(rv$top_table[[input$comparisons_view_microarray_norm]][,"p-value"])
+                  return(p)
+                })
+                
+                output$logFChistogram_microarray_norm <- renderPlotly({
+                  req(rv$top_table)
+                  p <- makelogFCHistogram(rv$top_table[[input$comparisons_view_microarray_norm]][,"log2FC"])
+                  return(p)
+                })
+              }
             })
             
             #********************************************************************#
@@ -6253,12 +6293,17 @@ server <- function(input, output, session){
               req(input$rawp_volcano_microarray_norm)
               req(input$p_thres_volcano_microarray_norm)
               req(input$logFC_thres_volcano_microarray_norm)
-              p <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_microarray_norm]], 
-                               p = input$rawp_volcano_microarray_norm, 
-                               p_threshold = input$p_thres_volcano_microarray_norm, 
-                               logFC_threshold = input$logFC_thres_volcano_microarray_norm)
               
-              output$volcano_microarray_norm <- renderPlotly(p)
+              req(input$comparisons_view_microarray_norm)
+              
+              if (input$comparisons_view_microarray_norm %in% names(rv$top_table)){
+                p <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_microarray_norm]], 
+                                 p = input$rawp_volcano_microarray_norm, 
+                                 p_threshold = input$p_thres_volcano_microarray_norm, 
+                                 logFC_threshold = input$logFC_thres_volcano_microarray_norm)
+                
+                output$volcano_microarray_norm <- renderPlotly(p)
+              }
             }, ignoreNULL = FALSE)
             
             

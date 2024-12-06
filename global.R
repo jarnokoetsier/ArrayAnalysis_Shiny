@@ -25,34 +25,41 @@ require("remotes", character.only = TRUE)
 #Install (if not yet installed) and load the required packages: 
 for (pkg in 1:nrow(CRANpackages)) {
   
-  # Install package if not installed
-  if (!requireNamespace(CRANpackages$name[pkg], quietly = TRUE)){
-    remotes::install_version(CRANpackages$name[pkg], 
-                              version = CRANpackages$version[pkg], 
-                              repos = "http://cran.us.r-project.org")
-  } else {
+  # Install latest version
+  if (CRANpackages$direction[pkg] == "smaller"){
     
-    #Install package if package version is incorrect:
-    
-    # Install if package version is smaller than needed
-    if (CRANpackages$direction[pkg] == "smaller"){
+    # Install package if not installed
+    if (!requireNamespace(CRANpackages$name[pkg], quietly = TRUE)){
+      install.packages(CRANpackages$name[pkg], ask = FALSE)
+    } else {
+      
+      #Install package if package version is too low:
       if (packageVersion(CRANpackages$name[pkg]) < CRANpackages$version[pkg]){
-        remotes::install_version(CRANpackages$name[pkg],
-                                 CRANpackages$version[pkg])
+        install.packages(CRANpackages$name[pkg], ask = FALSE)
       }
     }
-    # Install if package version is different than needed
-    if (CRANpackages$direction[pkg] == "unequal"){
+  }
+  
+  # Install specific version (not needed yet)
+  if (CRANpackages$direction[pkg] == "unequal"){
+    
+    # Install package if not installed
+    if (!requireNamespace(CRANpackages$name[pkg], quietly = TRUE)){
+      remotes::install_version(CRANpackages$name[pkg],
+                               CRANpackages$version[pkg])
+    } else {
+      
+      #Install package if package version is not correct
       if (packageVersion(CRANpackages$name[pkg]) != CRANpackages$version[pkg]){
         remotes::install_version(CRANpackages$name[pkg],
                                  CRANpackages$version[pkg])
       }
     }
-
   }
+  
   require(as.character(CRANpackages$name[pkg]), character.only = TRUE)
 }
-    
+
 #******************************************************************************#
 #Bioconductor packages
 #******************************************************************************#
@@ -60,15 +67,12 @@ for (pkg in 1:nrow(CRANpackages)) {
 # Get required Bioconductor packages:
 BiocPackages <- read.table("Objects/Bioconductorpackages.txt", header = TRUE)
 
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager", ask = F)
-
 for (pkg in 1:nrow(BiocPackages)) {
   if (!requireNamespace(BiocPackages$name[pkg], quietly = TRUE)){
-    BiocManager::install(BiocPackages$name[pkg], ask = FALSE, version = "3.20")
+    BiocManager::install(BiocPackages$name[pkg], ask = FALSE)
   } else{
     if (packageVersion(BiocPackages$name[pkg]) < BiocPackages$version[pkg]){
-      BiocManager::install(BiocPackages$name[pkg], ask = FALSE, version = "3.20")
+      BiocManager::install(BiocPackages$name[pkg], ask = FALSE)
     }
   }
   require(as.character(BiocPackages$name[pkg]), character.only = TRUE)

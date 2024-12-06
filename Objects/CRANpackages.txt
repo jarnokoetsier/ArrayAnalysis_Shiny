@@ -1,4 +1,5 @@
 name	version	direction
+BiocManager	1.30.25	smaller
 tidyverse	2.0.0	smaller
 fuzzyjoin	0.1.6	smaller
 plotly		4.10.4	smaller
