@@ -30,12 +30,16 @@ for (pkg in 1:nrow(CRANpackages)) {
     
     # Install package if not installed
     if (!requireNamespace(CRANpackages$name[pkg], quietly = TRUE)){
-      install.packages(CRANpackages$name[pkg], ask = FALSE)
+      install.packages(CRANpackages$name[pkg], 
+                       ask = FALSE,
+                       repos = "https://cloud.r-project.org")
     } else {
       
       #Install package if package version is too low:
       if (packageVersion(CRANpackages$name[pkg]) < CRANpackages$version[pkg]){
-        install.packages(CRANpackages$name[pkg], ask = FALSE)
+        install.packages(CRANpackages$name[pkg], 
+                         ask = FALSE,
+                         repos = "https://cloud.r-project.org")
       }
     }
   }
@@ -46,13 +50,15 @@ for (pkg in 1:nrow(CRANpackages)) {
     # Install package if not installed
     if (!requireNamespace(CRANpackages$name[pkg], quietly = TRUE)){
       remotes::install_version(CRANpackages$name[pkg],
-                               CRANpackages$version[pkg])
+                               CRANpackages$version[pkg],
+                               repos = "https://cloud.r-project.org")
     } else {
       
       #Install package if package version is not correct
       if (packageVersion(CRANpackages$name[pkg]) != CRANpackages$version[pkg]){
         remotes::install_version(CRANpackages$name[pkg],
-                                 CRANpackages$version[pkg])
+                                 CRANpackages$version[pkg],
+                                 repos = "https://cloud.r-project.org")
       }
     }
   }
