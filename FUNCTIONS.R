@@ -32,6 +32,7 @@ firstup <- function(x) {
 
 getCELs <- function(zippath, shiny_upload = TRUE){
   tryCatch({
+    unlink("Data_unzipped", recursive = TRUE, force = TRUE)
     if (shiny_upload){
       # Unzip files
       if(!file.exists(paste0("Data_unzipped/unzipped_",stringr::str_remove(zippath$name, ".zip")))){
@@ -79,11 +80,11 @@ readCELs <- function(celfiles, zippath, rm = FALSE){
     }
     
     gxData <- affy::ReadAffy(filenames = celfiles)
-    if(rm){unlink("Data_unzipped", recursive = TRUE)}
+    if(rm){unlink("./Data_unzipped/", recursive = TRUE, force = TRUE)}
     return(gxData)
   }, error = function(cond){
     gxData <- oligo::read.celfiles(filenames = celfiles)
-    if(rm){unlink("Data_unzipped", recursive = TRUE)}
+    if(rm){unlink("Data_unzipped", recursive = TRUE, force = TRUE)}
     return(gxData)
   })
 }
@@ -110,7 +111,7 @@ getMetaData <- function(path, celfiles, filetype){
     } else{
       metaData <- as.data.frame(data.table::fread(path))
     }
-
+    
   }
   
   if (filetype == "Series Matrix File"){
@@ -1855,8 +1856,8 @@ RNASeqNormalization <- function(gxData,
   
   # Generate DESeqDataSet object
   dds <- DESeq2::DESeqDataSetFromMatrix(countData = gxData,
-                                colData = metaData,
-                                design = ~0)
+                                        colData = metaData,
+                                        design = ~0)
   
   # Filtering
   keep <- rowSums(counts(dds) >= filterThres) >= smallestGroupSize
@@ -1963,164 +1964,164 @@ getStatistics_RNASeq <- function(rawMatrix,
                                                         "Entrez Gene ID",
                                                         "Gene Symbol/Name"),
                                  biomart_filters = "Entrez Gene ID"){
- # tryCatch({
-    #metaData <- metaData[,c(expFactor, covGroups_num, covGroups_char)]
-    
-    # Replace name of biomaRt filter
-    biomart_filters <- tryCatch({
-      switch(biomart_filters,
+  # tryCatch({
+  #metaData <- metaData[,c(expFactor, covGroups_num, covGroups_char)]
+  
+  # Replace name of biomaRt filter
+  biomart_filters <- tryCatch({
+    switch(biomart_filters,
+           "Gene Symbol/Name" = "gene_name",
+           "Entrez Gene ID" = "entrezgene_id",
+           "Ensembl Gene ID" = "ensembl_gene_id",
+    )
+  }, error = function(cond){
+    return(biomart_filters)
+  })
+  
+  # Replace name(s) of biomaRt attributes
+  for (a in 1:length(biomart_attributes)){
+    biomart_attributes[a] <- tryCatch({
+      switch(biomart_attributes[a],
              "Gene Symbol/Name" = "gene_name",
              "Entrez Gene ID" = "entrezgene_id",
              "Ensembl Gene ID" = "ensembl_gene_id",
       )
     }, error = function(cond){
-      return(biomart_filters)
+      return(biomart_attributes[a])
     })
+  }
+  
+  # Get experiment factor
+  if(length(expFactor) > 1){
+    experimentFactor <- factor(make.names(apply(metaData[,expFactor], 1, paste, collapse = "_" )))
+  } else{
+    experimentFactor <- factor(make.names(metaData[,expFactor]))
+  }
+  
+  # Get covariates
+  for (n in covGroups_num){
+    metaData[,n] <- as.numeric(metaData[,n])
+  }
+  for (c in covGroups_char){
+    metaData[,c] <- factor(metaData[,c])
+  }
+  covariates <- c(covGroups_num, covGroups_char)
+  
+  # Make formula
+  if (!is.null(covariates)){
+    formula <- paste0("~ ", "experimentFactor + ", paste0(covariates, collapse = " + "))
+  } else {
+    formula <- paste0("~ ", "experimentFactor")
+  }
+  
+  # make DESeqDataSet object
+  sampleInfo <- cbind.data.frame(experimentFactor, metaData[,covariates])
+  colnames(sampleInfo) <- c("experimentFactor", covariates)
+  rownames(sampleInfo) <- rownames(metaData)
+  dds <- DESeq2::DESeqDataSetFromMatrix(countData = rawMatrix,
+                                        colData = sampleInfo,
+                                        design = as.formula(formula))
+  # Filtering
+  keep <- rowSums(counts(dds) >= filterThres) >= smallestGroupSize
+  dds <- dds[keep,]
+  
+  
+  # Perform statistical comparison for each of the selected comparison
+  top_table <- list()
+  for (i in comparisons){
     
-    # Replace name(s) of biomaRt attributes
-    for (a in 1:length(biomart_attributes)){
-      biomart_attributes[a] <- tryCatch({
-        switch(biomart_attributes[a],
-               "Gene Symbol/Name" = "gene_name",
-               "Entrez Gene ID" = "entrezgene_id",
-               "Ensembl Gene ID" = "ensembl_gene_id",
-        )
-      }, error = function(cond){
-        return(biomart_attributes[a])
-      })
-    }
+    # Change level
+    referenceLevel <- make.names(stringr::str_split(i," - ")[[1]][2])
+    dds$experimentFactor <- relevel(dds$experimentFactor, ref = referenceLevel)
+    dds <- DESeq2::DESeq(dds)
     
-    # Get experiment factor
-    if(length(expFactor) > 1){
-      experimentFactor <- factor(make.names(apply(metaData[,expFactor], 1, paste, collapse = "_" )))
+    contrastName <- paste("experimentFactor",
+                          make.names(stringr::str_split(i," - ")[[1]][1]),
+                          "vs",
+                          make.names(stringr::str_split(i," - ")[[1]][2]), sep = "_")
+    #res <- results(dds, name=contrastName)
+    resLFC <- as.data.frame(DESeq2::lfcShrink(dds, coef=contrastName, type="apeglm"))
+    resLFC <- dplyr::arrange(resLFC,by = pvalue)
+    
+    top_table[[i]] <- resLFC[,c("baseMean",
+                                "log2FoldChange",
+                                "lfcSE",
+                                "pvalue",
+                                "padj")]
+    top_table[[i]] <- cbind(rownames(top_table[[i]]), top_table[[i]])
+    rownames(top_table[[i]]) <- NULL
+    colnames(top_table[[i]]) <- c("GeneID", "meanExpr", "log2FC", "log2FC SE",
+                                  "p-value", "adj. p-value")
+  }
+  
+  # Add annotations to table if this option is selected
+  if (isTRUE(addAnnotation)){
+    
+    # Change attribute and filter name
+    if (biomart_dataset == "hsapiens_gene_ensembl"){
+      biomart_attributes1 <- stringr::str_replace(biomart_attributes,
+                                                  "gene_name",
+                                                  "hgnc_symbol")
+      biomart_filters1 <- stringr::str_replace(biomart_filters,
+                                               "gene_name",
+                                               "hgnc_symbol")
     } else{
-      experimentFactor <- factor(make.names(metaData[,expFactor]))
+      biomart_attributes1 <- stringr::str_replace(biomart_attributes,
+                                                  "gene_name",
+                                                  "external_gene_name")
+      biomart_filters1 <- stringr::str_replace(biomart_filters,
+                                               "gene_name",
+                                               "external_gene_name")
     }
     
-    # Get covariates
-    for (n in covGroups_num){
-      metaData[,n] <- as.numeric(metaData[,n])
-    }
-    for (c in covGroups_char){
-      metaData[,c] <- factor(metaData[,c])
-    }
-    covariates <- c(covGroups_num, covGroups_char)
     
-    # Make formula
-    if (!is.null(covariates)){
-      formula <- paste0("~ ", "experimentFactor + ", paste0(covariates, collapse = " + "))
-    } else {
-      formula <- paste0("~ ", "experimentFactor")
-    }
-    
-    # make DESeqDataSet object
-    sampleInfo <- cbind.data.frame(experimentFactor, metaData[,covariates])
-    colnames(sampleInfo) <- c("experimentFactor", covariates)
-    rownames(sampleInfo) <- rownames(metaData)
-    dds <- DESeq2::DESeqDataSetFromMatrix(countData = rawMatrix,
-                                          colData = sampleInfo,
-                                          design = as.formula(formula))
-    # Filtering
-    keep <- rowSums(counts(dds) >= filterThres) >= smallestGroupSize
-    dds <- dds[keep,]
-    
-    
-    # Perform statistical comparison for each of the selected comparison
-    top_table <- list()
-    for (i in comparisons){
+    # Do this for each top table in the list
+    for (t in 1:length(top_table)){
       
-      # Change level
-      referenceLevel <- make.names(stringr::str_split(i," - ")[[1]][2])
-      dds$experimentFactor <- relevel(dds$experimentFactor, ref = referenceLevel)
-      dds <- DESeq2::DESeq(dds)
-      
-      contrastName <- paste("experimentFactor",
-                            make.names(stringr::str_split(i," - ")[[1]][1]),
-                            "vs",
-                            make.names(stringr::str_split(i," - ")[[1]][2]), sep = "_")
-      #res <- results(dds, name=contrastName)
-      resLFC <- as.data.frame(DESeq2::lfcShrink(dds, coef=contrastName, type="apeglm"))
-      resLFC <- dplyr::arrange(resLFC,by = pvalue)
-      
-      top_table[[i]] <- resLFC[,c("baseMean",
-                                  "log2FoldChange",
-                                  "lfcSE",
-                                  "pvalue",
-                                  "padj")]
-      top_table[[i]] <- cbind(rownames(top_table[[i]]), top_table[[i]])
-      rownames(top_table[[i]]) <- NULL
-      colnames(top_table[[i]]) <- c("GeneID", "meanExpr", "log2FC", "log2FC SE",
-                                    "p-value", "adj. p-value")
-    }
-    
-    # Add annotations to table if this option is selected
-    if (isTRUE(addAnnotation)){
-      
-      # Change attribute and filter name
-      if (biomart_dataset == "hsapiens_gene_ensembl"){
-        biomart_attributes1 <- stringr::str_replace(biomart_attributes,
-                                                    "gene_name",
-                                                    "hgnc_symbol")
-        biomart_filters1 <- stringr::str_replace(biomart_filters,
-                                                 "gene_name",
-                                                 "hgnc_symbol")
-      } else{
-        biomart_attributes1 <- stringr::str_replace(biomart_attributes,
-                                                    "gene_name",
-                                                    "external_gene_name")
-        biomart_filters1 <- stringr::str_replace(biomart_filters,
-                                                 "gene_name",
-                                                 "external_gene_name")
+      # Round numbers in top table
+      for (n in 2:6){
+        top_table[[t]][,n] <- signif(top_table[[t]][,n],3)
       }
       
+      # Get annotations
+      ensembl <- biomaRt::useMart("ensembl")
+      ensembl <- biomaRt::useDataset(biomart_dataset, mart=ensembl)
+      annotations <- biomaRt::getBM(attributes=biomart_attributes1, 
+                                    filters = biomart_filters1,
+                                    values = top_table[[t]]$GeneID,
+                                    mart = ensembl)
       
-      # Do this for each top table in the list
-      for (t in 1:length(top_table)){
+      # Convert entrezgene id to character
+      if("entrezgene_id" %in% biomart_attributes){
+        annotations$entrezgene_id <- as.character(annotations$entrezgene_id)
+      }
+      annotations[annotations == ""] <- NA
+      annotations[annotations == " "] <- NA
+      
+      # Combine annotations with top table
+      annotations[,biomart_filters1] <- as.character(annotations[,biomart_filters1])
+      top_table_ann <- dplyr::left_join(top_table[[t]], annotations,
+                                        by = c("GeneID" = biomart_filters1))
+      
+      colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "gene_name"
+      colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "gene_name"
+      
+      # Make sure that there are no duplicate gene ids
+      for (a in 1:(ncol(top_table_ann)-6)){
+        temp1 <- unique(top_table_ann[,c(1,6+a)])
+        temp1 <- temp1[!is.na(temp1[,2]),]
+        temp_ann <- temp1 %>%
+          dplyr::group_by(GeneID) %>%
+          dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = "; "))
         
-        # Round numbers in top table
-        for (n in 2:6){
-          top_table[[t]][,n] <- signif(top_table[[t]][,n],3)
-        }
-        
-        # Get annotations
-        ensembl <- biomaRt::useMart("ensembl")
-        ensembl <- biomaRt::useDataset(biomart_dataset, mart=ensembl)
-        annotations <- biomaRt::getBM(attributes=biomart_attributes1, 
-                                      filters = biomart_filters1,
-                                      values = top_table[[t]]$GeneID,
-                                      mart = ensembl)
-        
-        # Convert entrezgene id to character
-        if("entrezgene_id" %in% biomart_attributes){
-          annotations$entrezgene_id <- as.character(annotations$entrezgene_id)
-        }
-        annotations[annotations == ""] <- NA
-        annotations[annotations == " "] <- NA
-        
-        # Combine annotations with top table
-        annotations[,biomart_filters1] <- as.character(annotations[,biomart_filters1])
-        top_table_ann <- dplyr::left_join(top_table[[t]], annotations,
-                                          by = c("GeneID" = biomart_filters1))
-        
-        colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "gene_name"
-        colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "gene_name"
-        
-        # Make sure that there are no duplicate gene ids
-        for (a in 1:(ncol(top_table_ann)-6)){
-          temp1 <- unique(top_table_ann[,c(1,6+a)])
-          temp1 <- temp1[!is.na(temp1[,2]),]
-          temp_ann <- temp1 %>%
-            dplyr::group_by(GeneID) %>%
-            dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = "; "))
-          
-          top_table[[t]] <- dplyr::left_join(top_table[[t]], temp_ann,
-                                             by = c("GeneID" = "GeneID"))
-        }
-        
+        top_table[[t]] <- dplyr::left_join(top_table[[t]], temp_ann,
+                                           by = c("GeneID" = "GeneID"))
       }
       
     }
-    return(top_table)
+    
+  }
+  return(top_table)
   #}, error = function(cond){
   #  NULL
   #})

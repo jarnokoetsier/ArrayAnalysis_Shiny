@@ -4465,7 +4465,7 @@ server <- function(input, output, session){
             # Select comparison for output
             observe({
               req(rv$normMatrix)
-              req(rv$top_table)
+              #req(rv$top_table)
               req(rv$experimentFactor)
               
               if (!is.null(rv$top_table)){
