@@ -1239,7 +1239,7 @@ makePHistogram <- function(P){
 }
 
 #==============================================================================#
-# makeVolcano()
+# makeVolcano_alt()
 #==============================================================================#
 
 # DESCRIPTION:
@@ -1251,7 +1251,7 @@ makePHistogram <- function(P){
 # p_threshold: P value threshold
 # logFC_threshold: log2FC threshold
 
-makeVolcano <- function(top_table, 
+makeVolcano_alt <- function(top_table, 
                         p = "raw", 
                         p_threshold = 0.05, 
                         logFC_threshold = 1){
@@ -1299,6 +1299,167 @@ makeVolcano <- function(top_table,
       ggplot2::theme(plot.title = element_text(face = "bold", hjust = 0.5)) +
       ggplot2::scale_color_manual(values = setNames(c("darkgrey", "red", "blue"),
                                                     c("unchanged", "upregulated", "downregulated")))
+  }
+  
+  p <- plotly::ggplotly(volcano, tooltip = "text")
+  
+  return(p)
+  
+  
+}
+
+#==============================================================================#
+# makeVolcano()
+#==============================================================================#
+
+# First, make a function for horizontal and vertical lines in plotly:
+
+# Vertical line function
+vline <- function(x = 0, color = "grey") {
+  list(
+    type = "line", 
+    y0 = 0, 
+    y1 = 1, 
+    yref = "paper",
+    x0 = x, 
+    x1 = x, 
+    line = list(color = color, dash = "dot")
+  )
+}
+
+# Horizontal line function
+hline <- function(y = 0, color = "grey") {
+  list(
+    type = "line", 
+    x0 = 0, 
+    x1 = 1, 
+    xref = "paper",
+    y0 = y, 
+    y1 = y, 
+    line = list(color = color, dash = "dot")
+  )
+}
+
+# DESCRIPTION:
+# Make volcano plot
+
+# VARIABLES:
+# top_table: top table from the "getStatistics" function
+# p: raw ("raw") or adjusted ("adj") P value
+# p_threshold: P value threshold
+# logFC_threshold: log2FC threshold
+
+makeVolcano <- function(top_table, 
+                        p = "raw", 
+                        p_threshold = 0.05, 
+                        logFC_threshold = 1){
+  
+  plotDF <- data.frame(log2FC = top_table[,"log2FC"],
+                       Pvalue = top_table[,"p-value"],
+                       logP = -log10(top_table[,"p-value"]),
+                       adjPvalue = top_table[,"adj. p-value"],
+                       GeneID = top_table[,"GeneID"])
+  
+  if (p == "raw"){
+    plotDF$Colour[(plotDF$log2FC < logFC_threshold & plotDF$log2FC > (-1*logFC_threshold)) | plotDF$Pvalue > p_threshold] <- "unchanged"
+    plotDF$Colour[plotDF$log2FC < (-1*logFC_threshold) & plotDF$Pvalue <= p_threshold] <- "downregulated"
+    plotDF$Colour[plotDF$log2FC >= logFC_threshold & plotDF$Pvalue <= p_threshold] <- "upregulated"
+    
+    
+    volcano <- plotly::plot_ly() %>%
+      # downregulated
+      plotly::add_trace(
+        data = plotDF[plotDF$Colour == "downregulated",],
+        x = ~log2FC,
+        y = ~logP,
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "blue"),
+        hoverinfo = "text",
+        text = ~GeneID,
+        name = "Downregulated"
+      ) %>%
+      # unchanged
+      plotly::add_trace(
+        data = plotDF[plotDF$Colour == "unchanged",],
+        x = ~log2FC,
+        y = ~logP,
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "darkgrey"),
+        hoverinfo = "none",
+        name = "Unchanged"
+      ) %>%
+      # upregulated
+      plotly::add_trace(
+        data = plotDF[plotDF$Colour == "upregulated",],
+        x = ~log2FC,
+        y = ~logP,
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "red"),
+        hoverinfo = "text",
+        text = ~GeneID,
+        name = "Upregulated"
+      )%>%
+      layout(xaxis = list(title = 'log<sub>2</sub>FC'), 
+             yaxis = list(title = '-log<sub>10</sub> P value'),
+             shapes = list(vline(logFC_threshold), 
+                           vline(-1*logFC_threshold),
+                           hline(-log10(p_threshold))))
+  }
+  
+  
+  
+  
+  
+  if (p == "adj"){
+    plotDF$Colour[(plotDF$log2FC < logFC_threshold & plotDF$log2FC > (-1*logFC_threshold)) | plotDF$adjPvalue > p_threshold] <- "unchanged"
+    plotDF$Colour[plotDF$log2FC < (-1*logFC_threshold) & plotDF$adjPvalue <= p_threshold] <- "downregulated"
+    plotDF$Colour[plotDF$log2FC >= logFC_threshold & plotDF$adjPvalue <= p_threshold] <- "upregulated"
+    
+    
+    volcano <- plotly::plot_ly() %>%
+      # downregulated
+      plotly::add_trace(
+        data = plotDF[plotDF$Colour == "downregulated",],
+        x = ~log2FC,
+        y = ~logP,
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "blue"),
+        hoverinfo = "text",
+        text = ~GeneID,
+        name = "Downregulated"
+      ) %>%
+      # unchanged
+      plotly::add_trace(
+        data = plotDF[plotDF$Colour == "unchanged",],
+        x = ~log2FC,
+        y = ~logP,
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "darkgrey"),
+        hoverinfo = "none",
+        name = "Unchanged"
+      ) %>%
+      # upregulated
+      plotly::add_trace(
+        data = plotDF[plotDF$Colour == "upregulated",],
+        x = ~log2FC,
+        y = ~logP,
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "red"),
+        hoverinfo = "text",
+        text = ~GeneID,
+        name = "Upregulated"
+      )%>%
+      layout(xaxis = list(title = 'log<sub>2</sub>FC'), 
+             yaxis = list(title = '-log<sub>10</sub> P value'),
+             shapes = list(vline(logFC_threshold), 
+                           vline(-1*logFC_threshold),
+                           hline(-log10(p_threshold))))
   }
   
   p <- plotly::ggplotly(volcano, tooltip = "text")
