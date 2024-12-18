@@ -1575,6 +1575,15 @@ ORA <- function(top_table,
       bg_genes <- unique(bg_genes[bg_genes$ONTOLOGY=="CC",geneID_type])
       bg_genes <- bg_genes[!is.na(bg_genes)]
     }
+    if (geneset == "KEGG"){
+      gmt_KEGG <- AnnotationDbi::select(BiocGenerics::get(pkg), 
+                                        columns = c(geneID_type, "PATH"), 
+                                        keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
+      gmt_KEGG <- gmt_KEGG[!is.na(gmt_KEGG$PATH),]
+      
+      bg_genes <- unique(gmt_KEGG[, geneID_type])
+      
+    }
     
     
     # If the gene IDs are not saved in the first column, some genes might be 
@@ -1734,6 +1743,41 @@ ORA <- function(top_table,
           TERM2NAME = path2name
         )
         
+      }
+      
+      # KEGG
+      if (geneset == "KEGG"){
+        
+        # Get correct organism name
+        KEGG_org <- switch(organism,
+                      "Homo sapiens" = "hsa",
+                      "Bos taurus" = "bta",
+                      "Caenorhabditis elegans" = "cel",
+                      "Mus musculus" = "mmu",
+                      "Rattus norvegicus" = "rno"
+        )
+        
+        # Prepare GMT for analysis
+        gmt <- unique(gmt_KEGG[,c("PATH", geneID_type)])
+        path2gene <- gmt[,c("PATH", geneID_type)]
+        colnames(path2gene) <- c("path", "gene")
+        path2gene$path <- paste0(KEGG_org,path2gene$path)
+        path2name <- read.table(url(paste0("https://rest.kegg.jp/list/pathway/", KEGG_org)), sep = "\t")
+        colnames(path2name) <- c("path", "name")
+        
+        # Perform ORA
+        ORA_data <- clusterProfiler::enricher(
+          gene = geneList,
+          pvalueCutoff = Inf,
+          pAdjustMethod = "fdr",
+          universe = universe,
+          minGSSize = 10,
+          maxGSSize = 500,
+          qvalueCutoff = Inf,
+          gson = NULL,
+          TERM2GENE = path2gene,
+          TERM2NAME = path2name
+        )
       }
     }
     

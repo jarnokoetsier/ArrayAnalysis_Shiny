@@ -1476,7 +1476,22 @@ server <- function(input, output, session){
                   }
                   
                   # Link to QuickGO website if geneset ID is a GO term
-                  if (input$geneset_ORA_rnaseq_raw != "WikiPathways"){
+                  if (input$geneset_ORA_rnaseq_raw == "KEGG"){
+                    output$ID <- paste0(
+                      '<a ',
+                      'href=',
+                      paste0(
+                        "https://www.genome.jp/pathway/",
+                        output$ID, ".html"
+                      ),
+                      ' target="_blank"',
+                      '>',
+                      output$ID,
+                      '</a>'
+                    )
+                  }
+                  
+                  if (input$geneset_ORA_rnaseq_raw %in% c("GO-BP", "GO-MF", "GO-CC")){
                     output$ID <- paste0(
                       '<a ',
                       'href=',
@@ -3136,7 +3151,22 @@ server <- function(input, output, session){
                     )
                   }
                   
-                  if (input$geneset_ORA_rnaseq_norm != "WikiPathways"){
+                  if (input$geneset_ORA_rnaseq_norm == "KEGG"){
+                    output$ID <- paste0(
+                      '<a ',
+                      'href=',
+                      paste0(
+                        "https://www.genome.jp/pathway/",
+                        output$ID, ".html"
+                      ),
+                      ' target="_blank"',
+                      '>',
+                      output$ID,
+                      '</a>'
+                    )
+                  }
+                  
+                  if (input$geneset_ORA_rnaseq_norm %in% c("GO-BP", "GO-MF", "GO-CC")){
                     output$ID <- paste0(
                       '<a ',
                       'href=',
@@ -4929,7 +4959,22 @@ server <- function(input, output, session){
                     )
                   }
                   
-                  if (input$geneset_ORA_microarray_raw != "WikiPathways"){
+                  if (input$geneset_ORA_microarray_raw == "KEGG"){
+                    output$ID <- paste0(
+                      '<a ',
+                      'href=',
+                      paste0(
+                        "https://www.genome.jp/pathway/",
+                        output$ID, ".html"
+                      ),
+                      ' target="_blank"',
+                      '>',
+                      output$ID,
+                      '</a>'
+                    )
+                  }
+                  
+                  if (input$geneset_ORA_microarray_raw %in% c("GO-BP", "GO-MF", "GO-CC")){
                     output$ID <- paste0(
                       '<a ',
                       'href=',
@@ -6545,9 +6590,24 @@ server <- function(input, output, session){
                       output$ID,
                       '</a>'
                     )
+                  } 
+                  
+                  if (input$geneset_ORA_microarray_norm == "KEGG"){
+                    output$ID <- paste0(
+                      '<a ',
+                      'href=',
+                      paste0(
+                        "https://www.genome.jp/pathway/",
+                        output$ID, ".html"
+                      ),
+                      ' target="_blank"',
+                      '>',
+                      output$ID,
+                      '</a>'
+                    )
                   }
                   
-                  if (input$geneset_ORA_microarray_norm != "WikiPathways"){
+                  if (input$geneset_ORA_microarray_norm %in% c("GO-BP", "GO-MF", "GO-CC")){
                     output$ID <- paste0(
                       '<a ',
                       'href=',

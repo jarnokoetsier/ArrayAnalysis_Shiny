@@ -596,7 +596,8 @@ ui <- tagList(
                                       choices = c("GO-BP",
                                                   "GO-MF",
                                                   "GO-CC",
-                                                  "WikiPathways")),
+                                                  "WikiPathways",
+                                                  "KEGG")),
                           
                           br(),
                           h4(strong(tags$span(
@@ -1115,7 +1116,8 @@ ui <- tagList(
                                       choices = c("GO-BP",
                                                   "GO-MF",
                                                   "GO-CC",
-                                                  "WikiPathways")),
+                                                  "WikiPathways",
+                                                  "KEGG")),
                           
                           br(),
                           
@@ -1585,7 +1587,8 @@ ui <- tagList(
                                       choices = c("GO-BP",
                                                   "GO-MF",
                                                   "GO-CC",
-                                                  "WikiPathways")),
+                                                  "WikiPathways",
+                                                  "KEGG")),
                           
                           br(),
                           h4(strong(tags$span(
@@ -2101,7 +2104,8 @@ ui <- tagList(
                                       choices = c("GO-BP",
                                                   "GO-MF",
                                                   "GO-CC",
-                                                  "WikiPathways")),
+                                                  "WikiPathways",
+                                                  "KEGG")),
                           
                           br(),
                           h4(strong(tags$span(
