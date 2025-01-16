@@ -15,7 +15,6 @@ server <- function(input, output, session){
       q("no")
     })
   }
-  
   ##############################################################################
   
   # Preparations
@@ -458,19 +457,19 @@ server <- function(input, output, session){
               samples <- rownames(rv$metaData)
               
               shinyWidgets::pickerInput(inputId = "select_outliers_rnaseq_raw",
-                          label = tags$span(
-                            "Select samples to be removed", 
-                            tags$span(
-                              icon(
-                                name = "question-circle",
-                              ) 
-                            ) |>
-                              prompter::add_prompt(message = "Select one or more samples to exclude from the analysis.", 
-                                         position = "right",
-                                         size = "large")
-                          ),
-                          choices = samples,
-                          multiple = TRUE)
+                                        label = tags$span(
+                                          "Select samples to be removed", 
+                                          tags$span(
+                                            icon(
+                                              name = "question-circle",
+                                            ) 
+                                          ) |>
+                                            prompter::add_prompt(message = "Select one or more samples to exclude from the analysis.", 
+                                                                 position = "right",
+                                                                 size = "large")
+                                        ),
+                                        choices = samples,
+                                        multiple = TRUE)
             } else{
               NULL
             }
@@ -480,10 +479,10 @@ server <- function(input, output, session){
           # 2. Select experimental groups
           output$UI_groupselect_rnaseq_raw <- renderUI({
             shinyWidgets::pickerInput(inputId = "groupselect_rnaseq_raw",
-                        label = NULL,
-                        choices = colnames(rv$metaData),
-                        selected = autoGroup(rv$metaData),
-                        multiple = TRUE)
+                                      label = NULL,
+                                      choices = colnames(rv$metaData),
+                                      selected = autoGroup(rv$metaData),
+                                      multiple = TRUE)
           })
           
           
@@ -515,6 +514,10 @@ server <- function(input, output, session){
             # Show modal
             shinybusy::show_modal_spinner(text = "Pre-processing data...",
                                           color="#0dc5c1")
+            
+            hideTab("navbar", target = "panel_statistics_rnaseq_raw")
+            hideTab("navbar", target = "panel_ORA_rnaseq_raw")
+            rv$top_table <- NULL
             
             # Select outlier
             if (!isTRUE(input$outier_rnaseq_raw)){
@@ -604,29 +607,102 @@ server <- function(input, output, session){
               }
             )
             
-            # Boxplot of single gene
-            output$ExprBoxplot_rnaseq_raw <- plotly::renderPlotly({
+            # Change color by click on button
+            rv$colorOrder <- 1:length(levels(rv$experimentFactor))
+            observeEvent(input$geneboxplot_changeOrder_rnaseq_raw,{
+              all_orders <- permute(1:length(levels(rv$experimentFactor))) 
+              sel <- which(unlist(lapply(all_orders, function(x) all(x == rv$colorOrder))))
+              
+              if (sel < length(all_orders)){
+                rv$colorOrder <- all_orders[[sel+1]]
+              } else{
+                rv$colorOrder <- all_orders[[1]]
+              }
+            })
+            
+            
+            # Boxplot of single gene (based on selected row in the expression matrix)
+            output$ExprBoxplot_rnaseq_raw <- renderPlot({
               req(input$exprTable_rnaseq_raw_rows_selected)
               
-              # Set colors
-              myPalette <- colorsByFactor(rv$experimentFactor)
-              legendColors <- myPalette$legendColors
-              
-              # Prepare expression data frame
-              plotExpr <- data.frame(
-                logExpr = rv$normData[input$exprTable_rnaseq_raw_rows_selected,],
-                Grouping = rv$experimentFactor
-              )
-              
-              # make interactive plot
-              plotExpr %>%
-                plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                                color = ~Grouping, colors = legendColors, type = "box") %>%
-                plotly::layout(xaxis = list(title = " "),
-                               yaxis = list(title = 'log expression'),
-                               legend = list(title=list(text='Group')),
-                               showlegend = FALSE)
-              
+              if (length(levels(rv$experimentFactor)) > 4){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              } else{
+                legendColors <- c(input$geneboxplot_col1_rnaseq_raw,
+                                  input$geneboxplot_col2_rnaseq_raw,
+                                  input$geneboxplot_col3_rnaseq_raw,
+                                  input$geneboxplot_col4_rnaseq_raw,
+                                  input$geneboxplot_col5_rnaseq_raw,
+                                  input$geneboxplot_col6_rnaseq_raw)
+              }
+              # Make boxplot
+              rv$temp1 <- geneBoxplot(experimentFactor = rv$experimentFactor, 
+                          normMatrix = rv$normData, 
+                          sel_row = input$exprTable_rnaseq_raw_rows_selected,
+                          legendColors = legendColors[rv$colorOrder],
+                          groupOrder = input$geneboxplot_order_rnaseq_raw,
+                          rnaseq = TRUE,
+                          jitter = input$jitter_geneboxplot_rnaseq_raw,
+                          seed = sample(1:1000,1))
+              return(rv$temp1)
+            })
+            
+            
+            # Get number of experimental groups
+            output$length_geneboxplot_rnaseq_raw <- reactive({
+              length(levels(rv$experimentFactor))
+            })
+            outputOptions(output, "length_geneboxplot_rnaseq_raw", suspendWhenHidden = FALSE) 
+            
+            
+            #***************************#
+            # Modal to download boxplot
+            #***************************#
+            
+            # Download plot
+            output$realdownload_geneboxplot_rnaseq_raw <- downloadHandler(
+              filename = "GeneBoxplot.png",
+              content = function(file){
+                ggplot2::ggsave(plot = rv$temp1, 
+                       filename = file,
+                       width = input$width_geneboxplot_rnaseq_raw,
+                       height = input$height_geneboxplot_rnaseq_raw,
+                       units = "px")
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_geneboxplot_rnaseq_raw, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(6,
+                           sliderInput("height_geneboxplot_rnaseq_raw", 
+                                       "Height",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    ),
+                    column(6,
+                           sliderInput("width_geneboxplot_rnaseq_raw", 
+                                       "Width",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    )
+                  ),
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_geneboxplot_rnaseq_raw', 
+                                          'Download')
+                           )
+                  )
+                )
+              ))
             })
             
             #********************************************************************#
@@ -635,11 +711,70 @@ server <- function(input, output, session){
             
             # Boxplots of all genes together
             output$boxplots_rnaseq_raw <- renderImage({
-              normData1 <- Biobase::ExpressionSet(assayData = rv$normData)
+              req(session$clientData$output_boxplots_rnaseq_raw_width)
+              req(session$clientData$output_boxplots_rnaseq_raw_height)
               getBoxplots(experimentFactor = rv$experimentFactor,
-                          normData = normData1,
-                          RNASeq = TRUE)
-            },deleteFile = TRUE)
+                          normData = rv$normData,
+                          RNASeq = TRUE,
+                          width = session$clientData$output_boxplots_rnaseq_raw_width,
+                          height = session$clientData$output_boxplots_rnaseq_raw_height)
+            }, deleteFile = TRUE)
+            
+            
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
+            # Download plot
+            output$realdownload_boxplots_rnaseq_raw <- downloadHandler(
+              filename = function(){"QC_Boxplots.png"},
+              content = function(file){
+                png(file,
+                    width=input$width_boxplots_rnaseq_raw,
+                    height=input$height_boxplots_rnaseq_raw,
+                    pointsize=24)
+                getBoxplots_download(experimentFactor = rv$experimentFactor,
+                                     normData = rv$normData,
+                                     RNASeq = TRUE)
+                dev.off()
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_boxplots_rnaseq_raw, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(6,
+                           sliderInput("height_boxplots_rnaseq_raw", 
+                                       "Height",
+                                       min = 1200, max = 1600,
+                                       value = 1500, step = 1,
+                                       width = "100%"),
+                    ),
+                    column(6,
+                           sliderInput("width_boxplots_rnaseq_raw", 
+                                       "Width",
+                                       min = 800, max = 1200,
+                                       value = 1000, step = 1,
+                                       width = "100%"),
+                    )
+                  ),
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_boxplots_rnaseq_raw', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
             
             #********************************************************************#
             # Output 3: Density plots
@@ -659,7 +794,15 @@ server <- function(input, output, session){
             
             # Heatmap of sample-sample correlations
             output$heatmap_rnaseq_raw  <- plotly::renderPlotly({
-              getHeatmap(experimentFactor = rv$experimentFactor, 
+              
+              # Make colors
+              if(length(input$heatmapFactor_rnaseq_raw) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$heatmapFactor_rnaseq_raw], 1, paste, collapse = "_" ))
+              } else{
+                colorFactor <- factor(rv$metaData_fil[,input$heatmapFactor_rnaseq_raw])
+              }
+              
+              getHeatmap(experimentFactor = colorFactor,
                          normMatrix = rv$normData,
                          clusterOption1 = input$clusteroption1_rnaseq_raw,
                          clusterOption2 = input$clusteroption2_rnaseq_raw,
@@ -739,30 +882,126 @@ server <- function(input, output, session){
                            
                            # Download button
                            downloadButton("downloadNormalizedData_rnaseq_raw", 
-                                          "Download"),
+                                          "Download table"),
+                           
+                           br(),
+                           br(),
+                           
+                           # Dropdown Button to adjust the plot settings
+                           shinyWidgets::dropdownButton(
+                             tags$div(
+                               style = "max-height: 300px; overflow-y: auto; padding: 5px;",
+                               
+                               
+                               # Change order of the boxplots:
+                               tags$h4("Drag to change boxplot order"),
+                               shinyjqui::orderInput(inputId = 'geneboxplot_order_rnaseq_raw', 
+                                                     label = NULL, 
+                                                     items = levels(rv$experimentFactor),
+                                                     item_class = 'default'),
+                               br(),
+                               
+                               # Change colour of the boxplots by button. 
+                               # This is used when there are more than 6 experimental groups
+                               conditionalPanel(
+                                 condition = "output.length_geneboxplot_rnaseq_raw > 6",
+                                 tags$h4("Click to change boxplot colours"),
+                                 shinyWidgets::actionBttn("geneboxplot_changeOrder_rnaseq_raw",
+                                                          label = "Change color",
+                                                          style = "simple",
+                                                          color = "primary",
+                                                          icon = icon("sync"))
+                               ),
+                               
+                               # Change colour of the boxplots by colour picker
+                               # This is used when there are less than 7 experimental groups
+                               conditionalPanel(
+                                 condition = "output.length_geneboxplot_rnaseq_raw < 7",
+                                 tags$h4("Click to select boxplot colours"),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_rnaseq_raw > 0",
+                                   colourpicker::colourInput("geneboxplot_col1_rnaseq_raw", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[1])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_rnaseq_raw > 1",
+                                   colourpicker::colourInput("geneboxplot_col2_rnaseq_raw", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[2])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_rnaseq_raw > 2",
+                                   colourpicker::colourInput("geneboxplot_col3_rnaseq_raw", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[3])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_rnaseq_raw > 3",
+                                   colourpicker::colourInput("geneboxplot_col4_rnaseq_raw", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[4])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_rnaseq_raw > 4",
+                                   colourpicker::colourInput("geneboxplot_col5_rnaseq_raw", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[5])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_rnaseq_raw > 5",
+                                   colourpicker::colourInput("geneboxplot_col6_rnaseq_raw", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[6])
+                                 )
+                               ),
+                               br(),
+                               tags$h4("Drag to change jitter"),
+                               sliderInput("jitter_geneboxplot_rnaseq_raw", 
+                                           NULL,
+                                           min = 0, max = 0.3,
+                                           value = 0.1, step = 0.01),
+                               br()
+                             ),
+                             circle = TRUE, status = "info",
+                             icon = icon("fas fa-cog"),
+                             
+                             tooltip = shinyWidgets::tooltipOptions(
+                               title = "Click to personalize plot!")
+                             
+                           ), # EO dropdownButton
                            
                            # Boxplot of the selected gene's expression values
-                           plotly::plotlyOutput("ExprBoxplot_rnaseq_raw")%>% 
-                             shinycssloaders::withSpinner(color="#0dc5c1")
+                           plotOutput("ExprBoxplot_rnaseq_raw")%>% 
+                             shinycssloaders::withSpinner(color="#0dc5c1"),
+                           
+                           actionButton("download_geneboxplot_rnaseq_raw", 
+                                        "Download figure",
+                                        icon = shiny::icon("download")),
+                           br(),
+                           br()
                   ),
                   
                   # TAB2: Boxplots of all gene's expression values
                   tabPanel("Boxplots",
                            icon = icon("fas fa-file"),
-                           h3(strong("Boxplots")),
-                           h5("These are boxplots of the normalized expression expression values."),
-                           hr(),
-                           plotOutput(outputId = "boxplots_rnaseq_raw") %>% 
+                           br(),
+                           actionButton("download_boxplots_rnaseq_raw", 
+                                        "Download figure",
+                                        icon = shiny::icon("download")),
+                           plotOutput(outputId = "boxplots_rnaseq_raw",
+                                      width = "65vw", height = "80vw")%>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
                   # TAB3: Density plots of all gene's expression values
                   tabPanel("Density plots",
                            icon = icon("fas fa-mouse-pointer"),
-                           h3(strong("Density plots")),
-                           h5("These are density plots of the normalized expression expression values."),
-                           hr(),
-                           plotly::plotlyOutput(outputId = "densityplots_rnaseq_raw") %>% 
+                           br(),
+                           h2(strong("Density plot of normalized counts"), align = "center"),
+                           h4("Distributions should be comparable between samples", align = "center"),
+                           plotly::plotlyOutput(outputId = "densityplots_rnaseq_raw",
+                                                width = "65vw", height = "40vw") %>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
@@ -800,23 +1039,29 @@ server <- function(input, output, session){
                            
                            #Theme
                            shinyWidgets::dropdownButton(
-                             tags$h3("Theme"),
+                             selectInput(inputId = "heatmapFactor_rnaseq_raw",
+                                                       label = "Side colors",
+                                                       choices = colnames(rv$metaData_fil),
+                                                       selected = rv$experimentName,
+                                                       multiple = TRUE),
+                             
                              selectInput(inputId = 'heatmaptheme_rnaseq_raw',
-                                         label = NULL,
+                                         label = "Heatmap theme",
                                          choices = c("Default", 
                                                      "Yellow-red", 
-                                                     "Dark")),
+                                                     "Blues", 
+                                                     "Reds")),
                              circle = TRUE, status = "info",
                              icon = icon("fas fa-cog"), width = "300px",
                              tooltip = shinyWidgets::tooltipOptions(
-                               title = "Click to change theme!")
+                               title = "Click to change colors!")
                            ),
                            
                            plotly::plotlyOutput("heatmap_rnaseq_raw", 
-                                        width = "1000px", 
-                                        height="600px") %>% 
+                                                width = "1000px", 
+                                                height="600px") %>% 
                              shinycssloaders::withSpinner(color="#0dc5c1", 
-                                         proxy.height = "400px")
+                                                          proxy.height = "400px")
                            
                   ),
                   
@@ -835,10 +1080,10 @@ server <- function(input, output, session){
                              column(3,
                                     # Color by which factor?
                                     shinyWidgets::pickerInput(inputId = "colorFactor_rnaseq_raw",
-                                                label = "Color by:",
-                                                choices = colnames(rv$metaData_fil),
-                                                selected = rv$experimentName,
-                                                multiple = TRUE)
+                                                              label = "Color by:",
+                                                              choices = colnames(rv$metaData_fil),
+                                                              selected = rv$experimentName,
+                                                              multiple = TRUE)
                              ),
                              column(3,
                                     br(),
@@ -887,8 +1132,9 @@ server <- function(input, output, session){
                            fluidRow(
                              hr(),
                              plotly::plotlyOutput("PCA_rnaseq_raw")%>% 
-                               shinycssloaders::withSpinner(color="#0dc5c1")
-                           ) 
+                               shinycssloaders::withSpinner(color="#0dc5c1"),
+                           ),
+
                            
                   ), # EO PCA tabpanel
                   
@@ -907,7 +1153,7 @@ server <- function(input, output, session){
                 ) # EO tabsetPanel
               ) # EO tagList
             }) # EO renderUI
-
+            
             # Allow user to go to next tab
             output$UI_next_preprocessing_rnaseq_raw <- renderUI({
               req(rv$normData)
@@ -915,10 +1161,10 @@ server <- function(input, output, session){
                 hr(),
                 h2(strong("Continue your analysis")),
                 shinyWidgets::actionBttn(inputId = "next_preprocessing_rnaseq_raw",
-                           label = "Next",
-                           style = "jelly",
-                           color = "danger",
-                           icon = icon("arrow-right"))
+                                         label = "Next",
+                                         style = "jelly",
+                                         color = "danger",
+                                         icon = icon("arrow-right"))
               )
             })
             
@@ -933,7 +1179,7 @@ server <- function(input, output, session){
           # Go to data upload tab
           observeEvent(input$next_preprocessing_rnaseq_raw,{
             
-            # Go to microarray statistics tab
+            # Go to statistics tab
             updateNavbarPage(session, "navbar",
                              selected = "panel_statistics_rnaseq_raw")
           })
@@ -944,11 +1190,11 @@ server <- function(input, output, session){
           output$UI_covGroups_num_rnaseq_raw <- renderUI({
             tagList(
               shinyWidgets::pickerInput(inputId = "covGroups_num_rnaseq_raw",
-                          label = "Continuous covariates (e.g., age):",
-                          choices = setdiff(colnames(rv$metaData_fil),
-                                            rv$experimentName),
-                          selected = NULL,
-                          multiple = TRUE)
+                                        label = "Continuous covariates (e.g., age):",
+                                        choices = setdiff(colnames(rv$metaData_fil),
+                                                          rv$experimentName),
+                                        selected = NULL,
+                                        multiple = TRUE)
             )
           })
           
@@ -956,11 +1202,11 @@ server <- function(input, output, session){
           output$UI_covGroups_char_rnaseq_raw <- renderUI({
             tagList(
               shinyWidgets::pickerInput(inputId = "covGroups_char_rnaseq_raw",
-                          label = "Discrete covariates (e.g., sex):",
-                          choices = setdiff(colnames(rv$metaData_fil),
-                                            rv$experimentName),
-                          selected = NULL,
-                          multiple = TRUE)
+                                        label = "Discrete covariates (e.g., sex):",
+                                        choices = setdiff(colnames(rv$metaData_fil),
+                                                          rv$experimentName),
+                                        selected = NULL,
+                                        multiple = TRUE)
             )
           })
           
@@ -982,14 +1228,14 @@ server <- function(input, output, session){
           output$UI_biomart_dataset_rnaseq_raw <- renderUI({
             req(input$addAnnotation_rnaseq_raw)
             shinyWidgets::pickerInput(inputId = "biomart_dataset_rnaseq_raw",
-                        label = "Organism:",
-                        choices = c("Homo sapiens" = "hsapiens_gene_ensembl" ,
-                                    "Bos taurus" = "btaurus_gene_ensembl",
-                                    "Caenorhabditis elegans" = "celegans_gene_ensembl",
-                                    "Mus musculus" = "mmusculus_gene_ensembl",
-                                    "Rattus norvegicus" = "rnorvegicus_gene_ensembl"),
-                        selected = "hsapiens_gene_ensembl",
-                        multiple = FALSE)
+                                      label = "Organism:",
+                                      choices = c("Homo sapiens" = "hsapiens_gene_ensembl" ,
+                                                  "Bos taurus" = "btaurus_gene_ensembl",
+                                                  "Caenorhabditis elegans" = "celegans_gene_ensembl",
+                                                  "Mus musculus" = "mmusculus_gene_ensembl",
+                                                  "Rattus norvegicus" = "rnorvegicus_gene_ensembl"),
+                                      selected = "hsapiens_gene_ensembl",
+                                      multiple = FALSE)
           })
           
           output$UI_addAnnotations_rnaseq_raw <- renderUI({
@@ -999,20 +1245,20 @@ server <- function(input, output, session){
             tagList(
               
               shinyWidgets::pickerInput(inputId = "biomart_filter_rnaseq_raw",
-                          label = "Gene ID",
-                          choices = c("Ensembl Gene ID",
-                                      "Entrez Gene ID",
-                                      "Gene Symbol/Name"),
-                          selected = "Entrez Gene ID",
-                          multiple = FALSE),
+                                        label = "Gene ID",
+                                        choices = c("Ensembl Gene ID",
+                                                    "Entrez Gene ID",
+                                                    "Gene Symbol/Name"),
+                                        selected = "Entrez Gene ID",
+                                        multiple = FALSE),
               
               shinyWidgets::pickerInput(inputId = "biomart_attributes_rnaseq_raw",
-                          label = "Output",
-                          choices = c("Ensembl Gene ID",
-                                      "Entrez Gene ID",
-                                      "Gene Symbol/Name"),
-                          selected = "Gene Symbol/Name",
-                          multiple = TRUE)
+                                        label = "Output",
+                                        choices = c("Ensembl Gene ID",
+                                                    "Entrez Gene ID",
+                                                    "Gene Symbol/Name"),
+                                        selected = "Gene Symbol/Name",
+                                        multiple = TRUE)
             )
             
           })
@@ -1024,11 +1270,11 @@ server <- function(input, output, session){
           #=========================================#
           observeEvent(input$calculate_statistics_rnaseq_raw,{
             shinybusy::show_modal_spinner(text = "Statistical analysis...",
-                               color="#0dc5c1")
+                                          color="#0dc5c1")
             
             # Calculate statistics
             if (isTRUE(input$addAnnotation_rnaseq_raw)){
-              rv$top_table <- getStatistics_RNASeq(rawMatrix = rv$gxData_fil, 
+              rv$top_table_list <- getStatistics_RNASeq(rawMatrix = rv$gxData_fil, 
                                                    metaData = rv$metaData_fil, 
                                                    expFactor = rv$experimentName,
                                                    covGroups_num = input$covGroups_num_rnaseq_raw,
@@ -1043,7 +1289,7 @@ server <- function(input, output, session){
                                                    biomart_filters = input$biomart_filter_rnaseq_raw)
               
             } else{
-              rv$top_table <- getStatistics_RNASeq(rawMatrix = rv$gxData_fil, 
+              rv$top_table_list <- getStatistics_RNASeq(rawMatrix = rv$gxData_fil, 
                                                    metaData = rv$metaData_fil, 
                                                    expFactor = rv$experimentName, 
                                                    covGroups_num = input$covGroups_num_rnaseq_raw,
@@ -1058,28 +1304,31 @@ server <- function(input, output, session){
               
             }
             
+            rv$newFactor <- rv$experimentFactor
+            rv$newData <- rv$normData
+            
             # Select comparison for output
             observe({
               
-              if (!is.null(rv$top_table)){
+              if (!is.null(rv$top_table_list)){
+                rv$top_table <- rv$top_table_list[[1]]
                 # Remove modal
                 shinybusy::remove_modal_spinner()
                 
                 # Show comparisons
                 output$UI_comparisons_view_rnaseq_raw <- renderUI({
                   shinyWidgets::pickerInput(inputId = "comparisons_view_rnaseq_raw",
-                              label = "Select comparison:",
-                              choices = names(rv$top_table),
-                              selected = names(rv$top_table)[1],
-                              multiple = FALSE)
+                                            label = "Select comparison:",
+                                            choices = names(rv$top_table),
+                                            selected = names(rv$top_table)[1],
+                                            multiple = FALSE)
                 })
                 
                 # Show message
                 shinyWidgets::sendSweetAlert(
                   session = session,
                   title = "Info",
-                  text = "Statistical analysis has been performed. You can download 
-              the results as well as view them in interactive plots.",
+                  text = rv$top_table_list[[2]],
                   type = "info")
                 
                 # Show microarray statistics tab
@@ -1107,11 +1356,16 @@ server <- function(input, output, session){
             
             observe({
               req(input$comparisons_view_rnaseq_raw)
+              req(rv$top_table)
               
               # print top table
               output$top_table_rnaseq_raw <- DT::renderDataTable({
                 
-                output <- rv$top_table[[input$comparisons_view_rnaseq_raw]]
+                if (is.null(input$comparisons_view_rnaseq_raw)){
+                  output <- rv$top_table[[1]]
+                } else{
+                  output <- rv$top_table[[input$comparisons_view_rnaseq_raw]]
+                }
                 
                 return(output)
               },options = list(pageLength = 6),
@@ -1124,43 +1378,142 @@ server <- function(input, output, session){
                   write.csv(rv$top_table[[input$comparisons_view_rnaseq_raw]], file, quote = FALSE, row.names = FALSE)
                 }
               )
+            })
+            
+            # Change plotting data depending on whether all experimental groups will be plotted  
+            observe({
+              req(input$comparisons_view_rnaseq_raw)
+              req(rv$top_table)
               
-              # Boxplot of single gene
-              output$ExprBoxplot_statistics_rnaseq_raw <- plotly::renderPlotly({
+              if (!is.null(input$boxplotAll_rnaseq_raw)){
+                if (input$boxplotAll_rnaseq_raw){
+                  rv$newFactor <- rv$experimentFactor
+                  rv$newData <- rv$normData
+                }
+                if (!input$boxplotAll_rnaseq_raw){
+                  if(length(rv$experimentName) > 1){
+                    t <- make.names(apply(rv$metaData_fil[,rv$experimentName], 1, paste, collapse = "_" ))
+                  } else{
+                    t <- make.names(rv$metaData_fil[,rv$experimentName])
+                  }
+                  rv$newData <- rv$normData[,t %in% (unlist(stringr::str_split(input$comparisons_view_rnaseq_raw, " - ")))]
+                  rv$newFactor <- factor(as.character(rv$experimentFactor)[t %in% (unlist(stringr::str_split(input$comparisons_view_rnaseq_raw, " - ")))])
+                }
+              }
+
+              # Change color by click on button
+              rv$colorOrder <- 1:length(levels(rv$newFactor))
+              observeEvent(input$statboxplot_changeOrder_rnaseq_raw,{
+                all_orders <- permute(1:length(levels(rv$newFactor))) 
+                sel <- which(unlist(lapply(all_orders, function(x) all(x == rv$colorOrder))))
                 
-                req(input$top_table_rnaseq_raw_rows_selected)
-                req(input$comparisons_view_rnaseq_raw)
-                
-                if (input$comparisons_view_rnaseq_raw %in% names(rv$top_table)){
-                  # Set colors
-                  myPalette <- colorsByFactor(rv$experimentFactor)
-                  legendColors <- myPalette$legendColors
-                  
-                  # Prepare expression data frame
-                  gene <- rv$top_table[[input$comparisons_view_rnaseq_raw]]$GeneID[input$top_table_rnaseq_raw_rows_selected]
-                  plotExpr <- data.frame(
-                    logExpr = rv$normData[as.character(rownames(rv$normData)) %in% as.character(gene),],
-                    Grouping = rv$experimentFactor
-                  )
-                  
-                  # make interactive plot
-                  plotExpr %>%
-                    plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                                    color = ~Grouping, colors = legendColors, type = "box") %>%
-                    plotly::layout(xaxis = list(title = " "),
-                                   yaxis = list(title = 'log expression'),
-                                   legend = list(title=list(text='Group')),
-                                   showlegend = FALSE)
-                  
+                if (sel < length(all_orders)){
+                  rv$colorOrder <- all_orders[[sel+1]]
+                } else{
+                  rv$colorOrder <- all_orders[[1]]
                 }
               })
+              
+              
+              # Boxplot of single gene (based on selected row in the top table)
+              output$ExprBoxplot_statistics_rnaseq_raw <- renderPlot({
+                req(input$top_table_rnaseq_raw_rows_selected)
+                req(rv$top_table)
+                
+                if (length(levels(rv$newFactor)) > 6){
+                  legendColors <- colorsByFactor(rv$newFactor)$legendColors
+                } else{
+                  legendColors <- c(input$statboxplot_col1_rnaseq_raw,
+                                    input$statboxplot_col2_rnaseq_raw,
+                                    input$statboxplot_col3_rnaseq_raw,
+                                    input$statboxplot_col4_rnaseq_raw,
+                                    input$statboxplot_col5_rnaseq_raw,
+                                    input$statboxplot_col6_rnaseq_raw)
+                }
+                
+                gene <- rv$top_table[[input$comparisons_view_rnaseq_raw]]$GeneID[input$top_table_rnaseq_raw_rows_selected]
+                sel_row <- which(as.character(rownames(rv$normData)) %in% as.character(gene))
+                
+                # Make boxplot
+                rv$temp <- geneBoxplot(experimentFactor = rv$newFactor, 
+                            normMatrix = rv$newData, 
+                            sel_row = sel_row,
+                            legendColors = legendColors[rv$colorOrder],
+                            groupOrder = input$statboxplot_order_rnaseq_raw,
+                            jitter = input$jitter_statboxplot_rnaseq_raw,
+                            rnaseq=TRUE,
+                            seed = sample(1:1000,1))
+                
+                return(rv$temp)
+                
+              })
+              
+              # Get number of experimental groups
+              output$length_statboxplot_rnaseq_raw <- reactive({
+                length(levels(rv$experimentFactor))
+              })
+              outputOptions(output, "length_statboxplot_rnaseq_raw", suspendWhenHidden = FALSE) 
+              
             })
+            
+            #***************************#
+            # Modal to download boxplot
+            #***************************#
+            
+            # Download plot
+            output$realdownload_statboxplot_rnaseq_raw <- downloadHandler(
+              filename = "GeneBoxplot.png",
+              content = function(file){
+                ggplot2::ggsave(plot = rv$temp, 
+                                filename = file,
+                                width = input$width_statboxplot_rnaseq_raw,
+                                height = input$height_statboxplot_rnaseq_raw,
+                                units = "px")
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_statboxplot_rnaseq_raw, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                footer = tagList(
+                  fluidRow(
+                    column(6,
+                           sliderInput("height_statboxplot_rnaseq_raw", 
+                                       "Height",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    ),
+                    column(6,
+                           sliderInput("width_statboxplot_rnaseq_raw", 
+                                       "Width",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    )
+                  ),
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_statboxplot_rnaseq_raw', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
+            
             #********************************************************************#
             # TAB2: P value and logFC histograms
             #********************************************************************#
             
             observe({
               req(input$comparisons_view_rnaseq_raw)
+              req(rv$top_table)
               
               if (input$comparisons_view_rnaseq_raw %in% names(rv$top_table)){
                 # P value histogram
@@ -1207,6 +1560,88 @@ server <- function(input, output, session){
             #=========================================#
             
             observe({
+              req(rv$top_table)
+              
+              output$UI_boxplotAll_rnaseq_raw <- renderUI({
+                tagList(
+                  # Change order of the boxplots:
+                  tags$h4("Drag to change boxplot order"),
+                  shinyjqui::orderInput(inputId = 'statboxplot_order_rnaseq_raw', 
+                                        label = NULL, 
+                                        items = levels(rv$newFactor),
+                                        item_class = 'default'),
+                  br(),
+                  
+                  # Change colour of the boxplots by button. 
+                  # This is used when there are more than 6 experimental groups
+                  conditionalPanel(
+                    condition = "output.length_statboxplot_rnaseq_raw > 6",
+                    tags$h4("Click to change boxplot colours"),
+                    shinyWidgets::actionBttn("statboxplot_changeOrder_rnaseq_raw",
+                                             label = "Change color",
+                                             style = "simple",
+                                             color = "primary",
+                                             icon = icon("sync"))
+                  ),
+                  
+                  # Change colour of the boxplots by colour picker
+                  # This is used when there are less than 7 experimental groups
+                  conditionalPanel(
+                    condition = "output.length_statboxplot_rnaseq_raw < 7",
+                    tags$h4("Click to select boxplot colours"),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_rnaseq_raw > 0",
+                      colourpicker::colourInput("statboxplot_col1_rnaseq_raw", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[1])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_rnaseq_raw > 1",
+                      colourpicker::colourInput("statboxplot_col2_rnaseq_raw", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[2])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_rnaseq_raw > 2",
+                      colourpicker::colourInput("statboxplot_col3_rnaseq_raw", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[3])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_rnaseq_raw > 3",
+                      colourpicker::colourInput("statboxplot_col4_rnaseq_raw", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[4])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_rnaseq_raw > 4",
+                      colourpicker::colourInput("statboxplot_col5_rnaseq_raw", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[5])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_rnaseq_raw > 5",
+                      colourpicker::colourInput("statboxplot_col6_rnaseq_raw", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[6])
+                    )
+                  ),
+                  br(),
+                  tags$h4("Drag to change jitter"),
+                  sliderInput("jitter_statboxplot_rnaseq_raw", 
+                              NULL,
+                              min = 0, max = 0.3,
+                              value = 0.1, step = 0.01),
+                  br()
+                )
+              })
+            })
+            
+            observe({
+              if (is.null(rv$top_table)){
+                output$UI_output_statistics_rnaseq_raw <- renderUI(NULL)
+              } else{
+
               output$UI_output_statistics_rnaseq_raw <- renderUI({
                 tagList(
                   tabsetPanel(
@@ -1224,9 +1659,45 @@ server <- function(input, output, session){
                              DT::dataTableOutput(outputId = "top_table_rnaseq_raw") %>% 
                                shinycssloaders::withSpinner(color="#0dc5c1"),
                              downloadButton("download_top_table_rnaseq_raw", 
-                                            "Download"),
-                             plotly::plotlyOutput("ExprBoxplot_statistics_rnaseq_raw")%>% 
-                               shinycssloaders::withSpinner(color="#0dc5c1")
+                                            "Download table"),
+                             br(),
+                             br(),
+                             
+                             # Dropdown Button to adjust the plot settings
+                             shinyWidgets::dropdownButton(
+                               tags$div(
+                                 style = "max-height: 300px; overflow-y: auto; padding: 5px;",
+                                 
+                                 # Plot all experimental groups?
+                                 conditionalPanel(
+                                   condition = "output.length_statboxplot_rnaseq_raw > 2",
+                                   tags$h4("Plot all experimental groups?"),
+                                   shinyWidgets::materialSwitch(inputId = "boxplotAll_rnaseq_raw",
+                                                                label = NULL, 
+                                                                value = TRUE,
+                                                                status = "primary"),
+                                   
+                                   br()
+                                 ),
+                                 uiOutput("UI_boxplotAll_rnaseq_raw")
+                                 
+                                 
+                                 
+                               ),
+                               circle = TRUE, status = "info",
+                               icon = icon("fas fa-cog"),
+                               
+                               tooltip = shinyWidgets::tooltipOptions(
+                                 title = "Click to personalize plot!")
+                               
+                             ), # EO dropdownButton
+                             plotOutput("ExprBoxplot_statistics_rnaseq_raw")%>% 
+                               shinycssloaders::withSpinner(color="#0dc5c1"),
+                             actionButton("download_statboxplot_rnaseq_raw", 
+                                          "Download figure",
+                                          icon = shiny::icon("download")),
+                             br(),
+                             br()
                     ),
                     #********************************************************************#
                     # histogram tab
@@ -1280,10 +1751,10 @@ server <- function(input, output, session){
                              
                              # Button to reload the volcano plot
                              shinyWidgets::actionBttn(inputId = "plot_volcano_rnaseq_raw", 
-                                        label = "Plot",
-                                        style = "jelly",
-                                        color = "primary",
-                                        icon = icon("sync")),
+                                                      label = "Plot",
+                                                      style = "jelly",
+                                                      color = "primary",
+                                                      icon = icon("sync")),
                              br(),
                              br(),
                              # Volcano plot output
@@ -1295,6 +1766,7 @@ server <- function(input, output, session){
                   ) # tabsetpanel
                 ) # taglist
               }) # renderUI
+              }
             }) # Observe
             
             # Allow user to go to next tab
@@ -1304,10 +1776,10 @@ server <- function(input, output, session){
                 hr(),
                 h2(strong("Continue your analysis")),
                 shinyWidgets::actionBttn(inputId = "next_statistics_rnaseq_raw",
-                           label = "Next",
-                           style = "jelly",
-                           color = "danger",
-                           icon = icon("arrow-right"))
+                                         label = "Next",
+                                         style = "jelly",
+                                         color = "danger",
+                                         icon = icon("arrow-right"))
               )
             })
             
@@ -1334,10 +1806,10 @@ server <- function(input, output, session){
             req(rv$top_table)
             output$UI_comparisons_view_ORA_rnaseq_raw <- renderUI({
               shinyWidgets::pickerInput(inputId = "comparisons_view_ORA_rnaseq_raw",
-                          label = NULL,
-                          choices = names(rv$top_table),
-                          selected = names(rv$top_table)[1],
-                          multiple = FALSE)
+                                        label = NULL,
+                                        choices = names(rv$top_table),
+                                        selected = names(rv$top_table)[1],
+                                        multiple = FALSE)
             })
           })
           
@@ -1366,19 +1838,19 @@ server <- function(input, output, session){
                 
                 # Which columns of the top table contains the gene ids?
                 shinyWidgets::pickerInput(inputId = "geneID_ORA_rnaseq_raw",
-                            label = "Which column of the top table contains the gene IDs?",
-                            choices = colnames(rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]])[col_choice],
-                            selected = colnames(rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]])[1],
-                            multiple = FALSE),
+                                          label = "Which column of the top table contains the gene IDs?",
+                                          choices = colnames(rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]])[col_choice],
+                                          selected = colnames(rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]])[1],
+                                          multiple = FALSE),
                 
                 # Which gene IDs do they column contain?
                 shinyWidgets::pickerInput(inputId = "selID_ORA_rnaseq_raw",
-                            label = "Which gene ID to use?",
-                            choices = c("Ensembl Gene ID" = "ENSEMBL", 
-                                        "Entrez Gene ID" = "ENTREZID", 
-                                        "Gene Symbol/Name" = "SYMBOL"),
-                            selected = "ENTREZID",
-                            multiple = FALSE),
+                                          label = "Which gene ID to use?",
+                                          choices = c("Ensembl Gene ID" = "ENSEMBL", 
+                                                      "Entrez Gene ID" = "ENTREZID", 
+                                                      "Gene Symbol/Name" = "SYMBOL"),
+                                          selected = "ENTREZID",
+                                          multiple = FALSE),
               )
             })
           })
@@ -1391,7 +1863,7 @@ server <- function(input, output, session){
             
             # Show modal
             shinybusy::show_modal_spinner(text = "Overrepresentation analysis...",
-                               color="#0dc5c1")
+                                          color="#0dc5c1")
             
             # Perform ORA:
             
@@ -1653,10 +2125,10 @@ server <- function(input, output, session){
                                
                                # Actionbutton: press to reload plot
                                shinyWidgets::actionBttn(inputId = "plot_ORAplot_rnaseq_raw", 
-                                          label = "Plot",
-                                          style = "jelly",
-                                          color = "primary",
-                                          icon = icon("sync")),
+                                                        label = "Plot",
+                                                        style = "jelly",
+                                                        color = "primary",
+                                                        icon = icon("sync")),
                                br(),
                                br(),
                                
@@ -1692,21 +2164,21 @@ server <- function(input, output, session){
                                  column(3,
                                         # Select network layout
                                         shinyWidgets::pickerInput(inputId = "layout_network_rnaseq_raw",
-                                                    label = "Network layout",
-                                                    choices = c('star', 'circle', 'gem', 'dh', 'graphopt', 'grid', 'mds', 
-                                                                'randomly', 'fr', 'kk', 'drl', 'lgl'),
-                                                    selected = 'graphopt',
-                                                    multiple = FALSE)
+                                                                  label = "Network layout",
+                                                                  choices = c('star', 'circle', 'gem', 'dh', 'graphopt', 'grid', 'mds', 
+                                                                              'randomly', 'fr', 'kk', 'drl', 'lgl'),
+                                                                  selected = 'graphopt',
+                                                                  multiple = FALSE)
                                  )
                                ),
                                hr(),
                                
                                # Actionbutton: press to reload plot
                                shinyWidgets::actionBttn(inputId = "plot_ORAnetwork_rnaseq_raw", 
-                                          label = "Plot",
-                                          style = "jelly",
-                                          color = "primary",
-                                          icon = icon("sync")),
+                                                        label = "Plot",
+                                                        style = "jelly",
+                                                        color = "primary",
+                                                        icon = icon("sync")),
                                br(),
                                br(),
                                
@@ -1800,7 +2272,7 @@ server <- function(input, output, session){
                 type = "error")
               shinybusy::remove_modal_spinner()
             }
-              
+            
             
             # Read metadata
             if (!is.null(input$uploadMeta_rnaseq_norm_tsv)){
@@ -2330,29 +2802,104 @@ server <- function(input, output, session){
               }
             )
             
-            # Boxplot of single gene
-            output$ExprBoxplot_rnaseq_norm <- renderPlotly({
+            # Change color by click on button
+            rv$colorOrder <- 1:length(levels(rv$experimentFactor))
+            observeEvent(input$geneboxplot_changeOrder_rnaseq_norm,{
+              all_orders <- permute(1:length(levels(rv$experimentFactor))) 
+              sel <- which(unlist(lapply(all_orders, function(x) all(x == rv$colorOrder))))
+              
+              if (sel < length(all_orders)){
+                rv$colorOrder <- all_orders[[sel+1]]
+              } else{
+                rv$colorOrder <- all_orders[[1]]
+              }
+            })
+            
+            # Boxplot of single gene (based on selected row in the expression matrix)
+            output$ExprBoxplot_rnaseq_norm <- renderPlot({
               req(input$exprTable_rnaseq_norm_rows_selected)
               
-              # Set colors
-              myPalette <- colorsByFactor(rv$experimentFactor)
-              legendColors <- myPalette$legendColors
-              
-              # Prepare expression data frame
-              plotExpr <- data.frame(
-                logExpr = rv$normData[input$exprTable_rnaseq_norm_rows_selected,],
-                Grouping = rv$experimentFactor
-              )
-              
-              # make interactive plot
-              plotExpr %>%
-                plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                                color = ~Grouping, colors = legendColors, type = "box") %>%
-                plotly::layout(xaxis = list(title = " "),
-                               yaxis = list(title = 'log expression'),
-                               legend = list(title=list(text='Group')),
-                               showlegend = FALSE)
-              
+              if (length(levels(rv$experimentFactor)) > 4){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              } else{
+                legendColors <- c(input$geneboxplot_col1_rnaseq_norm,
+                                  input$geneboxplot_col2_rnaseq_norm,
+                                  input$geneboxplot_col3_rnaseq_norm,
+                                  input$geneboxplot_col4_rnaseq_norm,
+                                  input$geneboxplot_col5_rnaseq_norm,
+                                  input$geneboxplot_col6_rnaseq_norm)
+              }
+              # Make boxplot
+              rv$temp1 <- geneBoxplot(experimentFactor = rv$experimentFactor, 
+                                     normMatrix = rv$normData, 
+                                     sel_row = input$exprTable_rnaseq_norm_rows_selected,
+                                     legendColors = legendColors[rv$colorOrder],
+                                     groupOrder = input$geneboxplot_order_rnaseq_norm,
+                                     rnaseq = TRUE,
+                                     jitter = input$jitter_geneboxplot_rnaseq_norm,
+                                     seed = sample(1:1000,1))
+              return(rv$temp1)
+            })
+            
+            
+            # Get number of experimental groups
+            output$length_geneboxplot_rnaseq_norm <- reactive({
+              length(levels(rv$experimentFactor))
+            })
+            outputOptions(output, "length_geneboxplot_rnaseq_norm", suspendWhenHidden = FALSE) 
+            
+            
+            #***************************#
+            # Modal to download boxplot
+            #***************************#
+            
+            # Download plot
+            output$realdownload_geneboxplot_rnaseq_norm <- downloadHandler(
+              filename = "GeneBoxplot.png",
+              content = function(file){
+                ggplot2::ggsave(plot = rv$temp1, 
+                                filename = file,
+                                width = input$width_geneboxplot_rnaseq_norm,
+                                height = input$height_geneboxplot_rnaseq_norm,
+                                units = "px")
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_geneboxplot_rnaseq_norm, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(6,
+                           sliderInput("height_geneboxplot_rnaseq_norm", 
+                                       "Height",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    ),
+                    column(6,
+                           sliderInput("width_geneboxplot_rnaseq_norm", 
+                                       "Width",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    )
+                  ),
+                  hr(),
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_geneboxplot_rnaseq_norm', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
             })
             
             #********************************************************************#
@@ -2361,11 +2908,14 @@ server <- function(input, output, session){
             
             # Boxplots of all genes together
             output$boxplots_rnaseq_norm <- renderImage({
-              normData1 <- Biobase::ExpressionSet(assayData = rv$normData)
+              req(session$clientData$output_boxplots_rnaseq_norm_width)
+              req(session$clientData$output_boxplots_rnaseq_norm_height)
               getBoxplots(experimentFactor = rv$experimentFactor,
-                          normData = normData1,
-                          RNASeq = TRUE)
-            },deleteFile = TRUE)
+                          normData = rv$normData,
+                          RNASeq = TRUE,
+                          width = session$clientData$output_boxplots_rnaseq_norm_width,
+                          height = session$clientData$output_boxplots_rnaseq_norm_height)
+            }, deleteFile = TRUE)
             
             #********************************************************************#
             # Densityplots
@@ -2385,7 +2935,15 @@ server <- function(input, output, session){
             
             # Heatmap of sample-sample correlations
             output$heatmap_rnaseq_norm  <- plotly::renderPlotly({
-              getHeatmap(experimentFactor = rv$experimentFactor, 
+              
+              # Make colors
+              if(length(input$heatmapFactor_rnaseq_norm) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$heatmapFactor_rnaseq_norm], 1, paste, collapse = "_" ))
+              } else{
+                colorFactor <- factor(rv$metaData_fil[,input$heatmapFactor_rnaseq_norm])
+              }
+              
+              getHeatmap(experimentFactor = colorFactor, 
                          normMatrix = rv$normData,
                          clusterOption1 = input$clusteroption1_rnaseq_norm,
                          clusterOption2 = input$clusteroption2_rnaseq_norm,
@@ -2412,7 +2970,6 @@ server <- function(input, output, session){
               } else{
                 colorFactor <- factor(rv$metaData_fil[,input$colorFactor_rnaseq_norm])
               }
-              print(head(colorFactor))
               
               plot_PCA(PC_data = rv$PCA_data, 
                        colorFactor = colorFactor, 
@@ -2457,25 +3014,118 @@ server <- function(input, output, session){
                              withSpinner(color="#0dc5c1"),
                            downloadButton("downloadNormalizedData_rnaseq_norm", 
                                           "Download"),
-                           plotlyOutput("ExprBoxplot_rnaseq_norm")%>% 
-                             withSpinner(color="#0dc5c1")
+                           br(),
+                           br(),
+                           
+                           # Dropdown Button to adjust the plot settings
+                           shinyWidgets::dropdownButton(
+                             tags$div(
+                               style = "max-height: 300px; overflow-y: auto; padding: 5px;",
+                               
+                               
+                               # Change order of the boxplots:
+                               tags$h4("Drag to change boxplot order"),
+                               shinyjqui::orderInput(inputId = 'geneboxplot_order_rnaseq_norm', 
+                                                     label = NULL, 
+                                                     items = levels(rv$experimentFactor),
+                                                     item_class = 'default'),
+                               br(),
+                               
+                               # Change colour of the boxplots by button. 
+                               # This is used when there are more than 6 experimental groups
+                               conditionalPanel(
+                                 condition = "output.length_geneboxplot_rnaseq_norm > 6",
+                                 tags$h4("Click to change boxplot colours"),
+                                 shinyWidgets::actionBttn("geneboxplot_changeOrder_rnaseq_norm",
+                                                          label = "Change color",
+                                                          style = "simple",
+                                                          color = "primary",
+                                                          icon = icon("sync"))
+                               ),
+                               
+                               # Change colour of the boxplots by colour picker
+                               # This is used when there are less than 7 experimental groups
+                               conditionalPanel(
+                                 condition = "output.length_geneboxplot_rnaseq_norm < 7",
+                                 tags$h4("Click to select boxplot colours"),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_rnaseq_norm > 0",
+                                   colourpicker::colourInput("geneboxplot_col1_rnaseq_norm", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[1])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_rnaseq_norm > 1",
+                                   colourpicker::colourInput("geneboxplot_col2_rnaseq_norm", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[2])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_rnaseq_norm > 2",
+                                   colourpicker::colourInput("geneboxplot_col3_rnaseq_norm", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[3])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_rnaseq_norm > 3",
+                                   colourpicker::colourInput("geneboxplot_col4_rnaseq_norm", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[4])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_rnaseq_norm > 4",
+                                   colourpicker::colourInput("geneboxplot_col5_rnaseq_norm", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[5])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_rnaseq_norm > 5",
+                                   colourpicker::colourInput("geneboxplot_col6_rnaseq_norm", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[6])
+                                 )
+                               ),
+                               br(),
+                               tags$h4("Drag to change jitter"),
+                               sliderInput("jitter_geneboxplot_rnaseq_norm", 
+                                           NULL,
+                                           min = 0, max = 0.3,
+                                           value = 0.1, step = 0.01),
+                               br()
+                             ),
+                             circle = TRUE, status = "info",
+                             icon = icon("fas fa-cog"),
+                             
+                             tooltip = shinyWidgets::tooltipOptions(
+                               title = "Click to personalize plot!")
+                             
+                           ), # EO dropdownButton
+                           
+                           # Boxplot of the selected gene's expression values
+                           plotOutput("ExprBoxplot_rnaseq_norm")%>% 
+                             shinycssloaders::withSpinner(color="#0dc5c1"),
+                           
+                           actionButton("download_geneboxplot_rnaseq_norm", 
+                                        "Download figure",
+                                        icon = shiny::icon("download")),
+                           br(),
+                           br()
                   ),
                   tabPanel("Boxplots",
                            icon = icon("fas fa-file"),
-                           h3(strong("Boxplots")),
-                           h5("These are boxplots of the normalized expression expression values."),
-                           hr(),
-                           plotOutput(outputId = "boxplots_rnaseq_norm") %>% 
-                             withSpinner(color="#0dc5c1")
+                           plotOutput(outputId = "boxplots_rnaseq_norm",
+                                      width = "65vw", height = "80vw")%>% 
+                             shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
                   tabPanel("Density plots",
                            icon = icon("fas fa-mouse-pointer"),
-                           h3(strong("Density plots")),
-                           h5("These are density plots of the normalized expression expression values."),
-                           hr(),
-                           plotlyOutput(outputId = "densityplots_rnaseq_norm") %>% 
-                             withSpinner(color="#0dc5c1")
+                           br(),
+                           h2(strong("Density plot of normalized counts"), align = "center"),
+                           h4("Distributions should be comparable between samples", align = "center"),
+                           plotly::plotlyOutput(outputId = "densityplots_rnaseq_norm",
+                                                width = "65vw", height = "40vw") %>% 
+                             shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
                   tabPanel("Correlation plot", 
@@ -2516,17 +3166,24 @@ server <- function(input, output, session){
                            dropdownButton(
                              tags$h3("Theme"),
                              
+                             selectInput(inputId = "heatmapFactor_rnaseq_norm",
+                                         label = "Side colors",
+                                         choices = colnames(rv$metaData_fil),
+                                         selected = rv$experimentName,
+                                         multiple = TRUE),
+                             
                              selectInput(inputId = 'heatmaptheme_rnaseq_norm',
-                                         label = NULL,
+                                         label = "Heatmap theme",
                                          choices = c("Default", 
                                                      "Yellow-red", 
-                                                     "Dark")),
+                                                     "Blues", 
+                                                     "Reds")),
                              
                              circle = TRUE, status = "info",
                              icon = icon("fas fa-cog"), width = "300px",
                              
                              tooltip = tooltipOptions(
-                               title = "Click to change theme!")
+                               title = "Click to change colors!")
                              
                            ),
                            
@@ -2746,30 +3403,30 @@ server <- function(input, output, session){
             if (isTRUE(input$addAnnotation_rnaseq_norm)){
               
               counts <- 2^rv$normData - 1 
-              rv$top_table <- getStatistics_RNASeq_processed(normMatrix = counts, 
-                                                             metaData = rv$metaData_fil, 
-                                                             expFactor = rv$experimentName, 
-                                                             covGroups_num = input$covGroups_num_rnaseq_norm, 
-                                                             covGroups_char = input$covGroups_char_rnaseq_norm, 
-                                                             comparisons = input$comparisons_rnaseq_norm,
-                                                             addAnnotation = input$addAnnotation_rnaseq_norm,
-                                                             biomart_dataset = input$biomart_dataset_rnaseq_norm,
-                                                             biomart_attributes = unique(c(input$biomart_filter_rnaseq_norm,
-                                                                                           input$biomart_attributes_rnaseq_norm)),
-                                                             biomart_filters = input$biomart_filter_rnaseq_norm)
+              rv$top_table_list <- getStatistics_RNASeq_processed(normMatrix = counts, 
+                                                                  metaData = rv$metaData_fil, 
+                                                                  expFactor = rv$experimentName, 
+                                                                  covGroups_num = input$covGroups_num_rnaseq_norm, 
+                                                                  covGroups_char = input$covGroups_char_rnaseq_norm, 
+                                                                  comparisons = input$comparisons_rnaseq_norm,
+                                                                  addAnnotation = input$addAnnotation_rnaseq_norm,
+                                                                  biomart_dataset = input$biomart_dataset_rnaseq_norm,
+                                                                  biomart_attributes = unique(c(input$biomart_filter_rnaseq_norm,
+                                                                                                input$biomart_attributes_rnaseq_norm)),
+                                                                  biomart_filters = input$biomart_filter_rnaseq_norm)
               
             } else{
               counts <- 2^rv$normData - 1 
-              rv$top_table <- getStatistics_RNASeq_processed(normMatrix = counts, 
-                                                             metaData = rv$metaData_fil, 
-                                                             expFactor = rv$experimentName, 
-                                                             covGroups_num = input$covGroups_num_rnaseq_norm, 
-                                                             covGroups_char = input$covGroups_char_rnaseq_norm, 
-                                                             comparisons = input$comparisons_rnaseq_norm,
-                                                             addAnnotation = input$addAnnotation_rnaseq_norm,
-                                                             biomart_dataset = NULL,
-                                                             biomart_attributes = NULL,
-                                                             biomart_filters = NULL)
+              rv$top_table_list <- getStatistics_RNASeq_processed(normMatrix = counts, 
+                                                                  metaData = rv$metaData_fil, 
+                                                                  expFactor = rv$experimentName, 
+                                                                  covGroups_num = input$covGroups_num_rnaseq_norm, 
+                                                                  covGroups_char = input$covGroups_char_rnaseq_norm, 
+                                                                  comparisons = input$comparisons_rnaseq_norm,
+                                                                  addAnnotation = input$addAnnotation_rnaseq_norm,
+                                                                  biomart_dataset = NULL,
+                                                                  biomart_attributes = NULL,
+                                                                  biomart_filters = NULL)
               
             }
             
@@ -2777,7 +3434,8 @@ server <- function(input, output, session){
             observe({
               
               
-              if (!is.null(rv$top_table)){
+              if (!is.null(rv$top_table_list)){
+                rv$top_table <- rv$top_table_list[[1]]
                 # Remove modal
                 shinybusy::remove_modal_spinner()
                 
@@ -2794,8 +3452,7 @@ server <- function(input, output, session){
                 sendSweetAlert(
                   session = session,
                   title = "Info",
-                  text = "Statistical analysis has been performed. You can download 
-              the results as well as view them in interactive plots.",
+                  text = rv$top_table_list[[2]],
                   type = "info")
                 
                 # Show microarray statistics tab
@@ -2837,37 +3494,136 @@ server <- function(input, output, session){
                   write.csv(rv$top_table[[input$comparisons_view_rnaseq_norm]], file, quote = FALSE, row.names = FALSE)
                 }
               )
+            })
               
-              # Boxplot of single gene
-              output$ExprBoxplot_statistics_rnaseq_norm <- plotly::renderPlotly({
+            # Change plotting data depending on whether all experimental groups will be plotted  
+            observe({
+              req(input$comparisons_view_rnaseq_norm)
+              req(rv$top_table)
+              
+              if (!is.null(input$boxplotAll_rnaseq_norm)){
+                if (input$boxplotAll_rnaseq_norm){
+                  rv$newFactor <- rv$experimentFactor
+                  rv$newData <- rv$normData
+                }
+                if (!input$boxplotAll_rnaseq_norm){
+                  if(length(rv$experimentName) > 1){
+                    t <- make.names(apply(rv$metaData_fil[,rv$experimentName], 1, paste, collapse = "_" ))
+                  } else{
+                    t <- make.names(rv$metaData_fil[,rv$experimentName])
+                  }
+                  rv$newData <- rv$normData[,t %in% (unlist(stringr::str_split(input$comparisons_view_rnaseq_raw, " - ")))]
+                  rv$newFactor <- factor(as.character(rv$experimentFactor)[t %in% (unlist(stringr::str_split(input$comparisons_view_rnaseq_raw, " - ")))])
+                }
+              }
+              
+              # Change color by click on button
+              rv$colorOrder <- 1:length(levels(rv$newFactor))
+              observeEvent(input$statboxplot_changeOrder_rnaseq_norm,{
+                all_orders <- permute(1:length(levels(rv$newFactor))) 
+                sel <- which(unlist(lapply(all_orders, function(x) all(x == rv$colorOrder))))
                 
+                if (sel < length(all_orders)){
+                  rv$colorOrder <- all_orders[[sel+1]]
+                } else{
+                  rv$colorOrder <- all_orders[[1]]
+                }
+              })
+              
+              
+              # Boxplot of single gene (based on selected row in the top table)
+              output$ExprBoxplot_statistics_rnaseq_norm <- renderPlot({
                 req(input$top_table_rnaseq_norm_rows_selected)
-                req(input$comparisons_view_rnaseq_norm)
+                req(rv$top_table)
                 
-                if (input$comparisons_view_rnaseq_norm %in% names(rv$top_table)){
-                  # Set colors
-                  myPalette <- colorsByFactor(rv$experimentFactor)
-                  legendColors <- myPalette$legendColors
-                  
-                  # Prepare expression data frame
-                  gene <- rv$top_table[[input$comparisons_view_rnaseq_norm]]$GeneID[input$top_table_rnaseq_norm_rows_selected]
-                  plotExpr <- data.frame(
-                    logExpr = rv$normData[as.character(rownames(rv$normData)) %in% as.character(gene),],
-                    Grouping = rv$experimentFactor
-                  )
-                  
-                  # make interactive plot
-                  plotExpr %>%
-                    plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                                    color = ~Grouping, colors = legendColors, type = "box") %>%
-                    plotly::layout(xaxis = list(title = " "),
-                                   yaxis = list(title = 'log expression'),
-                                   legend = list(title=list(text='Group')),
-                                   showlegend = FALSE)
+                if (length(levels(rv$newFactor)) > 6){
+                  legendColors <- colorsByFactor(rv$newFactor)$legendColors
+                } else{
+                  legendColors <- c(input$statboxplot_col1_rnaseq_norm,
+                                    input$statboxplot_col2_rnaseq_norm,
+                                    input$statboxplot_col3_rnaseq_norm,
+                                    input$statboxplot_col4_rnaseq_norm,
+                                    input$statboxplot_col5_rnaseq_norm,
+                                    input$statboxplot_col6_rnaseq_norm)
                 }
                 
+                gene <- rv$top_table[[input$comparisons_view_rnaseq_norm]]$GeneID[input$top_table_rnaseq_norm_rows_selected]
+                sel_row <- which(as.character(rownames(rv$normData)) %in% as.character(gene))
+                
+                # Make boxplot
+                rv$temp <- geneBoxplot(experimentFactor = rv$newFactor, 
+                                       normMatrix = rv$newData, 
+                                       sel_row = sel_row,
+                                       legendColors = legendColors[rv$colorOrder],
+                                       groupOrder = input$statboxplot_order_rnaseq_norm,
+                                       jitter = input$jitter_statboxplot_rnaseq_norm,
+                                       rnaseq=TRUE,
+                                       seed = sample(1:1000,1))
+                
+                return(rv$temp)
+                
               })
+              
+              # Get number of experimental groups
+              output$length_statboxplot_rnaseq_norm <- reactive({
+                length(levels(rv$experimentFactor))
+              })
+              outputOptions(output, "length_statboxplot_rnaseq_norm", suspendWhenHidden = FALSE) 
+              
             })
+            
+            #***************************#
+            # Modal to download boxplot
+            #***************************#
+            
+            # Download plot
+            output$realdownload_statboxplot_rnaseq_norm <- downloadHandler(
+              filename = "GeneBoxplot.png",
+              content = function(file){
+                ggplot2::ggsave(plot = rv$temp, 
+                                filename = file,
+                                width = input$width_statboxplot_rnaseq_norm,
+                                height = input$height_statboxplot_rnaseq_norm,
+                                units = "px")
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_statboxplot_rnaseq_norm, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                footer = tagList(
+                  fluidRow(
+                    column(6,
+                           sliderInput("height_statboxplot_rnaseq_norm", 
+                                       "Height",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    ),
+                    column(6,
+                           sliderInput("width_statboxplot_rnaseq_norm", 
+                                       "Width",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    )
+                  ),
+                  hr(),
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_statboxplot_rnaseq_norm', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
+            
             
             #********************************************************************#
             # Histograms
@@ -2911,95 +3667,212 @@ server <- function(input, output, session){
             }, ignoreNULL = FALSE)
             
             
-            # UI: Output in different tabs
+            #=========================================#
+            #  # UI: Output in different tabs
+            #=========================================#
             
             observe({
-              output$UI_output_statistics_rnaseq_norm <- renderUI({
+              req(rv$top_table)
+              
+              output$UI_boxplotAll_rnaseq_norm <- renderUI({
                 tagList(
-                  tabsetPanel(
-                    
-                    #********************************************************************#
-                    # top table tab
-                    #********************************************************************#
-                    
-                    tabPanel("Top table",
-                             icon = icon("fas fa-mouse-pointer"),
-                             br(),
-                             h3(strong("Top Table")),
-                             h5("The Top Table includes the output of the selected statistical analysis."),
-                             hr(),
-                             dataTableOutput(outputId = "top_table_rnaseq_norm") %>% 
-                               withSpinner(color="#0dc5c1"),
-                             downloadButton("download_top_table_rnaseq_norm", 
-                                            "Download"),
-                             plotlyOutput("ExprBoxplot_statistics_rnaseq_norm")%>% 
-                               withSpinner(color="#0dc5c1")
+                  # Change order of the boxplots:
+                  tags$h4("Drag to change boxplot order"),
+                  shinyjqui::orderInput(inputId = 'statboxplot_order_rnaseq_norm', 
+                                        label = NULL, 
+                                        items = levels(rv$newFactor),
+                                        item_class = 'default'),
+                  br(),
+                  
+                  # Change colour of the boxplots by button. 
+                  # This is used when there are more than 6 experimental groups
+                  conditionalPanel(
+                    condition = "output.length_statboxplot_rnaseq_raw > 6",
+                    tags$h4("Click to change boxplot colours"),
+                    shinyWidgets::actionBttn("statboxplot_changeOrder_rnaseq_norm",
+                                             label = "Change color",
+                                             style = "simple",
+                                             color = "primary",
+                                             icon = icon("sync"))
+                  ),
+                  
+                  # Change colour of the boxplots by colour picker
+                  # This is used when there are less than 7 experimental groups
+                  conditionalPanel(
+                    condition = "output.length_statboxplot_rnaseq_norm < 7",
+                    tags$h4("Click to select boxplot colours"),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_rnaseq_norm > 0",
+                      colourpicker::colourInput("statboxplot_col1_rnaseq_norm", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[1])
                     ),
-                    #********************************************************************#
-                    # histogram tab
-                    #********************************************************************#
-                    
-                    tabPanel("Histograms",
-                             icon = icon("fas fa-mouse-pointer"),
-                             br(),
-                             plotlyOutput("Phistogram_rnaseq_norm")%>% 
-                               withSpinner(color="#0dc5c1"),
-                             hr(),
-                             plotlyOutput("logFChistogram_rnaseq_norm")%>% 
-                               withSpinner(color="#0dc5c1")
-                             
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_rnaseq_norm > 1",
+                      colourpicker::colourInput("statboxplot_col2_rnaseq_norm", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[2])
                     ),
-                    
-                    #********************************************************************#
-                    # volcano tab
-                    #********************************************************************#
-                    
-                    tabPanel("Volcano plot",
-                             icon = icon("fas fa-mouse-pointer"),
-                             br(),
-                             
-                             fluidRow(
-                               column(3,
-                                      # Raw or adjusted P value?
-                                      prettyRadioButtons(
-                                        inputId = "rawp_volcano_rnaseq_norm",
-                                        label = "P value", 
-                                        choices = 
-                                          c("Raw P value" = "raw", 
-                                            "Adjusted P value" = "adj"))
-                               ),
-                               column(3,
-                                      #P value threshold
-                                      numericInput(
-                                        inputId = "p_thres_volcano_rnaseq_norm",
-                                        label = "P threshold",
-                                        value = 0.05)
-                               ),
-                               column(3,
-                                      #logFC threshold
-                                      numericInput(
-                                        inputId = "logFC_thres_volcano_rnaseq_norm",
-                                        label = "logFC threshold",
-                                        value = 1)
-                               )
-                             ),
-                             hr(),
-                             actionBttn(inputId = "plot_volcano_rnaseq_norm", 
-                                        label = "Plot",
-                                        style = "jelly",
-                                        color = "primary",
-                                        icon = icon("sync")),
-                             br(),
-                             br(),
-                             # Volcano plot
-                             plotlyOutput("volcano_rnaseq_norm")%>% 
-                               withSpinner(color="#0dc5c1")
-                             
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_rnaseq_norm > 2",
+                      colourpicker::colourInput("statboxplot_col3_rnaseq_norm", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[3])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_rnaseq_norm > 3",
+                      colourpicker::colourInput("statboxplot_col4_rnaseq_norm", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[4])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_rnaseq_norm > 4",
+                      colourpicker::colourInput("statboxplot_col5_rnaseq_norm", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[5])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_rnaseq_rorm > 5",
+                      colourpicker::colourInput("statboxplot_col6_rnaseq_norm", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[6])
                     )
-                    
-                  ) # tabsetpanel
-                ) # taglist
-              }) # renderUI
+                  ),
+                  br(),
+                  tags$h4("Drag to change jitter"),
+                  sliderInput("jitter_statboxplot_rnaseq_norm", 
+                              NULL,
+                              min = 0, max = 0.3,
+                              value = 0.1, step = 0.01),
+                  br()
+                )
+              })
+            })
+            
+            observe({
+              if (is.null(rv$top_table)){
+                output$UI_output_statistics_rnaseq_norm <- renderUI(NULL)
+              } else{
+                output$UI_output_statistics_rnaseq_norm <- renderUI({
+                  tagList(
+                    tabsetPanel(
+                      
+                      #********************************************************************#
+                      # top table tab
+                      #********************************************************************#
+                      
+                      tabPanel("Top table",
+                               icon = icon("fas fa-mouse-pointer"),
+                               br(),
+                               h3(strong("Top Table")),
+                               h5("The Top Table includes the output of the selected statistical analysis."),
+                               hr(),
+                               dataTableOutput(outputId = "top_table_rnaseq_norm") %>% 
+                                 withSpinner(color="#0dc5c1"),
+                               downloadButton("download_top_table_rnaseq_norm", 
+                                              "Download table"),
+                               br(),
+                               br(),
+                               
+                               # Dropdown Button to adjust the plot settings
+                               shinyWidgets::dropdownButton(
+                                 tags$div(
+                                   style = "max-height: 300px; overflow-y: auto; padding: 5px;",
+                                   
+                                   # Plot all experimental groups?
+                                   conditionalPanel(
+                                     condition = "output.length_statboxplot_rnaseq_norm > 2",
+                                     tags$h4("Plot all experimental groups?"),
+                                     shinyWidgets::materialSwitch(inputId = "boxplotAll_rnaseq_norm",
+                                                                  label = NULL, 
+                                                                  value = TRUE,
+                                                                  status = "primary"),
+                                     
+                                     br()
+                                   ),
+                                   uiOutput("UI_boxplotAll_rnaseq_norm")
+                                 ),
+                                 circle = TRUE, status = "info",
+                                 icon = icon("fas fa-cog"),
+                                 
+                                 tooltip = shinyWidgets::tooltipOptions(
+                                   title = "Click to personalize plot!")
+                                 
+                               ), # EO dropdownButton
+                               plotOutput("ExprBoxplot_statistics_rnaseq_norm")%>% 
+                                 shinycssloaders::withSpinner(color="#0dc5c1"),
+                               actionButton("download_statboxplot_rnaseq_norm", 
+                                            "Download figure",
+                                            icon = shiny::icon("download")),
+                               br(),
+                               br()
+                      ),
+                      #********************************************************************#
+                      # histogram tab
+                      #********************************************************************#
+                      
+                      tabPanel("Histograms",
+                               icon = icon("fas fa-mouse-pointer"),
+                               br(),
+                               plotlyOutput("Phistogram_rnaseq_norm")%>% 
+                                 withSpinner(color="#0dc5c1"),
+                               hr(),
+                               plotlyOutput("logFChistogram_rnaseq_norm")%>% 
+                                 withSpinner(color="#0dc5c1")
+                               
+                      ),
+                      
+                      #********************************************************************#
+                      # volcano tab
+                      #********************************************************************#
+                      
+                      tabPanel("Volcano plot",
+                               icon = icon("fas fa-mouse-pointer"),
+                               br(),
+                               
+                               fluidRow(
+                                 column(3,
+                                        # Raw or adjusted P value?
+                                        prettyRadioButtons(
+                                          inputId = "rawp_volcano_rnaseq_norm",
+                                          label = "P value", 
+                                          choices = 
+                                            c("Raw P value" = "raw", 
+                                              "Adjusted P value" = "adj"))
+                                 ),
+                                 column(3,
+                                        #P value threshold
+                                        numericInput(
+                                          inputId = "p_thres_volcano_rnaseq_norm",
+                                          label = "P threshold",
+                                          value = 0.05)
+                                 ),
+                                 column(3,
+                                        #logFC threshold
+                                        numericInput(
+                                          inputId = "logFC_thres_volcano_rnaseq_norm",
+                                          label = "logFC threshold",
+                                          value = 1)
+                                 )
+                               ),
+                               hr(),
+                               actionBttn(inputId = "plot_volcano_rnaseq_norm", 
+                                          label = "Plot",
+                                          style = "jelly",
+                                          color = "primary",
+                                          icon = icon("sync")),
+                               br(),
+                               br(),
+                               # Volcano plot
+                               plotlyOutput("volcano_rnaseq_norm")%>% 
+                                 withSpinner(color="#0dc5c1")
+                               
+                      )
+                      
+                    ) # tabsetpanel
+                  ) # taglist
+                }) # renderUI
+              }
             }) # Observe
             
             # Allow user to go to next tab
@@ -3780,19 +4653,19 @@ server <- function(input, output, session){
             if(!input$outlier_microarray_raw){
               samples <- rownames(rv$metaData)
               shinyWidgets::pickerInput(inputId = "select_outliers_microarray_raw",
-                          label = tags$span(
-                            "Select samples to be removed", 
-                            tags$span(
-                              icon(
-                                name = "question-circle",
-                              ) 
-                            ) |>
-                              prompter::add_prompt(message = "Select one or more samples to exclude from the analysis.", 
-                                                   position = "right",
-                                                   size = "large")
-                          ),
-                          choices = samples,
-                          multiple = TRUE)
+                                        label = tags$span(
+                                          "Select samples to be removed", 
+                                          tags$span(
+                                            icon(
+                                              name = "question-circle",
+                                            ) 
+                                          ) |>
+                                            prompter::add_prompt(message = "Select one or more samples to exclude from the analysis.", 
+                                                                 position = "right",
+                                                                 size = "large")
+                                        ),
+                                        choices = samples,
+                                        multiple = TRUE)
             } else{
               NULL
             }
@@ -3929,18 +4802,18 @@ server <- function(input, output, session){
             # Collect chosen pre-processing settings into a dataframe
             rv$processingSettings <- data.frame(
               Option = c("Removed samples",
-                       "Experimental group",
-                       "Experimental levels",
-                       "Normalization method",
-                       "Annotation"),
+                         "Experimental group",
+                         "Experimental levels",
+                         "Normalization method",
+                         "Annotation"),
               Selected = c(paste(rv$outlier, collapse = "; "),
-                          paste(input$groupselect_microarray_raw, collapse = "; "),
-                          paste(unique(rv$experimentFactor), collapse = "; "),
-                          paste(input$normMeth_microarray_raw,"; ",input$perGroup_microarray_raw),
-                          paste0(rv$annotations,
-                                 ifelse(rv$annotations == "Custom annotations", paste0("; ",input$CDFtype_microarray_raw),""), 
-                                 ifelse(rv$annotations == "Custom annotations", paste0("; ",input$species_microarray_raw), ""))
-                          )
+                           paste(input$groupselect_microarray_raw, collapse = "; "),
+                           paste(unique(rv$experimentFactor), collapse = "; "),
+                           paste(input$normMeth_microarray_raw,"; ",input$perGroup_microarray_raw),
+                           paste0(rv$annotations,
+                                  ifelse(rv$annotations == "Custom annotations", paste0("; ",input$CDFtype_microarray_raw),""), 
+                                  ifelse(rv$annotations == "Custom annotations", paste0("; ",input$species_microarray_raw), ""))
+              )
             )
             
             # Perform normalization
@@ -4045,29 +4918,104 @@ server <- function(input, output, session){
               }
             )
             
+            # Change color by click on button
+            rv$colorOrder <- 1:length(levels(rv$experimentFactor))
+            observeEvent(input$geneboxplot_changeOrder_microarray_raw,{
+              all_orders <- permute(1:length(levels(rv$experimentFactor))) 
+              sel <- which(unlist(lapply(all_orders, function(x) all(x == rv$colorOrder))))
+              
+              if (sel < length(all_orders)){
+                rv$colorOrder <- all_orders[[sel+1]]
+              } else{
+                rv$colorOrder <- all_orders[[1]]
+              }
+            })
+              
+            
             # Boxplot of single gene (based on selected row in the expression matrix)
-            output$ExprBoxplot_microarray <- plotly::renderPlotly({
+            output$ExprBoxplot_microarray_raw <- renderPlot({
               req(input$exprTable_microarray_raw_rows_selected)
               
-              # Set colors
-              myPalette <- colorsByFactor(rv$experimentFactor)
-              legendColors <- myPalette$legendColors
-              
-              # Prepare expression data frame
-              plotExpr <- data.frame(
-                logExpr = rv$normMatrix[input$exprTable_microarray_raw_rows_selected,],
-                Grouping = rv$experimentFactor
-              )
-              
-              # make interactive plot
-              plotExpr %>%
-                plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                                color = ~Grouping, colors = legendColors, type = "box") %>%
-                plotly::layout(xaxis = list(title = " "),
-                               yaxis = list(title = 'log intensity'),
-                               legend = list(title=list(text='Group')),
-                               showlegend = FALSE)
-              
+              if (length(levels(rv$experimentFactor)) > 4){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              } else{
+                legendColors <- c(input$geneboxplot_col1_microarray_raw,
+                                  input$geneboxplot_col2_microarray_raw,
+                                  input$geneboxplot_col3_microarray_raw,
+                                  input$geneboxplot_col4_microarray_raw,
+                                  input$geneboxplot_col5_microarray_raw,
+                                  input$geneboxplot_col6_microarray_raw)
+              }
+              # Make boxplot
+              rv$temp1 <- geneBoxplot(experimentFactor = rv$experimentFactor, 
+                                     normMatrix = rv$normMatrix, 
+                                     sel_row = input$exprTable_microarray_raw_rows_selected,
+                                     legendColors = legendColors[rv$colorOrder],
+                                     groupOrder = input$geneboxplot_order_microarray_raw,
+                                     rnaseq = FALSE,
+                                     jitter = input$jitter_geneboxplot_microarray_raw,
+                                     seed = sample(1:1000,1))
+              return(rv$temp1)
+            })
+            
+            
+            # Get number of experimental groups
+            output$length_geneboxplot_microarray_raw <- reactive({
+              length(levels(rv$experimentFactor))
+            })
+            outputOptions(output, "length_geneboxplot_microarray_raw", suspendWhenHidden = FALSE) 
+            
+            
+            #***************************#
+            # Modal to download boxplot
+            #***************************#
+
+            # Download plot
+            output$realdownload_geneboxplot_microarray_raw <- downloadHandler(
+              filename = "GeneBoxplot.png",
+              content = function(file){
+                ggplot2::ggsave(plot = rv$temp1, 
+                                filename = file,
+                                width = input$width_geneboxplot_microarray_raw,
+                                height = input$height_geneboxplot_microarray_raw,
+                                units = "px")
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_geneboxplot_microarray_raw, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                footer = tagList(
+                  fluidRow(
+                    column(6,
+                           sliderInput("height_geneboxplot_microarray_raw", 
+                                       "Height",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    ),
+                    column(6,
+                           sliderInput("width_geneboxplot_microarray_raw", 
+                                       "Width",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    )
+                  ),
+                  hr(),
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_geneboxplot_microarray_raw', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
             })
             
             #********************************************************************#
@@ -4076,9 +5024,14 @@ server <- function(input, output, session){
             
             # Boxplots of all genes together
             output$boxplots_microarray_raw <- renderImage({
+              req(session$clientData$output_boxplots_microarray_raw_width)
+              req(session$clientData$output_boxplots_microarray_raw_height)
               getBoxplots(experimentFactor = rv$experimentFactor,
-                          normData = rv$normData)
-            },deleteFile = TRUE)
+                          normData = rv$normData,
+                          RNASeq = FALSE,
+                          width = session$clientData$output_boxplots_microarray_raw_width,
+                          height = session$clientData$output_boxplots_microarray_raw_height)
+            }, deleteFile = TRUE)
             
             #********************************************************************#
             # Output 3: Densityplots
@@ -4097,7 +5050,15 @@ server <- function(input, output, session){
             
             # Heatmap of sample-sample correlations
             output$heatmap_microarray_raw  <- plotly::renderPlotly({
-              getHeatmap(experimentFactor = rv$experimentFactor, 
+              
+              # Make colors
+              if(length(input$heatmapFactor_microarray_raw) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$heatmapFactor_microarray_raw], 1, paste, collapse = "_" ))
+              } else{
+                colorFactor <- factor(rv$metaData_fil[,input$heatmapFactor_microarray_raw])
+              }
+              
+              getHeatmap(experimentFactor = colorFactor, 
                          normMatrix = rv$normMatrix,
                          clusterOption1 = input$clusteroption1_microarray_raw,
                          clusterOption2 = input$clusteroption2_microarray_raw,
@@ -4151,11 +5112,12 @@ server <- function(input, output, session){
                 write.csv(rv$processingSettings, file, quote = FALSE, row.names = FALSE)
               }
             )
-              
-              
+            
+            
             #------------------------------------------------------------------#
             # Display output: QC tables/plots
             #------------------------------------------------------------------#
+            
             
             # Render UI for main tab
             output$UI_QC_microarray_raw <- renderUI({
@@ -4172,27 +5134,123 @@ server <- function(input, output, session){
                              withSpinner(color="#0dc5c1"),
                            downloadButton("downloadNormalizedData_microarray_raw", 
                                           "Download"),
-                           plotly::plotlyOutput("ExprBoxplot_microarray")%>% 
-                             withSpinner(color="#0dc5c1")
+                           br(),
+                           br(),
+                           
+                           # Dropdown Button to adjust the plot settings
+                           shinyWidgets::dropdownButton(
+                             tags$div(
+                               style = "max-height: 300px; overflow-y: auto; padding: 5px;",
+                               
+                               
+                               # Change order of the boxplots:
+                               tags$h4("Drag to change boxplot order"),
+                               shinyjqui::orderInput(inputId = 'geneboxplot_order_microarray_raw', 
+                                                     label = NULL, 
+                                                     items = levels(rv$experimentFactor),
+                                                     item_class = 'default'),
+                               br(),
+                               
+                               # Change colour of the boxplots by button. 
+                               # This is used when there are more than 6 experimental groups
+                               conditionalPanel(
+                                 condition = "output.length_geneboxplot_microarray_raw > 6",
+                                 tags$h4("Click to change boxplot colours"),
+                                 shinyWidgets::actionBttn("geneboxplot_changeOrder_microarray_raw",
+                                                          label = "Change color",
+                                                          style = "simple",
+                                                          color = "primary",
+                                                          icon = icon("sync"))
+                               ),
+                               
+                               # Change colour of the boxplots by colour picker
+                               # This is used when there are less than 7 experimental groups
+                               conditionalPanel(
+                                 condition = "output.length_geneboxplot_microarray_raw < 7",
+                                 tags$h4("Click to select boxplot colours"),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_microarray_raw > 0",
+                                   colourpicker::colourInput("geneboxplot_col1_microarray_raw", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[1])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_microarray_raw > 1",
+                                   colourpicker::colourInput("geneboxplot_col2_microarray_raw", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[2])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_microarray_raw > 2",
+                                   colourpicker::colourInput("geneboxplot_col3_microarray_raw", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[3])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_microarray_raw > 3",
+                                   colourpicker::colourInput("geneboxplot_col4_microarray_raw", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[4])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_microarray_raw > 4",
+                                   colourpicker::colourInput("geneboxplot_col5_microarray_raw", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[5])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_microarray_raw > 5",
+                                   colourpicker::colourInput("geneboxplot_col6_microarray_raw", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[6])
+                                 )
+                               ),
+                               br(),
+                               tags$h4("Drag to change jitter"),
+                               sliderInput("jitter_geneboxplot_microarray_raw", 
+                                           NULL,
+                                           min = 0, max = 0.3,
+                                           value = 0.1, step = 0.01),
+                               br()
+                             ),
+                             circle = TRUE, status = "info",
+                             icon = icon("fas fa-cog"),
+                             
+                             tooltip = shinyWidgets::tooltipOptions(
+                               title = "Click to personalize plot!")
+                             
+                           ), # EO dropdownButton
+                           
+                           # Boxplot of the selected gene's expression values
+                           plotOutput("ExprBoxplot_microarray_raw")%>% 
+                             shinycssloaders::withSpinner(color="#0dc5c1"),
+                           
+                           actionButton("download_geneboxplot_microarray_raw", 
+                                        "Download figure",
+                                        icon = shiny::icon("download")),
+                           br(),
+                           br()
                   ),
                   
                   # Boxplots
                   tabPanel("Boxplots",
                            icon = icon("fas fa-file"),
-                           h3(strong("Boxplots")),
-                           h5("These are boxplots of the normalized expression expression values."),
-                           hr(),
-                           plotOutput(outputId = "boxplots_microarray_raw") %>% 
+                           #h3(strong("Boxplots")),
+                           #h5("These are boxplots of the normalized expression expression values."),
+                           #hr(),
+                           plotOutput(outputId = "boxplots_microarray_raw",
+                                      width = "65vw", height = "80vw")%>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
                   # Density plot
                   tabPanel("Density plots",
                            icon = icon("fas fa-mouse-pointer"),
-                           h3(strong("Density plots")),
-                           h5("These are density plots of the normalized expression expression values."),
-                           hr(),
-                           plotly::plotlyOutput(outputId = "densityplots_microarray_raw") %>% 
+                           br(),
+                           h2(strong("Density plot of normalized intensities"), align = "center"),
+                           h4("Distributions should be comparable between arrays", align = "center"),
+                           plotly::plotlyOutput(outputId = "densityplots_microarray_raw",
+                                                width = "65vw", height = "40vw") %>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
@@ -4235,18 +5293,23 @@ server <- function(input, output, session){
                            dropdownButton(
                              tags$h3("Theme"),
                              
-                             # Color theme
+                             selectInput(inputId = "heatmapFactor_microarray_raw",
+                                         label = "Side colors",
+                                         choices = colnames(rv$metaData_fil),
+                                         selected = rv$experimentName,
+                                         multiple = TRUE),
+                             
                              selectInput(inputId = 'heatmaptheme_microarray_raw',
-                                         label = NULL,
+                                         label = "Heatmap theme",
                                          choices = c("Default", 
                                                      "Yellow-red", 
-                                                     "Dark")),
-                             
+                                                     "Blues", 
+                                                     "Reds")),
                              circle = TRUE, status = "info",
                              icon = icon("fas fa-cog"), width = "300px",
                              
                              tooltip = shinyWidgets::tooltipOptions(
-                               title = "Click to change theme!")
+                               title = "Click to change colors!")
                              
                            ),
                            
@@ -4466,7 +5529,7 @@ server <- function(input, output, session){
             
             # Calculate statistics
             if (isTRUE(input$addAnnotation_microarray_raw)){
-              rv$top_table <- getStatistics(normMatrix = rv$normMatrix, 
+              rv$top_table_list <- getStatistics(normMatrix = rv$normMatrix, 
                                             metaData = rv$metaData_fil, 
                                             expFactor = rv$experimentName, 
                                             covGroups_num = input$covGroups_num_microarray_raw,
@@ -4479,7 +5542,7 @@ server <- function(input, output, session){
                                             biomart_filters = input$biomart_filter_microarray_raw)
               
             } else{
-              rv$top_table <- getStatistics(normMatrix = rv$normMatrix, 
+              rv$top_table_list <- getStatistics(normMatrix = rv$normMatrix, 
                                             metaData = rv$metaData_fil, 
                                             expFactor = rv$experimentName, 
                                             covGroups_num = input$covGroups_num_microarray_raw,
@@ -4495,10 +5558,10 @@ server <- function(input, output, session){
             # Select comparison for output
             observe({
               req(rv$normMatrix)
-              #req(rv$top_table)
               req(rv$experimentFactor)
               
-              if (!is.null(rv$top_table)){
+              if (!is.null(rv$top_table_list)){
+                rv$top_table <- rv$top_table_list[[1]]
                 
                 # Remove modal
                 shinybusy::remove_modal_spinner()
@@ -4516,8 +5579,7 @@ server <- function(input, output, session){
                 shinyWidgets::sendSweetAlert(
                   session = session,
                   title = "Info",
-                  text = "Statistical analysis has been performed. You can download 
-              the results as well as view them in interactive plots.",
+                  text = rv$top_table_list[[2]],
                   type = "info")
                 
                 # Show microarray statistics tab
@@ -4605,35 +5667,132 @@ server <- function(input, output, session){
               }
             )
             
-            # Boxplot of single gene
-            output$ExprBoxplot_statistics_microarray_raw <- renderPlotly({
-              
-              req(input$top_table_microarray_raw_rows_selected)
+            # Change plotting data depending on whether all experimental groups will be plotted  
+            observe({
               req(input$comparisons_view_microarray_raw)
+              req(rv$top_table)
               
-              if (input$comparisons_view_microarray_raw %in% names(rv$top_table)){
-                # Set colors
-                myPalette <- colorsByFactor(rv$experimentFactor)
-                legendColors <- myPalette$legendColors
-                
-                # Prepare expression data frame
-                gene <- rv$top_table[[input$comparisons_view_microarray_raw]]$GeneID[input$top_table_microarray_raw_rows_selected]
-                plotExpr <- data.frame(
-                  logExpr = rv$normMatrix[as.character(rownames(rv$normMatrix)) %in% as.character(gene),],
-                  Grouping = rv$experimentFactor
-                )
-                
-                
-                # make interactive plot
-                plotExpr %>%
-                  plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                          color = ~Grouping, colors = legendColors, type = "box") %>%
-                  layout(xaxis = list(title = " "),
-                         yaxis = list(title = 'log intensity'),
-                         legend = list(title=list(text='Group')),
-                         showlegend = FALSE)
+              if (!is.null(input$boxplotAll_microarray_raw)){
+                if (input$boxplotAll_microarray_raw){
+                  rv$newFactor <- rv$experimentFactor
+                  rv$newData <- rv$normMatrix
+                }
+                if (!input$boxplotAll_microarray_raw){
+                  if(length(rv$experimentName) > 1){
+                    t <- make.names(apply(rv$metaData_fil[,rv$experimentName], 1, paste, collapse = "_" ))
+                  } else{
+                    t <- make.names(rv$metaData_fil[,rv$experimentName])
+                  }
+                  rv$newData <- rv$normMatrix[,t %in% (unlist(stringr::str_split(input$comparisons_view_microarray_raw, " - ")))]
+                  rv$newFactor <- factor(as.character(rv$experimentFactor)[t %in% (unlist(stringr::str_split(input$comparisons_view_microarray_raw, " - ")))])
+                }
               }
               
+              # Change color by click on button
+              rv$colorOrder <- 1:length(levels(rv$newFactor))
+              observeEvent(input$statboxplot_changeOrder_microarray_raw,{
+                all_orders <- permute(1:length(levels(rv$newFactor))) 
+                sel <- which(unlist(lapply(all_orders, function(x) all(x == rv$colorOrder))))
+                
+                if (sel < length(all_orders)){
+                  rv$colorOrder <- all_orders[[sel+1]]
+                } else{
+                  rv$colorOrder <- all_orders[[1]]
+                }
+              })
+              
+              
+              # Boxplot of single gene (based on selected row in the top table)
+              output$ExprBoxplot_statistics_microarray_raw <- renderPlot({
+                req(input$top_table_microarray_raw_rows_selected)
+                req(rv$top_table)
+                
+                if (length(levels(rv$newFactor)) > 6){
+                  legendColors <- colorsByFactor(rv$newFactor)$legendColors
+                } else{
+                  legendColors <- c(input$statboxplot_col1_microarray_raw,
+                                    input$statboxplot_col2_microarray_raw,
+                                    input$statboxplot_col3_microarray_raw,
+                                    input$statboxplot_col4_microarray_raw,
+                                    input$statboxplot_col5_microarray_raw,
+                                    input$statboxplot_col6_microarray_raw)
+                }
+                
+                gene <- rv$top_table[[input$comparisons_view_microarray_raw]]$GeneID[input$top_table_microarray_raw_rows_selected]
+                sel_row <- which(as.character(rownames(rv$normMatrix)) %in% as.character(gene))
+                
+                # Make boxplot
+                rv$temp <- geneBoxplot(experimentFactor = rv$newFactor, 
+                                       normMatrix = rv$newData, 
+                                       sel_row = sel_row,
+                                       legendColors = legendColors[rv$colorOrder],
+                                       groupOrder = input$statboxplot_order_microarray_raw,
+                                       jitter = input$jitter_statboxplot_microarray_raw,
+                                       rnaseq=FALSE,
+                                       seed = sample(1:1000,1))
+                
+                return(rv$temp)
+                
+              })
+              
+              # Get number of experimental groups
+              output$length_statboxplot_microarray_raw <- reactive({
+                length(levels(rv$experimentFactor))
+              })
+              outputOptions(output, "length_statboxplot_microarray_raw", suspendWhenHidden = FALSE) 
+              
+            })
+            
+            #***************************#
+            # Modal to download boxplot
+            #***************************#
+
+            # Download plot
+            output$realdownload_statboxplot_microarray_raw <- downloadHandler(
+              filename = "GeneBoxplot.png",
+              content = function(file){
+                ggplot2::ggsave(plot = rv$temp, 
+                                filename = file,
+                                width = input$width_statboxplot_microarray_raw,
+                                height = input$height_statboxplot_microarray_raw,
+                                units = "px")
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_statboxplot_microarray_raw, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                footer = tagList(
+                  fluidRow(
+                    column(6,
+                           sliderInput("height_statboxplot_microarray_raw", 
+                                       "Height",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    ),
+                    column(6,
+                           sliderInput("width_statboxplot_microarray_raw", 
+                                       "Width",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    )
+                  ),
+                  hr(),
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_statboxplot_microarray_raw', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
             })
             
             #********************************************************************#
@@ -4694,110 +5853,225 @@ server <- function(input, output, session){
             #--------------------------------------#
             # dynamic UI: Output in different tabs
             #--------------------------------------#
+            observe({
+              req(rv$top_table)
+              
+              output$UI_boxplotAll_microarray_raw <- renderUI({
+                tagList(
+                  # Change order of the boxplots:
+                  tags$h4("Drag to change boxplot order"),
+                  shinyjqui::orderInput(inputId = 'statboxplot_order_microarray_raw', 
+                                        label = NULL, 
+                                        items = levels(rv$newFactor),
+                                        item_class = 'default'),
+                  br(),
+                  
+                  # Change colour of the boxplots by button. 
+                  # This is used when there are more than 6 experimental groups
+                  conditionalPanel(
+                    condition = "output.length_statboxplot_microarray_raw > 6",
+                    tags$h4("Click to change boxplot colours"),
+                    shinyWidgets::actionBttn("statboxplot_changeOrder_microarray_raw",
+                                             label = "Change color",
+                                             style = "simple",
+                                             color = "primary",
+                                             icon = icon("sync"))
+                  ),
+                  
+                  # Change colour of the boxplots by colour picker
+                  # This is used when there are less than 7 experimental groups
+                  conditionalPanel(
+                    condition = "output.length_statboxplot_microarray_raw < 7",
+                    tags$h4("Click to select boxplot colours"),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_microarray_raw > 0",
+                      colourpicker::colourInput("statboxplot_col1_microarray_raw", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[1])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_microarray_raw > 1",
+                      colourpicker::colourInput("statboxplot_col2_microarray_raw", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[2])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_microarray_raw > 2",
+                      colourpicker::colourInput("statboxplot_col3_microarray_raw", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[3])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_microarray_raw > 3",
+                      colourpicker::colourInput("statboxplot_col4_microarray_raw", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[4])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_microarray_raw > 4",
+                      colourpicker::colourInput("statboxplot_col5_microarray_raw", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[5])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_microarray_raw > 5",
+                      colourpicker::colourInput("statboxplot_col6_microarray_raw", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[6])
+                    )
+                  ),
+                  br(),
+                  tags$h4("Drag to change jitter"),
+                  sliderInput("jitter_statboxplot_microarray_raw", 
+                              NULL,
+                              min = 0, max = 0.3,
+                              value = 0.1, step = 0.01),
+                  br()
+                )
+              })
+            })
             
             observe({
-              output$UI_output_statistics_microarray_raw <- renderUI({
-                tagList(
-                  tabsetPanel(
-                    
-                    #********************************************************************#
-                    # top table tab
-                    #********************************************************************#
-                    
-                    tabPanel("Top table",
-                             icon = icon("fas fa-mouse-pointer"),
-                             br(),
-                             
-                             # Title + description
-                             h3(strong("Top Table")),
-                             h5("The Top Table includes the output of the selected statistical analysis."),
-                             hr(),
-                             
-                             # Top table
-                             dataTableOutput(outputId = "top_table_microarray_raw") %>% 
-                               withSpinner(color="#0dc5c1"),
-                             
-                             # Download button
-                             downloadButton("download_top_table_microarray_raw", 
-                                            "Download"),
-                             
-                             # Boxplots
-                             plotlyOutput("ExprBoxplot_statistics_microarray_raw")%>% 
-                               withSpinner(color="#0dc5c1")
-                    ),
-                    
-                    #********************************************************************#
-                    # histogram tab
-                    #********************************************************************#
-                    
-                    tabPanel("Histograms",
-                             icon = icon("fas fa-mouse-pointer"),
-                             br(),
-                             
-                             # P value histogram
-                             plotlyOutput("Phistogram_microarray_raw")%>% 
-                               withSpinner(color="#0dc5c1"),
-                             hr(),
-                             
-                             # log2FC histogram
-                             plotlyOutput("logFChistogram_microarray_raw")%>% 
-                               withSpinner(color="#0dc5c1")
-                             
-                    ),
-                    
-                    #********************************************************************#
-                    # volcano tab
-                    #********************************************************************#
-                    
-                    tabPanel("Volcano plot",
-                             icon = icon("fas fa-mouse-pointer"),
-                             br(),
-                             
-                             fluidRow(
-                               column(3,
-                                      # Raw or adjusted P value?
-                                      prettyRadioButtons(
-                                        inputId = "rawp_volcano_microarray_raw",
-                                        label = "P value", 
-                                        choices = 
-                                          c("Raw P value" = "raw", 
-                                            "Adjusted P value" = "adj"))
+              if (is.null(rv$top_table)){
+                output$UI_output_statistics_microarray_raw <- renderUI(NULL)
+              } else{
+                output$UI_output_statistics_microarray_raw <- renderUI({
+                  tagList(
+                    tabsetPanel(
+                      
+                      #********************************************************************#
+                      # top table tab
+                      #********************************************************************#
+                      
+                      tabPanel("Top table",
+                               icon = icon("fas fa-mouse-pointer"),
+                               br(),
+                               
+                               # Title + description
+                               h3(strong("Top Table")),
+                               h5("The Top Table includes the output of the selected statistical analysis."),
+                               hr(),
+                               
+                               # Top table
+                               dataTableOutput(outputId = "top_table_microarray_raw") %>% 
+                                 withSpinner(color="#0dc5c1"),
+                               
+                               # Download button
+                               downloadButton("download_top_table_microarray_raw", 
+                                              "Download table"),
+                               br(),
+                               br(),
+                               
+                               # Dropdown Button to adjust the plot settings
+                               shinyWidgets::dropdownButton(
+                                 tags$div(
+                                   style = "max-height: 300px; overflow-y: auto; padding: 5px;",
+                                   
+                                   # Plot all experimental groups?
+                                   conditionalPanel(
+                                     condition = "output.length_statboxplot_microarray_raw > 2",
+                                     tags$h4("Plot all experimental groups?"),
+                                     shinyWidgets::materialSwitch(inputId = "boxplotAll_microarray_raw",
+                                                                  label = NULL, 
+                                                                  value = TRUE,
+                                                                  status = "primary"),
+                                     
+                                     br()
+                                   ),
+                                   uiOutput("UI_boxplotAll_microarray_raw")
+                                   
+                                   
+                                   
+                                 ),
+                                 circle = TRUE, status = "info",
+                                 icon = icon("fas fa-cog"),
+                                 
+                                 tooltip = shinyWidgets::tooltipOptions(
+                                   title = "Click to personalize plot!")
+                                 
+                               ), # EO dropdownButton
+                               plotOutput("ExprBoxplot_statistics_microarray_raw")%>% 
+                                 shinycssloaders::withSpinner(color="#0dc5c1"),
+                               actionButton("download_statboxplot_microarray_raw", 
+                                            "Download figure",
+                                            icon = shiny::icon("download")),
+                               br(),
+                               br()
+                      ),
+                      
+                      #********************************************************************#
+                      # histogram tab
+                      #********************************************************************#
+                      
+                      tabPanel("Histograms",
+                               icon = icon("fas fa-mouse-pointer"),
+                               br(),
+                               
+                               # P value histogram
+                               plotlyOutput("Phistogram_microarray_raw")%>% 
+                                 withSpinner(color="#0dc5c1"),
+                               hr(),
+                               
+                               # log2FC histogram
+                               plotlyOutput("logFChistogram_microarray_raw")%>% 
+                                 withSpinner(color="#0dc5c1")
+                               
+                      ),
+                      
+                      #********************************************************************#
+                      # volcano tab
+                      #********************************************************************#
+                      
+                      tabPanel("Volcano plot",
+                               icon = icon("fas fa-mouse-pointer"),
+                               br(),
+                               
+                               fluidRow(
+                                 column(3,
+                                        # Raw or adjusted P value?
+                                        prettyRadioButtons(
+                                          inputId = "rawp_volcano_microarray_raw",
+                                          label = "P value", 
+                                          choices = 
+                                            c("Raw P value" = "raw", 
+                                              "Adjusted P value" = "adj"))
+                                 ),
+                                 column(3,
+                                        # P value threshold
+                                        numericInput(
+                                          inputId = "p_thres_volcano_microarray_raw",
+                                          label = "P threshold",
+                                          value = 0.05)
+                                 ),
+                                 column(3,
+                                        # log2FC threshold
+                                        numericInput(
+                                          inputId = "logFC_thres_volcano_microarray_raw",
+                                          label = "logFC threshold",
+                                          value = 1)
+                                 )
                                ),
-                               column(3,
-                                      # P value threshold
-                                      numericInput(
-                                        inputId = "p_thres_volcano_microarray_raw",
-                                        label = "P threshold",
-                                        value = 0.05)
-                               ),
-                               column(3,
-                                      # log2FC threshold
-                                      numericInput(
-                                        inputId = "logFC_thres_volcano_microarray_raw",
-                                        label = "logFC threshold",
-                                        value = 1)
-                               )
-                             ),
-                             hr(),
-                             
-                             # Action button: press to (re-)render plot
-                             actionBttn(inputId = "plot_volcano_microarray_raw", 
-                                        label = "Plot",
-                                        style = "jelly",
-                                        color = "primary",
-                                        icon = icon("sync")),
-                             br(),
-                             br(),
-                             
-                             # Volcano plot
-                             plotlyOutput("volcano_microarray_raw")%>% 
-                               withSpinner(color="#0dc5c1")
-                             
-                    )
-                    
-                  ) # tabsetpanel
-                ) # taglist
-              }) # renderUI
+                               hr(),
+                               
+                               # Action button: press to (re-)render plot
+                               actionBttn(inputId = "plot_volcano_microarray_raw", 
+                                          label = "Plot",
+                                          style = "jelly",
+                                          color = "primary",
+                                          icon = icon("sync")),
+                               br(),
+                               br(),
+                               
+                               # Volcano plot
+                               plotlyOutput("volcano_microarray_raw")%>% 
+                                 withSpinner(color="#0dc5c1")
+                               
+                      )
+                      
+                    ) # tabsetpanel
+                  ) # taglist
+                }) # renderUI
+              }
             }) # Observe
             
             # Allow user to go to next tab
@@ -5273,7 +6547,7 @@ server <- function(input, output, session){
               rv$gxData <- getGEO(filename=input$uploadExprData_microarray_norm_smf$datapath)
               # Guess the organism
               rv$Organism <- getOrganism(gxData = rv$gxData)
-              } else{
+            } else{
               shinyWidgets::sendSweetAlert(
                 session = session,
                 title = "Error!!",
@@ -5283,36 +6557,36 @@ server <- function(input, output, session){
             }
             
             # Get metadata
-            if (!is.null(input$uploadMeta_microarray_norm_tsv)){
-              if (input$MetaFileType_microarray_norm==".tsv/.csv file"){
+            if (input$MetaFileType_microarray_norm==".tsv/.csv file"){
+              if (!is.null(input$uploadMeta_microarray_norm_tsv)){
                 rv$metaData <- getMetaData(path = input$uploadMeta_microarray_norm_tsv$datapath,
                                            celfiles = colnames(exprs(rv$gxData)),
                                            filetype = input$MetaFileType_microarray_norm)
+                
+              }else{
+                shinyWidgets::sendSweetAlert(
+                  session = session,
+                  title = "Error!!",
+                  text = "You forgot to upload an expression and/or metadata file",
+                  type = "error")
+                shinybusy::remove_modal_spinner()
               }
-            }else{
-              shinyWidgets::sendSweetAlert(
-                session = session,
-                title = "Error!!",
-                text = "You forgot to upload an expression and/or metadata file",
-                type = "error")
-              shinybusy::remove_modal_spinner()
             }
-            
-            if (!is.null(input$uploadMeta_microarray_norm_smf)){
-              if (input$MetaFileType_microarray_norm=="Series Matrix File"){
+            if (input$MetaFileType_microarray_norm=="Series Matrix File"){
+              if (!is.null(input$uploadMeta_microarray_norm_smf)){
                 rv$metaData <- getMetaData(path = input$uploadMeta_microarray_norm_smf$datapath,
                                            celfiles =  colnames(exprs(rv$gxData)),
                                            filetype = input$MetaFileType_microarray_norm)
+                
+              }else{
+                shinyWidgets::sendSweetAlert(
+                  session = session,
+                  title = "Error!!",
+                  text = "You forgot to upload an expression and/or metadata file",
+                  type = "error")
+                shinybusy::remove_modal_spinner()
               }
-            }else{
-              shinyWidgets::sendSweetAlert(
-                session = session,
-                title = "Error!!",
-                text = "You forgot to upload an expression and/or metadata file",
-                type = "error")
-              shinybusy::remove_modal_spinner()
             }
-            
             # Read raw expression data
             req(rv$metaData)
             if(nrow(rv$metaData)>0){
@@ -5591,7 +6865,7 @@ server <- function(input, output, session){
             if(!input$outlier_norm){
               samples <- rownames(rv$metaData)
               
-              pickerInput(inputId = "select_outliers_norm",
+              pickerInput(inputId = "select_outliers_microarray_norm",
                           label = tags$span(
                             "Select samples to be removed", 
                             tags$span(
@@ -5624,9 +6898,9 @@ server <- function(input, output, session){
           output$experimentallevels_microarray_norm <- renderText({
             req(input$groupselect_microarray_norm)
             
-            if(length(input$groupselect_norm) > 1){
-              experimentFactor <- make.names(apply(rv$metaData[,input$groupselect_microarray__norm], 1, paste, collapse = "_" ))
-            } else{
+            if(length(input$groupselect_microarray_norm) > 1){
+              experimentFactor <- make.names(apply(rv$metaData[,input$groupselect_microarray_norm], 1, paste, collapse = "_" ))
+              } else{
               experimentFactor <- make.names(rv$metaData[,input$groupselect_microarray_norm])
             }
             levels <- unique(experimentFactor)
@@ -5685,7 +6959,7 @@ server <- function(input, output, session){
             
             # Select outlier
             if (!isTRUE(input$outier)){
-              rv$outlier <- input$select_outliers_norm
+              rv$outlier <- input$select_outliers_microarray_norm
             } else{
               rv$outlier <- NULL
             }
@@ -5702,7 +6976,7 @@ server <- function(input, output, session){
             rv$metaData_fil <- rv$metaData[stringr::str_remove(colnames(exprs(rv$gxData_fil)),"\\.CEL.*"),]
             
             # Experiment factor
-            if(length(input$groupselect) > 1){
+            if(length(input$groupselect_microarray_norm) > 1){
               rv$experimentFactor <- factor(make.names(apply(rv$metaData_fil[,input$groupselect_microarray_norm], 1, paste, collapse = "_" )))
               rv$experimentName <- input$groupselect_microarray_norm
             } else{
@@ -5774,29 +7048,104 @@ server <- function(input, output, session){
               }
             )
             
-            # Boxplot of single gene
-            output$ExprBoxplot_microarray_norm <- renderPlotly({
+            # Change color by click on button
+            rv$colorOrder <- 1:length(levels(rv$experimentFactor))
+            observeEvent(input$geneboxplot_changeOrder_microarray_norm,{
+              all_orders <- permute(1:length(levels(rv$experimentFactor))) 
+              sel <- which(unlist(lapply(all_orders, function(x) all(x == rv$colorOrder))))
+              
+              if (sel < length(all_orders)){
+                rv$colorOrder <- all_orders[[sel+1]]
+              } else{
+                rv$colorOrder <- all_orders[[1]]
+              }
+            })
+            
+            
+            # Boxplot of single gene (based on selected row in the expression matrix)
+            output$ExprBoxplot_microarray_norm <- renderPlot({
               req(input$exprTable_microarray_norm_rows_selected)
               
-              # Set colors
-              myPalette <- colorsByFactor(rv$experimentFactor)
-              legendColors <- myPalette$legendColors
-              
-              # Prepare expression data frame
-              plotExpr <- data.frame(
-                logExpr = rv$normMatrix[input$exprTable_microarray_norm_rows_selected,],
-                Grouping = rv$experimentFactor
-              )
-              
-              # make interactive plot
-              plotExpr %>%
-                plotly::plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                                color = ~Grouping, colors = legendColors, type = "box") %>%
-                plotly::layout(xaxis = list(title = " "),
-                               yaxis = list(title = 'log intensity'),
-                               legend = list(title=list(text='Group')),
-                               showlegend = FALSE)
-              
+              if (length(levels(rv$experimentFactor)) > 4){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              } else{
+                legendColors <- c(input$geneboxplot_col1_microarray_norm,
+                                  input$geneboxplot_col2_microarray_norm,
+                                  input$geneboxplot_col3_microarray_norm,
+                                  input$geneboxplot_col4_microarray_norm,
+                                  input$geneboxplot_col5_microarray_norm,
+                                  input$geneboxplot_col6_microarray_norm)
+              }
+              # Make boxplot
+              rv$temp1 <- geneBoxplot(experimentFactor = rv$experimentFactor, 
+                                     normMatrix = rv$normMatrix, 
+                                     sel_row = input$exprTable_microarray_norm_rows_selected,
+                                     legendColors = legendColors[rv$colorOrder],
+                                     groupOrder = input$geneboxplot_order_microarray_norm,
+                                     rnaseq = FALSE,
+                                     jitter = input$jitter_geneboxplot_microarray_norm,
+                                     seed = sample(1:1000,1))
+              return(rv$temp1)
+            })
+            
+            
+            # Get number of experimental groups
+            output$length_geneboxplot_microarray_norm <- reactive({
+              length(levels(rv$experimentFactor))
+            })
+            outputOptions(output, "length_geneboxplot_microarray_norm", suspendWhenHidden = FALSE) 
+            
+            
+            #***************************#
+            # Modal to download boxplot
+            #***************************#
+            
+            # Download plot
+            output$realdownload_geneboxplot_microarray_norm <- downloadHandler(
+              filename = "GeneBoxplot.png",
+              content = function(file){
+                ggplot2::ggsave(plot = rv$temp1, 
+                                filename = file,
+                                width = input$width_geneboxplot_microarray_norm,
+                                height = input$height_geneboxplot_microarray_norm,
+                                units = "px")
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_geneboxplot_microarray_norm, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                footer = tagList(
+                  fluidRow(
+                    column(6,
+                           sliderInput("height_geneboxplot_microarray_norm", 
+                                       "Height",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    ),
+                    column(6,
+                           sliderInput("width_geneboxplot_microarray_norm", 
+                                       "Width",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    )
+                  ),
+                  hr(),
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_geneboxplot_microarray_norm', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
             })
             
             #********************************************************************#
@@ -5805,9 +7154,14 @@ server <- function(input, output, session){
             
             # Boxplots of all genes together
             output$boxplots_microarray_norm <- renderImage({
+              req(session$clientData$output_boxplots_microarray_norm_width)
+              req(session$clientData$output_boxplots_microarray_norm_height)
               getBoxplots(experimentFactor = rv$experimentFactor,
-                          normData = rv$normData)
-            },deleteFile = TRUE)
+                          normData = rv$normData,
+                          RNASeq = FALSE,
+                          width = session$clientData$output_boxplots_microarray_norm_width,
+                          height = session$clientData$output_boxplots_microarray_norm_height)
+            }, deleteFile = TRUE)
             
             #********************************************************************#
             # Output 3: Densityplots
@@ -5826,7 +7180,15 @@ server <- function(input, output, session){
             
             # Heatmap of sample-sample correlations
             output$heatmap_microarray_norm  <- renderPlotly({
-              getHeatmap(experimentFactor = rv$experimentFactor, 
+              
+              # Make colors
+              if(length(input$heatmapFactor_microarray_norm) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$heatmapFactor_microarray_norm], 1, paste, collapse = "_" ))
+              } else{
+                colorFactor <- factor(rv$metaData_fil[,input$heatmapFactor_microarray_norm])
+              }
+              
+              getHeatmap(experimentFactor = colorFactor, 
                          normMatrix = rv$normMatrix,
                          clusterOption1 = input$clusteroption1_microarray_norm,
                          clusterOption2 = input$clusteroption2_microarray_norm,
@@ -5853,7 +7215,6 @@ server <- function(input, output, session){
               } else{
                 colorFactor <- factor(rv$metaData_fil[,input$colorFactor_microarray_norm])
               }
-              print(head(colorFactor))
               
               plot_PCA(PC_data = rv$PCA_data, 
                        colorFactor = colorFactor, 
@@ -5890,6 +7251,8 @@ server <- function(input, output, session){
             output$UI_QC_microarray_norm <- renderUI({
               tagList(
                 tabsetPanel(
+                  
+                  # TAB1: expression values
                   tabPanel("Expression values",
                            icon = icon("fas fa-mouse-pointer"),
                            h3(strong("Normalized expression values")),
@@ -5898,28 +7261,125 @@ server <- function(input, output, session){
                            DT::dataTableOutput(outputId = "exprTable_microarray_norm") %>% 
                              withSpinner(color="#0dc5c1"),
                            downloadButton("downloadNormalizedData_microarray_norm", 
-                                          "Download"),
-                           plotly::plotlyOutput("ExprBoxplot_microarray_norm")%>% 
-                             shinycssloaders::withSpinner(color="#0dc5c1")
+                                          "Download table"),
+                           br(),
+                           br(),
+                           
+                           # Dropdown Button to adjust the plot settings
+                           shinyWidgets::dropdownButton(
+                             tags$div(
+                               style = "max-height: 300px; overflow-y: auto; padding: 5px;",
+                               
+                               
+                               # Change order of the boxplots:
+                               tags$h4("Drag to change boxplot order"),
+                               shinyjqui::orderInput(inputId = 'geneboxplot_order_microarray_norm', 
+                                                     label = NULL, 
+                                                     items = levels(rv$experimentFactor),
+                                                     item_class = 'default'),
+                               br(),
+                               
+                               # Change colour of the boxplots by button. 
+                               # This is used when there are more than 6 experimental groups
+                               conditionalPanel(
+                                 condition = "output.length_geneboxplot_microarray_norm > 6",
+                                 tags$h4("Click to change boxplot colours"),
+                                 shinyWidgets::actionBttn("geneboxplot_changeOrder_microarray_norm",
+                                                          label = "Change color",
+                                                          style = "simple",
+                                                          color = "primary",
+                                                          icon = icon("sync"))
+                               ),
+                               
+                               # Change colour of the boxplots by colour picker
+                               # This is used when there are less than 7 experimental groups
+                               conditionalPanel(
+                                 condition = "output.length_geneboxplot_microarray_norm < 7",
+                                 tags$h4("Click to select boxplot colours"),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_microarray_norm > 0",
+                                   colourpicker::colourInput("geneboxplot_col1_microarray_norm", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[1])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_microarray_norm > 1",
+                                   colourpicker::colourInput("geneboxplot_col2_microarray_norm", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[2])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_microarray_norm > 2",
+                                   colourpicker::colourInput("geneboxplot_col3_microarray_norm", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[3])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_microarray_norm > 3",
+                                   colourpicker::colourInput("geneboxplot_col4_microarray_norm", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[4])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_microarray_norm > 4",
+                                   colourpicker::colourInput("geneboxplot_col5_microarray_norm", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[5])
+                                 ),
+                                 conditionalPanel(
+                                   condition = "output.length_geneboxplot_microarray_norm > 5",
+                                   colourpicker::colourInput("geneboxplot_col6_microarray_norm", 
+                                                             NULL, 
+                                                             colorsByFactor(rv$experimentFactor)$legendColors[6])
+                                 )
+                               ),
+                               br(),
+                               tags$h4("Drag to change jitter"),
+                               sliderInput("jitter_geneboxplot_microarray_norm", 
+                                           NULL,
+                                           min = 0, max = 0.3,
+                                           value = 0.1, step = 0.01),
+                               br()
+                             ),
+                             circle = TRUE, status = "info",
+                             icon = icon("fas fa-cog"),
+                             
+                             tooltip = shinyWidgets::tooltipOptions(
+                               title = "Click to personalize plot!")
+                             
+                           ), # EO dropdownButton
+                           
+                           # Boxplot of the selected gene's expression values
+                           plotOutput("ExprBoxplot_microarray_norm")%>% 
+                             shinycssloaders::withSpinner(color="#0dc5c1"),
+                           
+                           actionButton("download_geneboxplot_microarray_norm", 
+                                        "Download figure",
+                                        icon = shiny::icon("download")),
+                           br(),
+                           br()
                   ),
+                  
+                  # TAB2: boxplots
                   tabPanel("Boxplots",
                            icon = icon("fas fa-file"),
-                           h3(strong("Boxplots")),
-                           h5("These are boxplots of the normalized expression expression values."),
-                           hr(),
-                           plotOutput(outputId = "boxplots_microarray_norm") %>% 
+                           plotOutput(outputId = "boxplots_microarray_norm",
+                                      width = "65vw", height = "80vw") %>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
+                  # TAB3: Density plots
                   tabPanel("Density plots",
                            icon = icon("fas fa-mouse-pointer"),
-                           h3(strong("Density plots")),
-                           h5("These are density plots of the normalized expression expression values."),
-                           hr(),
-                           plotly::plotlyOutput(outputId = "densityplots_microarray_norm") %>% 
+                           br(),
+                           h2(strong("Density plot of normalized intensities"), align = "center"),
+                           h4("Distributions should be comparable between arrays", align = "center"),
+                           plotly::plotlyOutput(outputId = "densityplots_microarray_norm",
+                                                width = "65vw", height = "40vw") %>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
+                  # TAB4: sample-sample correlations
                   tabPanel("Correlation plot", 
                            icon = icon("fas fa-mouse-pointer"),
                            
@@ -5958,17 +7418,22 @@ server <- function(input, output, session){
                            dropdownButton(
                              tags$h3("Theme"),
                              
+                             selectInput(inputId = "heatmapFactor_microarray_norm",
+                                         label = "Side colors",
+                                         choices = colnames(rv$metaData_fil),
+                                         selected = rv$experimentName,
+                                         multiple = TRUE),
+                             
                              selectInput(inputId = 'heatmaptheme_microarray_norm',
-                                         label = NULL,
+                                         label = "Heatmap theme",
                                          choices = c("Default", 
                                                      "Yellow-red", 
-                                                     "Dark")),
-                             
+                                                     "Blues", 
+                                                     "Reds")),
                              circle = TRUE, status = "info",
                              icon = icon("fas fa-cog"), width = "300px",
-                             
                              tooltip = tooltipOptions(
-                               title = "Click to change theme!")
+                               title = "Click to change colors!")
                              
                            ),
                            
@@ -5979,6 +7444,8 @@ server <- function(input, output, session){
                                                           proxy.height = "400px")
                            
                   ),
+                  
+                  # TAB5: PCA
                   tabPanel("PCA",
                            icon = icon("fas fa-mouse-pointer"),
                            # Title + text
@@ -6050,7 +7517,7 @@ server <- function(input, output, session){
                            
                   ), # PCA tabpanel
                   
-                  # Settings table
+                  # # TAB6: settings table
                   tabPanel("Settings overview",
                            icon = icon("fas fa-file"),
                            h3(strong("Pre-processing settings")),
@@ -6189,7 +7656,7 @@ server <- function(input, output, session){
             
             # Calculate statistics
             if (isTRUE(input$addAnnotation_microarray_norm)){
-              rv$top_table <- getStatistics(normMatrix = rv$normMatrix, 
+              rv$top_table_list <- getStatistics(normMatrix = rv$normMatrix, 
                                             metaData = rv$metaData_fil, 
                                             expFactor = rv$experimentName, 
                                             covGroups_num = input$covGroups_num_microarray_norm,
@@ -6202,7 +7669,7 @@ server <- function(input, output, session){
                                             biomart_filters = input$biomart_filter_microarray_norm)
               
             } else{
-              rv$top_table <- getStatistics(normMatrix = rv$normMatrix, 
+              rv$top_table_list <- getStatistics(normMatrix = rv$normMatrix, 
                                             metaData = rv$metaData_fil, 
                                             expFactor = rv$experimentName, 
                                             covGroups_num = input$covGroups_num_microarray_norm,
@@ -6217,9 +7684,9 @@ server <- function(input, output, session){
             
             # Select comparison for output
             observe({
-              #req(rv$top_table)
+              rv$top_table <- rv$top_table_list[[1]]
               
-              if (!is.null(rv$top_table)){
+              if (!is.null(rv$top_table_list)){
                 # Remove modal
                 remove_modal_spinner()
                 
@@ -6236,8 +7703,7 @@ server <- function(input, output, session){
                 sendSweetAlert(
                   session = session,
                   title = "Info",
-                  text = "Statistical analysis has been performed. You can download 
-              the results as well as view them in interactive plots.",
+                  text = rv$top_table_list[[2]],
                   type = "info")
                 
                 # Show microarray statistics tab
@@ -6279,34 +7745,132 @@ server <- function(input, output, session){
               }
             )
             
-            # Boxplot of single gene
-            output$ExprBoxplot_statistics_microarray_norm <- renderPlotly({
-              
-              req(input$top_table_microarray_norm_rows_selected)
+            # Change plotting data depending on whether all experimental groups will be plotted  
+            observe({
               req(input$comparisons_view_microarray_norm)
+              req(rv$top_table)
               
-              if (input$comparisons_view_microarray_norm %in% names(rv$top_table)){
-                # Set colors
-                myPalette <- colorsByFactor(rv$experimentFactor)
-                legendColors <- myPalette$legendColors
-                
-                # Prepare expression data frame
-                gene <- rv$top_table[[input$comparisons_view_microarray_norm]]$GeneID[input$top_table_microarray_norm_rows_selected]
-                plotExpr <- data.frame(
-                  logExpr = rv$normMatrix[as.character(rownames(rv$normMatrix)) %in% as.character(gene),],
-                  Grouping = rv$experimentFactor
-                )
-                
-                # make interactive plot
-                plotExpr %>%
-                  plot_ly(x = ~Grouping,y = ~as.numeric(logExpr),
-                          color = ~Grouping, colors = legendColors, type = "box") %>%
-                  layout(xaxis = list(title = " "),
-                         yaxis = list(title = 'log intensity'),
-                         legend = list(title=list(text='Group')),
-                         showlegend = FALSE)
+              if (!is.null(input$boxplotAll_microarray_norm)){
+                if (input$boxplotAll_microarray_norm){
+                  rv$newFactor <- rv$experimentFactor
+                  rv$newData <- rv$normMatrix
+                }
+                if (!input$boxplotAll_microarray_norm){
+                  if(length(rv$experimentName) > 1){
+                    t <- make.names(apply(rv$metaData_fil[,rv$experimentName], 1, paste, collapse = "_" ))
+                  } else{
+                    t <- make.names(rv$metaData_fil[,rv$experimentName])
+                  }
+                  rv$newData <- rv$normMatrix[,t %in% (unlist(stringr::str_split(input$comparisons_view_microarray_norm, " - ")))]
+                  rv$newFactor <- factor(as.character(rv$experimentFactor)[t %in% (unlist(stringr::str_split(input$comparisons_view_microarray_norm, " - ")))])
+                }
               }
               
+              # Change color by click on button
+              rv$colorOrder <- 1:length(levels(rv$newFactor))
+              observeEvent(input$statboxplot_changeOrder_microarray_norm,{
+                all_orders <- permute(1:length(levels(rv$newFactor))) 
+                sel <- which(unlist(lapply(all_orders, function(x) all(x == rv$colorOrder))))
+                
+                if (sel < length(all_orders)){
+                  rv$colorOrder <- all_orders[[sel+1]]
+                } else{
+                  rv$colorOrder <- all_orders[[1]]
+                }
+              })
+              
+              
+              # Boxplot of single gene (based on selected row in the top table)
+              output$ExprBoxplot_statistics_microarray_norm <- renderPlot({
+                req(input$top_table_microarray_norm_rows_selected)
+                req(rv$top_table)
+                
+                if (length(levels(rv$newFactor)) > 6){
+                  legendColors <- colorsByFactor(rv$newFactor)$legendColors
+                } else{
+                  legendColors <- c(input$statboxplot_col1_microarray_norm,
+                                    input$statboxplot_col2_microarray_norm,
+                                    input$statboxplot_col3_microarray_norm,
+                                    input$statboxplot_col4_microarray_norm,
+                                    input$statboxplot_col5_microarray_norm,
+                                    input$statboxplot_col6_microarray_norm)
+                }
+                
+                gene <- rv$top_table[[input$comparisons_view_microarray_norm]]$GeneID[input$top_table_microarray_norm_rows_selected]
+                sel_row <- which(as.character(rownames(rv$normMatrix)) %in% as.character(gene))
+                
+                # Make boxplot
+                rv$temp <- geneBoxplot(experimentFactor = rv$newFactor, 
+                                       normMatrix = rv$newData, 
+                                       sel_row = sel_row,
+                                       legendColors = legendColors[rv$colorOrder],
+                                       groupOrder = input$statboxplot_order_microarray_norm,
+                                       jitter = input$jitter_statboxplot_microarray_norm,
+                                       rnaseq=FALSE,
+                                       seed = sample(1:1000,1))
+                
+                return(rv$temp)
+                
+              })
+              
+              # Get number of experimental groups
+              output$length_statboxplot_microarray_norm <- reactive({
+                length(levels(rv$experimentFactor))
+              })
+              outputOptions(output, "length_statboxplot_microarray_norm", suspendWhenHidden = FALSE) 
+              
+            })
+            
+            #***************************#
+            # Modal to download boxplot
+            #***************************#
+            
+            # Download plot
+            output$realdownload_statboxplot_microarray_norm <- downloadHandler(
+              filename = "GeneBoxplot.png",
+              content = function(file){
+                ggplot2::ggsave(plot = rv$temp, 
+                                filename = file,
+                                width = input$width_statboxplot_microarray_norm,
+                                height = input$height_statboxplot_microarray_norm,
+                                units = "px")
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_statboxplot_microarray_norm, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                footer = tagList(
+                  fluidRow(
+                    column(6,
+                           sliderInput("height_statboxplot_microarray_norm", 
+                                       "Height",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    ),
+                    column(6,
+                           sliderInput("width_statboxplot_microarray_norm", 
+                                       "Width",
+                                       min = 800, max = 3000,
+                                       value = 2100, step = 10,
+                                       width = "100%"),
+                    )
+                  ),
+                  hr(),
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_statboxplot_microarray_norm', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
             })
             
             #********************************************************************#
@@ -6352,95 +7916,215 @@ server <- function(input, output, session){
             }, ignoreNULL = FALSE)
             
             
-            # UI: Output in different tabs
+            #=========================================#
+            #  # UI: Output in different tabs
+            #=========================================#
             
             observe({
-              output$UI_output_statistics_microarray_norm <- renderUI({
+              req(rv$top_table)
+              
+              output$UI_boxplotAll_microarray_norm <- renderUI({
                 tagList(
-                  tabsetPanel(
-                    
-                    #********************************************************************#
-                    # top table tab
-                    #********************************************************************#
-                    
-                    tabPanel("Top table",
-                             icon = icon("fas fa-mouse-pointer"),
-                             br(),
-                             h3(strong("Top Table")),
-                             h5("The Top Table includes the output of the selected statistical analysis."),
-                             hr(),
-                             dataTableOutput(outputId = "top_table_microarray_norm") %>% 
-                               withSpinner(color="#0dc5c1"),
-                             downloadButton("download_top_table_microarray_norm", 
-                                            "Download"),
-                             plotlyOutput("ExprBoxplot_statistics_microarray_norm")%>% 
-                               withSpinner(color="#0dc5c1")
+                  # Change order of the boxplots:
+                  tags$h4("Drag to change boxplot order"),
+                  shinyjqui::orderInput(inputId = 'statboxplot_order_microarray_norm', 
+                                        label = NULL, 
+                                        items = levels(rv$newFactor),
+                                        item_class = 'default'),
+                  br(),
+                  
+                  # Change colour of the boxplots by button. 
+                  # This is used when there are more than 6 experimental groups
+                  conditionalPanel(
+                    condition = "output.length_statboxplot_microarray_norm > 6",
+                    tags$h4("Click to change boxplot colours"),
+                    shinyWidgets::actionBttn("statboxplot_changeOrder_microarray_norm",
+                                             label = "Change color",
+                                             style = "simple",
+                                             color = "primary",
+                                             icon = icon("sync"))
+                  ),
+                  
+                  # Change colour of the boxplots by colour picker
+                  # This is used when there are less than 7 experimental groups
+                  conditionalPanel(
+                    condition = "output.length_statboxplot_microarray_norm < 7",
+                    tags$h4("Click to select boxplot colours"),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_microarray_norm > 0",
+                      colourpicker::colourInput("statboxplot_col1_microarray_norm", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[1])
                     ),
-                    #********************************************************************#
-                    # histogram tab
-                    #********************************************************************#
-                    
-                    tabPanel("Histograms",
-                             icon = icon("fas fa-mouse-pointer"),
-                             br(),
-                             plotlyOutput("Phistogram_microarray_norm")%>% 
-                               withSpinner(color="#0dc5c1"),
-                             hr(),
-                             plotlyOutput("logFChistogram_microarray_norm")%>% 
-                               withSpinner(color="#0dc5c1")
-                             
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_microarray_norm > 1",
+                      colourpicker::colourInput("statboxplot_col2_microarray_norm", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[2])
                     ),
-                    
-                    #********************************************************************#
-                    # volcano tab
-                    #********************************************************************#
-                    
-                    tabPanel("Volcano plot",
-                             icon = icon("fas fa-mouse-pointer"),
-                             br(),
-                             
-                             fluidRow(
-                               column(3,
-                                      # Raw or adjusted P value?
-                                      prettyRadioButtons(
-                                        inputId = "rawp_volcano_microarray_norm",
-                                        label = "P value", 
-                                        choices = 
-                                          c("Raw P value" = "raw", 
-                                            "Adjusted P value" = "adj"))
-                               ),
-                               column(3,
-                                      #P value threshold
-                                      numericInput(
-                                        inputId = "p_thres_volcano_microarray_norm",
-                                        label = "P threshold",
-                                        value = 0.05)
-                               ),
-                               column(3,
-                                      #logFC threshold
-                                      numericInput(
-                                        inputId = "logFC_thres_volcano_microarray_norm",
-                                        label = "logFC threshold",
-                                        value = 1)
-                               )
-                             ),
-                             hr(),
-                             actionBttn(inputId = "plot_volcano_microarray_norm", 
-                                        label = "Plot",
-                                        style = "jelly",
-                                        color = "primary",
-                                        icon = icon("sync")),
-                             br(),
-                             br(),
-                             # Volcano plot
-                             plotlyOutput("volcano_microarray_norm")%>% 
-                               withSpinner(color="#0dc5c1")
-                             
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_microarray_norm > 2",
+                      colourpicker::colourInput("statboxplot_col3_microarray_norm", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[3])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_microarray_norm > 3",
+                      colourpicker::colourInput("statboxplot_col4_microarray_norm", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[4])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_microarray_norm > 4",
+                      colourpicker::colourInput("statboxplot_col5_microarray_norm", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[5])
+                    ),
+                    conditionalPanel(
+                      condition = "output.length_statboxplot_microarray_norm > 5",
+                      colourpicker::colourInput("statboxplot_col6_microarray_norm", 
+                                                NULL, 
+                                                colorsByFactor(rv$newFactor)$legendColors[6])
                     )
-                    
-                  ) # tabsetpanel
-                ) # taglist
-              }) # renderUI
+                  ),
+                  br(),
+                  tags$h4("Drag to change jitter"),
+                  sliderInput("jitter_statboxplot_microarray_norm", 
+                              NULL,
+                              min = 0, max = 0.3,
+                              value = 0.1, step = 0.01),
+                  br()
+                )
+              })
+            })
+            
+            observe({
+              if (is.null(rv$top_table)){
+                output$UI_output_statistics_microarray_norm <- renderUI(NULL)
+              } else{
+                output$UI_output_statistics_microarray_norm <- renderUI({
+                  tagList(
+                    tabsetPanel(
+                      
+                      #********************************************************************#
+                      # top table tab
+                      #********************************************************************#
+                      
+                      tabPanel("Top table",
+                               icon = icon("fas fa-mouse-pointer"),
+                               br(),
+                               h3(strong("Top Table")),
+                               h5("The Top Table includes the output of the selected statistical analysis."),
+                               hr(),
+                               dataTableOutput(outputId = "top_table_microarray_norm") %>% 
+                                 withSpinner(color="#0dc5c1"),
+                               downloadButton("download_top_table_microarray_norm", 
+                                              "Download table"),
+                               br(),
+                               br(),
+                               
+                               # Dropdown Button to adjust the plot settings
+                               shinyWidgets::dropdownButton(
+                                 tags$div(
+                                   style = "max-height: 300px; overflow-y: auto; padding: 5px;",
+                                   
+                                   # Plot all experimental groups?
+                                   conditionalPanel(
+                                     condition = "output.length_statboxplot_microarray_norm > 2",
+                                     tags$h4("Plot all experimental groups?"),
+                                     shinyWidgets::materialSwitch(inputId = "boxplotAll_microarray_norm",
+                                                                  label = NULL, 
+                                                                  value = TRUE,
+                                                                  status = "primary"),
+                                     
+                                     br()
+                                   ),
+                                   uiOutput("UI_boxplotAll_microarray_norm")
+                                   
+                                   
+                                   
+                                 ),
+                                 circle = TRUE, status = "info",
+                                 icon = icon("fas fa-cog"),
+                                 
+                                 tooltip = shinyWidgets::tooltipOptions(
+                                   title = "Click to personalize plot!")
+                                 
+                               ), # EO dropdownButton
+                               plotOutput("ExprBoxplot_statistics_microarray_norm")%>% 
+                                 shinycssloaders::withSpinner(color="#0dc5c1"),
+                               actionButton("download_statboxplot_microarray_norm", 
+                                            "Download figure",
+                                            icon = shiny::icon("download")),
+                               br(),
+                               br()
+                      ),
+                      #********************************************************************#
+                      # histogram tab
+                      #********************************************************************#
+                      
+                      tabPanel("Histograms",
+                               icon = icon("fas fa-mouse-pointer"),
+                               br(),
+                               plotlyOutput("Phistogram_microarray_norm")%>% 
+                                 withSpinner(color="#0dc5c1"),
+                               hr(),
+                               plotlyOutput("logFChistogram_microarray_norm")%>% 
+                                 withSpinner(color="#0dc5c1")
+                               
+                      ),
+                      
+                      #********************************************************************#
+                      # volcano tab
+                      #********************************************************************#
+                      
+                      tabPanel("Volcano plot",
+                               icon = icon("fas fa-mouse-pointer"),
+                               br(),
+                               
+                               fluidRow(
+                                 column(3,
+                                        # Raw or adjusted P value?
+                                        prettyRadioButtons(
+                                          inputId = "rawp_volcano_microarray_norm",
+                                          label = "P value", 
+                                          choices = 
+                                            c("Raw P value" = "raw", 
+                                              "Adjusted P value" = "adj"))
+                                 ),
+                                 column(3,
+                                        #P value threshold
+                                        numericInput(
+                                          inputId = "p_thres_volcano_microarray_norm",
+                                          label = "P threshold",
+                                          value = 0.05)
+                                 ),
+                                 column(3,
+                                        #logFC threshold
+                                        numericInput(
+                                          inputId = "logFC_thres_volcano_microarray_norm",
+                                          label = "logFC threshold",
+                                          value = 1)
+                                 )
+                               ),
+                               hr(),
+                               actionBttn(inputId = "plot_volcano_microarray_norm", 
+                                          label = "Plot",
+                                          style = "jelly",
+                                          color = "primary",
+                                          icon = icon("sync")),
+                               br(),
+                               br(),
+                               # Volcano plot
+                               plotlyOutput("volcano_microarray_norm")%>% 
+                                 withSpinner(color="#0dc5c1")
+                               
+                      )
+                      
+                    ) # tabsetpanel
+                  ) # taglist
+                }) # renderUI
+              }
             }) # Observe
             
             # Allow user to go to next tab

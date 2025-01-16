@@ -17,3 +17,5 @@ prompter	1.2.0	smaller
 htmlwidgets	1.6.4	smaller
 igraph	2.1.1	smaller
 ggraph	2.2.1	smaller
+shinyjqui	0.4.1	smaller
+colourpicker	1.3.0	smaller

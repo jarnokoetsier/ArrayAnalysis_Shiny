@@ -34,8 +34,9 @@ ui <- tagList(
                            padding-left: 0; 
                            padding-right: 0;
                            }
-                           
-                           "))),
+                           "))
+  ),
+  
   
   
   fluidPage(
@@ -500,13 +501,13 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Add gene annotations from biomaRt to 
+                              prompter::add_prompt(message = "Add gene annotations to 
                                        the output.", 
                                          position = "right",
                                          size = "large")
                           ))),
                           shinyWidgets::awesomeCheckbox(inputId = "addAnnotation_microarray_raw",
-                                          label = "Add gene annotations from biomaRt", 
+                                          label = "Add gene annotations", 
                                           value = FALSE,
                                           status = "danger"),
                           conditionalPanel(
@@ -828,8 +829,7 @@ ui <- tagList(
                           h2(strong("Pre-processing")),
                           
                           h5("In this pre-processing step, you can remove samples 
-                           (e.g., outliers), perform normalization, 
-                           and choose your desired probeset annotation."),
+                           (e.g., outliers) and perform transformation and normalization."),
                           
                           hr(),
                           
@@ -1020,13 +1020,13 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Add gene annotations from biomaRt to 
+                              add_prompt(message = "Add gene annotations to 
                                        the output.", 
                                          position = "right",
                                          size = "large")
                           ))),
                           awesomeCheckbox(inputId = "addAnnotation_microarray_norm",
-                                          label = "Add gene annotations from biomaRt", 
+                                          label = "Add gene annotations", 
                                           value = FALSE,
                                           status = "danger"),
                           conditionalPanel(
@@ -1331,8 +1331,7 @@ ui <- tagList(
                           h2(strong("Pre-processing")),
                           
                           h5("In this pre-processing step, you can remove samples 
-                           (e.g., outliers), perform normalization, 
-                           and choose your desired probeset annotation."),
+                           (e.g., outliers) and perform gene filtering and normalization."),
                           
                           hr(),
                           
@@ -1491,13 +1490,13 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Add gene annotations from biomaRt to 
+                              prompter::add_prompt(message = "Add gene annotations to 
                                        the output.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
                           awesomeCheckbox(inputId = "addAnnotation_rnaseq_raw",
-                                          label = "Add gene annotations from biomaRt", 
+                                          label = "Add gene annotations", 
                                           value = FALSE,
                                           status = "danger"),
                           conditionalPanel(
@@ -1798,8 +1797,7 @@ ui <- tagList(
                           h2(strong("Pre-processing")),
                           
                           h5("In this pre-processing step, you can remove samples 
-                           (e.g., outliers), perform normalization, 
-                           and choose your desired probeset annotation."),
+                           (e.g., outliers) and perform gene filtering and normalization."),
                           
                           hr(),
                           
@@ -1896,7 +1894,7 @@ ui <- tagList(
                             ) |>
                               add_prompt(message = "Select the normalization method 
                                        and whether you would like to do the normalization
-                                       on all arrays or per experimental group.", 
+                                       on all samples or per experimental group.", 
                                          position = "right",
                                          size = "large")
                           ))),
@@ -1910,7 +1908,7 @@ ui <- tagList(
                           
                           prettyRadioButtons(inputId = "perGroup_rnaseq_norm", 
                                              label = NULL, 
-                                             choices = c("Use all arrays",
+                                             choices = c("Use all samples",
                                                          "Per experimental group"),
                                              inline = TRUE, 
                                              status = "danger",
@@ -2008,13 +2006,13 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Add gene annotations from biomaRt to 
+                              prompter::add_prompt(message = "Add gene annotations to 
                                        the output.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
                           awesomeCheckbox(inputId = "addAnnotation_rnaseq_norm",
-                                          label = "Add gene annotations from biomaRt", 
+                                          label = "Add gene annotations", 
                                           value = FALSE,
                                           status = "danger"),
                           conditionalPanel(
