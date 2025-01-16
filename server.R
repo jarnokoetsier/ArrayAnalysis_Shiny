@@ -2917,6 +2917,61 @@ server <- function(input, output, session){
                           height = session$clientData$output_boxplots_rnaseq_norm_height)
             }, deleteFile = TRUE)
             
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
+            # Download plot
+            output$realdownload_boxplots_rnaseq_norm <- downloadHandler(
+              filename = function(){"QC_Boxplots.png"},
+              content = function(file){
+                png(file,
+                    width=input$width_boxplots_rnaseq_norm,
+                    height=input$height_boxplots_rnaseq_norm,
+                    pointsize=24)
+                getBoxplots_download(experimentFactor = rv$experimentFactor,
+                                     normData = rv$normData,
+                                     RNASeq = TRUE)
+                dev.off()
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_boxplots_rnaseq_norm, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(6,
+                           sliderInput("height_boxplots_rnaseq_norm", 
+                                       "Height",
+                                       min = 1200, max = 1600,
+                                       value = 1500, step = 1,
+                                       width = "100%"),
+                    ),
+                    column(6,
+                           sliderInput("width_boxplots_rnaseq_norm", 
+                                       "Width",
+                                       min = 800, max = 1200,
+                                       value = 1000, step = 1,
+                                       width = "100%"),
+                    )
+                  ),
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_boxplots_rnaseq_norm', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
+            
             #********************************************************************#
             # Densityplots
             #********************************************************************#
@@ -3113,6 +3168,10 @@ server <- function(input, output, session){
                   ),
                   tabPanel("Boxplots",
                            icon = icon("fas fa-file"),
+                           br(),
+                           actionButton("download_boxplots_rnaseq_norm", 
+                                        "Download figure",
+                                        icon = shiny::icon("download")),
                            plotOutput(outputId = "boxplots_rnaseq_norm",
                                       width = "65vw", height = "80vw")%>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
@@ -5033,6 +5092,62 @@ server <- function(input, output, session){
                           height = session$clientData$output_boxplots_microarray_raw_height)
             }, deleteFile = TRUE)
             
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
+            # Download plot
+            output$realdownload_boxplots_microarray_raw <- downloadHandler(
+              filename = function(){"QC_Boxplots.png"},
+              content = function(file){
+                png(file,
+                    width=input$width_boxplots_microarray_raw,
+                    height=input$height_boxplots_microarray_raw,
+                    pointsize=24)
+                getBoxplots_download(experimentFactor = rv$experimentFactor,
+                                     normData = rv$normData,
+                                     RNASeq = FALSE)
+                dev.off()
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_boxplots_microarray_raw, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(6,
+                           sliderInput("height_boxplots_microarray_raw", 
+                                       "Height",
+                                       min = 1200, max = 1600,
+                                       value = 1500, step = 1,
+                                       width = "100%"),
+                    ),
+                    column(6,
+                           sliderInput("width_boxplots_microarray_raw", 
+                                       "Width",
+                                       min = 800, max = 1200,
+                                       value = 1000, step = 1,
+                                       width = "100%"),
+                    )
+                  ),
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_boxplots_microarray_raw', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
+            
+            
             #********************************************************************#
             # Output 3: Densityplots
             #********************************************************************#
@@ -5235,9 +5350,10 @@ server <- function(input, output, session){
                   # Boxplots
                   tabPanel("Boxplots",
                            icon = icon("fas fa-file"),
-                           #h3(strong("Boxplots")),
-                           #h5("These are boxplots of the normalized expression expression values."),
-                           #hr(),
+                           br(),
+                           actionButton("download_boxplots_microarray_raw", 
+                                        "Download figure",
+                                        icon = shiny::icon("download")),
                            plotOutput(outputId = "boxplots_microarray_raw",
                                       width = "65vw", height = "80vw")%>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
@@ -7163,6 +7279,62 @@ server <- function(input, output, session){
                           height = session$clientData$output_boxplots_microarray_norm_height)
             }, deleteFile = TRUE)
             
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
+            # Download plot
+            output$realdownload_boxplots_microarray_norm <- downloadHandler(
+              filename = function(){"QC_Boxplots.png"},
+              content = function(file){
+                png(file,
+                    width=input$width_boxplots_microarray_norm,
+                    height=input$height_boxplots_microarray_norm,
+                    pointsize=24)
+                getBoxplots_download(experimentFactor = rv$experimentFactor,
+                                     normData = rv$normData,
+                                     RNASeq = FALSE)
+                dev.off()
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_boxplots_microarray_norm, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(6,
+                           sliderInput("height_boxplots_microarray_norm", 
+                                       "Height",
+                                       min = 1200, max = 1600,
+                                       value = 1500, step = 1,
+                                       width = "100%"),
+                    ),
+                    column(6,
+                           sliderInput("width_boxplots_microarray_norm", 
+                                       "Width",
+                                       min = 800, max = 1200,
+                                       value = 1000, step = 1,
+                                       width = "100%"),
+                    )
+                  ),
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_boxplots_microarray_norm', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
+            
+            
             #********************************************************************#
             # Output 3: Densityplots
             #********************************************************************#
@@ -7363,6 +7535,10 @@ server <- function(input, output, session){
                   # TAB2: boxplots
                   tabPanel("Boxplots",
                            icon = icon("fas fa-file"),
+                           br(),
+                           actionButton("download_boxplots_microarray_norm", 
+                                        "Download figure",
+                                        icon = shiny::icon("download")),
                            plotOutput(outputId = "boxplots_microarray_norm",
                                       width = "65vw", height = "80vw") %>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
