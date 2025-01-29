@@ -560,7 +560,7 @@ ui <- tagList(
                           
                           h5("In the gene overrepresentation analysis (ORA) step, 
                         you can find processes that are enriched by the 
-                           differentially expressed genes (DEGs)."),
+                           differentially expressed genes."),
                           
                           hr(),
                           

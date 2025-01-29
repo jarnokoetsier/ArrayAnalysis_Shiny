@@ -550,11 +550,15 @@ server <- function(input, output, session){
             rv$filterThreshold <- input$countfilter_rnaseq_raw
             
             # Normalization
-            rv$normData <- RNASeqNormalization(gxData = rv$gxData_fil,
-                                               metaData = rv$metaData_fil,
+            normData_temp <- RNASeqNormalization(gxData = rv$gxData_fil,
+                                               metaData = data.frame(experimentFactor = rv$experimentFactor, 
+                                                                     row.names = rownames(rv$metaData_fil)),
                                                filterThres = rv$filterThreshold,
                                                smallestGroupSize = min(table(rv$experimentFactor)))
             
+            
+            rv$normData <- normData_temp[["counts"]]
+            rv$normData_vst <- normData_temp[["vst"]]
             
             # Collect chosen pre-processing settings into a dataframe
             rv$processingSettings <- data.frame(
@@ -625,7 +629,7 @@ server <- function(input, output, session){
             output$ExprBoxplot_rnaseq_raw <- renderPlot({
               req(input$exprTable_rnaseq_raw_rows_selected)
               
-              if (length(levels(rv$experimentFactor)) > 4){
+              if (length(levels(rv$experimentFactor)) > 6){
                 legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
               } else{
                 legendColors <- c(input$geneboxplot_col1_rnaseq_raw,
@@ -785,29 +789,159 @@ server <- function(input, output, session){
               getDensityplots(experimentFactor = rv$experimentFactor,
                               normMatrix = rv$normData,
                               RNASeq = TRUE)
-              
+
             })
+            
+            # Download plot
+            output$download_densityplots_rnaseq_raw <- downloadHandler(
+              filename = "QC_Density.html",
+              content = function(file){
+                p <- getDensityplots(experimentFactor = rv$experimentFactor,
+                                     normMatrix = rv$normData,
+                                     RNASeq = TRUE)
+                htmlwidgets::saveWidget(p, 
+                                        file)
+              }
+            )
+            
             
             #********************************************************************#
             # Output 4: Heatmap
             #********************************************************************#
             
-            # Heatmap of sample-sample correlations
             output$heatmap_rnaseq_raw  <- plotly::renderPlotly({
-              
-              # Make colors
-              if(length(input$heatmapFactor_rnaseq_raw) > 1){
-                colorFactor <- factor(apply(rv$metaData_fil[,input$heatmapFactor_rnaseq_raw], 1, paste, collapse = "_" ))
+
+              # Make color factor
+              if(length(input$colorFactor_heatmap_rnaseq_raw) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_raw], 1, paste, collapse = "_" ))
               } else{
-                colorFactor <- factor(rv$metaData_fil[,input$heatmapFactor_rnaseq_raw])
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_raw])
               }
               
-              getHeatmap(experimentFactor = colorFactor,
-                         normMatrix = rv$normData,
+              # Set colors
+              if (length(levels(colorFactor)) > 5){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              } else{
+                legendColors <- c(input$heatmap_col1_rnaseq_raw,
+                                  input$heatmap_col2_rnaseq_raw,
+                                  input$heatmap_col3_rnaseq_raw,
+                                  input$heatmap_col4_rnaseq_raw,
+                                  input$heatmap_col5_rnaseq_raw)
+              }
+              if (length(legendColors) != length(levels(colorFactor))){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              }
+              names(legendColors) <- levels(colorFactor)
+              
+              # Make heatmap
+              rv$heatmap <- getHeatmap(experimentFactor = colorFactor,
+                         legendColors = legendColors,
+                         normMatrix = rv$normData_vst,
                          clusterOption1 = input$clusteroption1_rnaseq_raw,
                          clusterOption2 = input$clusteroption2_rnaseq_raw,
                          theme = input$heatmaptheme_rnaseq_raw)
             })
+            
+            # Allow users to set colors
+            observe({
+              req(input$colorFactor_heatmap_rnaseq_raw)
+              if(length(input$colorFactor_heatmap_rnaseq_raw) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_raw], 1, paste, collapse = "_" ))
+              } else{
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_raw])
+              }
+              test <- length(levels(colorFactor))
+              
+              if (test == 2){
+                output$UI_color_heatmap <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2])
+                  )
+                })
+              }
+              
+              if (test == 3){
+                output$UI_color_heatmap <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("heatmap_col3_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_heatmap <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("heatmap_col3_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("heatmap_col4_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_heatmap <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("heatmap_col3_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("heatmap_col4_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4]),
+                    colourpicker::colourInput("heatmap_col5_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_heatmap <- renderUI({
+                  NULL
+                })
+                
+              }
+              
+            })
+            
+            # Download plot
+            output$download_heatmap_rnaseq_raw <- downloadHandler(
+              filename = "QC_Heatmap.html",
+              content = function(file){
+                htmlwidgets::saveWidget(rv$heatmap, 
+                                        file)
+              }
+            )
             
             
             #********************************************************************#
@@ -815,7 +949,7 @@ server <- function(input, output, session){
             #********************************************************************#
             
             #Perform PCA
-            rv$PCA_data <- prcomp(t(rv$normData[apply(rv$normData, 1, var) != 0,]),
+            rv$PCA_data <- prcomp(t(rv$normData_vst[apply(rv$normData_vst, 1, var) != 0,]),
                                   retx = TRUE, 
                                   center = TRUE,
                                   scale.= TRUE)
@@ -823,23 +957,141 @@ server <- function(input, output, session){
             
             # Make PCA plot
             output$PCA_rnaseq_raw <- plotly::renderPlotly({
-              
-              # Make colors
-              if(length(input$colorFactor_rnaseq_raw) > 1){
-                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_rnaseq_raw], 1, paste, collapse = "_" ))
+
+              # Get factor to color by
+              if(length(input$colorFactor_PCA_rnaseq_raw) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_raw], 1, paste, collapse = "_" ))
               } else{
-                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_rnaseq_raw])
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_raw])
+              }
+              
+              # Set colors
+              if (length(levels(colorFactor)) > 5){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              } else{
+                legendColors <- c(input$PCA_col1_rnaseq_raw,
+                                  input$PCA_col2_rnaseq_raw,
+                                  input$PCA_col3_rnaseq_raw,
+                                  input$PCA_col4_rnaseq_raw,
+                                  input$PCA_col5_rnaseq_raw)
+              }
+              if (length(legendColors) != length(levels(colorFactor))){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
               }
               
               # Make PCA score plot
-              plot_PCA(PC_data = rv$PCA_data, 
-                       colorFactor = colorFactor, 
+              rv$PCAplot <- plot_PCA(PC_data = rv$PCA_data, 
+                       colorFactor = colorFactor,
+                       legendColors = legendColors, 
                        xpc = as.numeric(stringr::str_remove(input$xpca_rnaseq_raw,"PC")), 
                        ypc = as.numeric(stringr::str_remove(input$ypca_rnaseq_raw,"PC")), 
                        zpc = ifelse(input$xyz_rnaseq_raw,as.numeric(stringr::str_remove(input$zpca_rnaseq_raw,"PC")),3), 
                        xyz = input$xyz_rnaseq_raw)
+              return(rv$PCAplot)
+            })
+            
+            
+            # Allow users to set colors
+            observe({
+              req(input$colorFactor_PCA_rnaseq_raw)
+              if(length(input$colorFactor_PCA_rnaseq_raw) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_raw], 1, paste, collapse = "_" ))
+              } else{
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_raw])
+              }
+              test <- length(levels(colorFactor))
+              
+              if (test == 2){
+                output$UI_color_PCA <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2])
+                  )
+                })
+              }
+              
+              if (test == 3){
+                output$UI_color_PCA <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("PCA_col3_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_PCA <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("PCA_col3_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("PCA_col4_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_PCA <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("PCA_col3_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("PCA_col4_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4]),
+                    colourpicker::colourInput("PCA_col5_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_PCA <- renderUI({
+                  NULL
+                })
+                
+              }
               
             })
+            
+            # Download plot
+            output$download_PCA_rnaseq_raw <- downloadHandler(
+              filename = "QC_PCA.html",
+              content = function(file){
+                
+                htmlwidgets::saveWidget(rv$PCAplot, 
+                                        file)
+              }
+            )
             
             #********************************************************************#
             # Output 6: Overview of pre-processing settings
@@ -998,6 +1250,8 @@ server <- function(input, output, session){
                   tabPanel("Density plots",
                            icon = icon("fas fa-mouse-pointer"),
                            br(),
+                           downloadButton('download_densityplots_rnaseq_raw', 
+                                          'Download figure'),
                            h2(strong("Density plot of normalized counts"), align = "center"),
                            h4("Distributions should be comparable between samples", align = "center"),
                            plotly::plotlyOutput(outputId = "densityplots_rnaseq_raw",
@@ -1008,58 +1262,66 @@ server <- function(input, output, session){
                   # TAB4: Heatmap of sample-sample correlations
                   tabPanel("Correlation plot", 
                            icon = icon("fas fa-mouse-pointer"),
-                           br(),
+                           h3(strong("Heatmap of sample-sample correlations")),
+                           hr(),
                            fluidRow(
-                             # Select istance method
-                             column(4,
+                             column(3,
+                                    shinyWidgets::pickerInput(
+                                      inputId = "colorFactor_heatmap_rnaseq_raw",
+                                      label = "Side color",
+                                      choices = colnames(rv$metaData_fil),
+                                      selected = rv$experimentName,
+                                      multiple = TRUE,
+                                      options = list(
+                                        style = "btn-info"))
+                             ),
+                             # Select distance method
+                             column(3,
                                     shinyWidgets::pickerInput(
                                       inputId = "clusteroption1_rnaseq_raw",
-                                      label = "Distance calculation 
-                                              method",
+                                      label = "Distance",
                                       choices = c("Pearson","Spearman",
-                                                  "Euclidean"),
-                                      options = list(
-                                        style = "btn-primary"))
+                                                  "Euclidean"))
                              ),
                              
                              #Clustering method
-                             column(4,
+                             column(3,
                                     shinyWidgets::pickerInput(
                                       inputId = "clusteroption2_rnaseq_raw",
-                                      label = "Clustering method",
+                                      label = "Clustering",
                                       choices = c("ward.D2","single",
                                                   "complete","average",
                                                   "mcquitty","median",
-                                                  "centroid"),
-                                      options = list(
-                                        style = "btn-info"))
-                             )),
-                           
+                                                  "centroid"))
+                             )
+                           ),
                            hr(),
+                           downloadButton('download_heatmap_rnaseq_raw', 
+                                          'Download figure'),
+                           br(),
+                           br(),
                            
-                           #Theme
+                           # customize heatmap
                            shinyWidgets::dropdownButton(
-                             selectInput(inputId = "heatmapFactor_rnaseq_raw",
-                                                       label = "Side colors",
-                                                       choices = colnames(rv$metaData_fil),
-                                                       selected = rv$experimentName,
-                                                       multiple = TRUE),
-                             
+                             h4("Heatmap theme"),
                              selectInput(inputId = 'heatmaptheme_rnaseq_raw',
-                                         label = "Heatmap theme",
+                                         label = NULL,
                                          choices = c("Default", 
                                                      "Yellow-red", 
                                                      "Blues", 
                                                      "Reds")),
+                             br(),
+                             uiOutput("UI_color_heatmap"),
+                             
                              circle = TRUE, status = "info",
                              icon = icon("fas fa-cog"), width = "300px",
                              tooltip = shinyWidgets::tooltipOptions(
                                title = "Click to change colors!")
                            ),
                            
+                           # Make heatmap
                            plotly::plotlyOutput("heatmap_rnaseq_raw", 
-                                                width = "1000px", 
-                                                height="600px") %>% 
+                                                width = "65vw", height = "35vw") %>% 
                              shinycssloaders::withSpinner(color="#0dc5c1", 
                                                           proxy.height = "400px")
                            
@@ -1069,39 +1331,30 @@ server <- function(input, output, session){
                   tabPanel("PCA",
                            icon = icon("fas fa-mouse-pointer"),
                            # Title + text
-                           fluidRow(
                              h3(strong("Principal Component Analysis (PCA)")),
-                             h5("Here you can view the PCA score plot."),
-                             hr(),
-                           ),
+                             shinyWidgets::materialSwitch(
+                               inputId = "xyz_rnaseq_raw",
+                               label = "3D",
+                               value = FALSE, 
+                               status = "info"),
+                         
+                           hr(),
                            
                            # Set color + 3D/2D
                            fluidRow(
                              column(3,
                                     # Color by which factor?
-                                    shinyWidgets::pickerInput(inputId = "colorFactor_rnaseq_raw",
+                                    shinyWidgets::pickerInput(inputId = "colorFactor_PCA_rnaseq_raw",
                                                               label = "Color by:",
                                                               choices = colnames(rv$metaData_fil),
                                                               selected = rv$experimentName,
-                                                              multiple = TRUE)
+                                                              multiple = TRUE,
+                                                              options = list(
+                                                                style = "btn-info"))
                              ),
                              column(3,
-                                    br(),
-                                    # 3D plot?
-                                    shinyWidgets::materialSwitch(
-                                      inputId = "xyz_rnaseq_raw",
-                                      label = "3D",
-                                      value = FALSE, 
-                                      status = "danger")
-                                    
-                             )
-                           ),
-                           
-                           # Set axes
-                           fluidRow(
-                             column(3,
                                     #X-axis
-                                    selectInput(inputId = "xpca_rnaseq_raw", 
+                                    shinyWidgets::pickerInput(inputId = "xpca_rnaseq_raw", 
                                                 label = "x-axis",
                                                 choices = c("PC1","PC2","PC3", "PC4", "PC5",
                                                             "PC6", "PC7", "PC8"),
@@ -1109,7 +1362,7 @@ server <- function(input, output, session){
                              ),
                              column(3,
                                     #Y-axis
-                                    selectInput(inputId = "ypca_rnaseq_raw", 
+                                    shinyWidgets::pickerInput(inputId = "ypca_rnaseq_raw", 
                                                 label = "y-axis",
                                                 choices = c("PC1","PC2","PC3", "PC4", "PC5", 
                                                             "PC6", "PC7", "PC8"),
@@ -1119,7 +1372,7 @@ server <- function(input, output, session){
                                     #Z-axis
                                     conditionalPanel(
                                       condition = "input.xyz_rnaseq_raw==true",
-                                      selectInput(inputId = "zpca_rnaseq_raw", 
+                                      shinyWidgets::pickerInput(inputId = "zpca_rnaseq_raw", 
                                                   label = "z-axis",
                                                   choices = c("PC1","PC2","PC3", "PC4", "PC5", 
                                                               "PC6", "PC7", "PC8"),
@@ -1128,10 +1381,27 @@ server <- function(input, output, session){
                              )
                            ),
                            
-                           # Print plot
+                           hr(),
+                           downloadButton('download_PCA_rnaseq_raw', 
+                                          'Download figure'),
+                           br(),
+                           br(),
+                           
                            fluidRow(
-                             hr(),
-                             plotly::plotlyOutput("PCA_rnaseq_raw")%>% 
+                             
+                             # Customize PCA plot
+                             shinyWidgets::dropdownButton(
+                    
+                               uiOutput("UI_color_PCA"),
+                               circle = TRUE, status = "info",
+                               icon = icon("fas fa-cog"), width = "300px",
+                               tooltip = shinyWidgets::tooltipOptions(
+                                 title = "Click to change colors!")
+                             ),
+                             
+                             # Make PCA plot
+                             plotly::plotlyOutput("PCA_rnaseq_raw",
+                                                  width = "55vw", height = "30vw")%>% 
                                shinycssloaders::withSpinner(color="#0dc5c1"),
                            ),
 
@@ -1554,6 +1824,27 @@ server <- function(input, output, session){
             }, ignoreNULL = FALSE) 
             # ignoreNULL: generate plot even if action button is not pressed
             
+            #********************************************************************#
+            # TAB4: MA plot
+            #********************************************************************#
+            
+            observeEvent(input$plot_MA_rnaseq_raw, {
+              req(rv$top_table)
+              req(input$rawp_MA_rnaseq_raw)
+              req(input$p_thres_MA_rnaseq_raw)
+              req(input$logFC_thres_MA_rnaseq_raw)
+              req(input$comparisons_view_rnaseq_raw)
+              
+              if (input$comparisons_view_rnaseq_raw %in% names(rv$top_table)){
+                p <- makeMAplot(top_table = rv$top_table[[input$comparisons_view_rnaseq_raw]], 
+                                p = input$rawp_MA_rnaseq_raw, 
+                                p_threshold = input$p_thres_MA_rnaseq_raw, 
+                                logFC_threshold = input$logFC_thres_MA_rnaseq_raw)
+                
+                output$MA_rnaseq_raw <- plotly::renderPlotly(p)
+              }
+            }, ignoreNULL = FALSE) 
+            # ignoreNULL: generate plot even if action button is not pressed
             
             #=========================================#
             #  # UI: Output in different tabs
@@ -1761,7 +2052,57 @@ server <- function(input, output, session){
                              plotly::plotlyOutput("volcano_rnaseq_raw")%>% 
                                withSpinner(color="#0dc5c1")
                              
+                    ),
+                    
+                    #********************************************************************#
+                    # MA plot tab
+                    #********************************************************************#
+                    
+                    tabPanel("MA plot",
+                             icon = icon("fas fa-mouse-pointer"),
+                             br(),
+                             
+                             fluidRow(
+                               column(3,
+                                      # Raw or adjusted P value?
+                                      prettyRadioButtons(
+                                        inputId = "rawp_MA_rnaseq_raw",
+                                        label = "P value", 
+                                        choices = 
+                                          c("Raw P value" = "raw", 
+                                            "Adjusted P value" = "adj"))
+                               ),
+                               column(3,
+                                      #P value threshold
+                                      numericInput(
+                                        inputId = "p_thres_MA_rnaseq_raw",
+                                        label = "P threshold",
+                                        value = 0.05)
+                               ),
+                               column(3,
+                                      #logFC threshold
+                                      numericInput(
+                                        inputId = "logFC_thres_MA_rnaseq_raw",
+                                        label = "logFC threshold",
+                                        value = 1)
+                               )
+                             ),
+                             hr(),
+                             
+                             # Button to reload the volcano plot
+                             shinyWidgets::actionBttn(inputId = "plot_MA_rnaseq_raw", 
+                                                      label = "Plot",
+                                                      style = "jelly",
+                                                      color = "primary",
+                                                      icon = icon("sync")),
+                             br(),
+                             br(),
+                             # Volcano plot output
+                             plotly::plotlyOutput("MA_rnaseq_raw")%>% 
+                               withSpinner(color="#0dc5c1")
+                             
                     )
+                    
                     
                   ) # tabsetpanel
                 ) # taglist
@@ -2988,29 +3329,146 @@ server <- function(input, output, session){
             # Heatmap
             #********************************************************************#
             
-            # Heatmap of sample-sample correlations
             output$heatmap_rnaseq_norm  <- plotly::renderPlotly({
               
-              # Make colors
-              if(length(input$heatmapFactor_rnaseq_norm) > 1){
-                colorFactor <- factor(apply(rv$metaData_fil[,input$heatmapFactor_rnaseq_norm], 1, paste, collapse = "_" ))
+              # Make color factor
+              if(length(input$colorFactor_heatmap_rnaseq_norm) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_norm], 1, paste, collapse = "_" ))
               } else{
-                colorFactor <- factor(rv$metaData_fil[,input$heatmapFactor_rnaseq_norm])
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_norm])
               }
               
-              getHeatmap(experimentFactor = colorFactor, 
-                         normMatrix = rv$normData,
-                         clusterOption1 = input$clusteroption1_rnaseq_norm,
-                         clusterOption2 = input$clusteroption2_rnaseq_norm,
-                         theme = input$heatmaptheme_rnaseq_norm)
+              # Set colors
+              if (length(levels(colorFactor)) > 5){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              } else{
+                legendColors <- c(input$heatmap_col1_rnaseq_norm,
+                                  input$heatmap_col2_rnaseq_norm,
+                                  input$heatmap_col3_rnaseq_norm,
+                                  input$heatmap_col4_rnaseq_norm,
+                                  input$heatmap_col5_rnaseq_norm)
+              }
+              if (length(legendColors) != length(levels(colorFactor))){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              }
+              names(legendColors) <- levels(colorFactor)
+              
+              # Make heatmap
+              rv$heatmap <- getHeatmap(experimentFactor = colorFactor,
+                                       legendColors = legendColors,
+                                       normMatrix = rv$normData,
+                                       clusterOption1 = input$clusteroption1_rnaseq_norm,
+                                       clusterOption2 = input$clusteroption2_rnaseq_norm,
+                                       theme = input$heatmaptheme_rnaseq_norm)
             })
+            
+            # Allow users to set colors
+            observe({
+              req(input$colorFactor_heatmap_rnaseq_norm)
+              if(length(input$colorFactor_heatmap_rnaseq_norm) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_norm], 1, paste, collapse = "_" ))
+              } else{
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_norm])
+              }
+              test <- length(levels(colorFactor))
+              
+              if (test == 2){
+                output$UI_color_heatmap_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2])
+                  )
+                })
+              }
+              
+              if (test == 3){
+                output$UI_color_heatmap_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("heatmap_col3_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_heatmap_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("heatmap_col3_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("heatmap_col4_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_heatmap_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("heatmap_col3_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("heatmap_col4_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4]),
+                    colourpicker::colourInput("heatmap_col5_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_heatmap_rnaseq_norm <- renderUI({
+                  NULL
+                })
+                
+              }
+              
+            })
+            
+            # Download plot
+            output$download_heatmap_rnaseq_norm <- downloadHandler(
+              filename = "QC_Heatmap.html",
+              content = function(file){
+                htmlwidgets::saveWidget(rv$heatmap, 
+                                        file)
+              }
+            )
             
             
             #********************************************************************#
             # PCA
             #********************************************************************#
             
-            #Perform PCA
+            ##Perform PCA
             rv$PCA_data <- prcomp(t(rv$normData[apply(rv$normData, 1, var) != 0,]),
                                   retx = TRUE, 
                                   center = TRUE,
@@ -3020,20 +3478,140 @@ server <- function(input, output, session){
             # Make PCA plot
             output$PCA_rnaseq_norm <- plotly::renderPlotly({
               
-              if(length(input$colorFactor_rnaseq_norm) > 1){
-                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_rnaseq_norm], 1, paste, collapse = "_" ))
+              # Get factor to color by
+              if(length(input$colorFactor_PCA_rnaseq_norm) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm], 1, paste, collapse = "_" ))
               } else{
-                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_rnaseq_norm])
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm])
               }
               
-              plot_PCA(PC_data = rv$PCA_data, 
-                       colorFactor = colorFactor, 
-                       xpc = as.numeric(stringr::str_remove(input$xpca_rnaseq_norm,"PC")), 
-                       ypc = as.numeric(stringr::str_remove(input$ypca_rnaseq_norm,"PC")), 
-                       zpc = ifelse(input$xyz_rnaseq_norm,as.numeric(stringr::str_remove(input$zpca_rnaseq_norm,"PC")),3), 
-                       xyz = input$xyz_rnaseq_norm)
+              # Set colors
+              if (length(levels(colorFactor)) > 5){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              } else{
+                legendColors <- c(input$PCA_col1_rnaseq_norm,
+                                  input$PCA_col2_rnaseq_norm,
+                                  input$PCA_col3_rnaseq_norm,
+                                  input$PCA_col4_rnaseq_norm,
+                                  input$PCA_col5_rnaseq_norm)
+              }
+              if (length(legendColors) != length(levels(colorFactor))){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              }
+              
+              # Make PCA score plot
+              rv$PCAplot <- plot_PCA(PC_data = rv$PCA_data, 
+                                     colorFactor = colorFactor,
+                                     legendColors = legendColors, 
+                                     xpc = as.numeric(stringr::str_remove(input$xpca_rnaseq_norm,"PC")), 
+                                     ypc = as.numeric(stringr::str_remove(input$ypca_rnaseq_norm,"PC")), 
+                                     zpc = ifelse(input$xyz_rnaseq_norm,as.numeric(stringr::str_remove(input$zpca_rnaseq_norm,"PC")),3), 
+                                     xyz = input$xyz_rnaseq_norm)
+              return(rv$PCAplot)
+            })
+            
+            
+            # Allow users to set colors
+            observe({
+              req(input$colorFactor_PCA_rnaseq_norm)
+              if(length(input$colorFactor_PCA_rnaseq_norm) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm], 1, paste, collapse = "_" ))
+              } else{
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm])
+              }
+              test <- length(levels(colorFactor))
+              
+              if (test == 2){
+                output$UI_color_PCA_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2])
+                  )
+                })
+              }
+              
+              if (test == 3){
+                output$UI_color_PCA_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("PCA_col3_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_PCA_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("PCA_col3_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("PCA_col4_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_PCA_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("PCA_col3_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("PCA_col4_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4]),
+                    colourpicker::colourInput("PCA_col5_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_PCA_rnaseq_norm <- renderUI({
+                  NULL
+                })
+                
+              }
               
             })
+            
+            # Download plot
+            output$download_PCA_rnaseq_norm <- downloadHandler(
+              filename = "QC_PCA.html",
+              content = function(file){
+                
+                htmlwidgets::saveWidget(rv$PCAplot, 
+                                        file)
+              }
+            )
             
             #********************************************************************#
             # Output 6: Overview of pre-processing settings
@@ -3187,142 +3765,154 @@ server <- function(input, output, session){
                              shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
+                  # TAB4: Heatmap of sample-sample correlations
                   tabPanel("Correlation plot", 
                            icon = icon("fas fa-mouse-pointer"),
-                           
-                           br(),
-                           
+                           h3(strong("Heatmap of sample-sample correlations")),
+                           hr(),
                            fluidRow(
-                             
-                             #Distance method
-                             column(4,
-                                    pickerInput(
-                                      inputId = "clusteroption1_rnaseq_norm",
-                                      label = "Distance calculation 
-                                              method",
-                                      choices = c("Pearson","Spearman",
-                                                  "Euclidean"),
+                             column(3,
+                                    shinyWidgets::pickerInput(
+                                      inputId = "colorFactor_heatmap_rnaseq_norm",
+                                      label = "Side color",
+                                      choices = colnames(rv$metaData_fil),
+                                      selected = rv$experimentName,
+                                      multiple = TRUE,
                                       options = list(
-                                        style = "btn-primary"))
+                                        style = "btn-info"))
+                             ),
+                             # Select distance method
+                             column(3,
+                                    shinyWidgets::pickerInput(
+                                      inputId = "clusteroption1_rnaseq_norm",
+                                      label = "Distance",
+                                      choices = c("Pearson","Spearman",
+                                                  "Euclidean"))
                              ),
                              
-                             #Ckustering method
-                             column(4,
-                                    pickerInput(
+                             #Clustering method
+                             column(3,
+                                    shinyWidgets::pickerInput(
                                       inputId = "clusteroption2_rnaseq_norm",
-                                      label = "Clustering method",
+                                      label = "Clustering",
                                       choices = c("ward.D2","single",
                                                   "complete","average",
                                                   "mcquitty","median",
-                                                  "centroid"),
-                                      options = list(
-                                        style = "btn-info"))
-                             )),
-                           
+                                                  "centroid"))
+                             )
+                           ),
                            hr(),
+                           downloadButton('download_heatmap_rnaseq_norm', 
+                                          'Download figure'),
+                           br(),
+                           br(),
                            
-                           #Theme
-                           dropdownButton(
-                             tags$h3("Theme"),
-                             
-                             selectInput(inputId = "heatmapFactor_rnaseq_norm",
-                                         label = "Side colors",
-                                         choices = colnames(rv$metaData_fil),
-                                         selected = rv$experimentName,
-                                         multiple = TRUE),
-                             
+                           # customize heatmap
+                           shinyWidgets::dropdownButton(
+                             h4("Heatmap theme"),
                              selectInput(inputId = 'heatmaptheme_rnaseq_norm',
-                                         label = "Heatmap theme",
+                                         label = NULL,
                                          choices = c("Default", 
                                                      "Yellow-red", 
                                                      "Blues", 
                                                      "Reds")),
+                             br(),
+                             uiOutput("UI_color_heatmap_rnaseq_norm"),
                              
                              circle = TRUE, status = "info",
                              icon = icon("fas fa-cog"), width = "300px",
-                             
-                             tooltip = tooltipOptions(
+                             tooltip = shinyWidgets::tooltipOptions(
                                title = "Click to change colors!")
-                             
                            ),
                            
-                           plotlyOutput("heatmap_rnaseq_norm", 
-                                        width = "1000px", 
-                                        height="600px") %>% 
-                             withSpinner(color="#0dc5c1", 
-                                         proxy.height = "400px")
+                           # Make heatmap
+                           plotly::plotlyOutput("heatmap_rnaseq_norm", 
+                                                width = "65vw", height = "35vw") %>% 
+                             shinycssloaders::withSpinner(color="#0dc5c1", 
+                                                          proxy.height = "400px")
                            
                   ),
+                  
+                  # TAB5: PCA score plot
                   tabPanel("PCA",
                            icon = icon("fas fa-mouse-pointer"),
                            # Title + text
-                           fluidRow(
-                             h3(strong("Principal Component Analysis (PCA)")),
-                             h5("Here you can view the PCA score plot."),
-                             hr(),
-                           ),
+                           h3(strong("Principal Component Analysis (PCA)")),
+                           shinyWidgets::materialSwitch(
+                             inputId = "xyz_rnaseq_norm",
+                             label = "3D",
+                             value = FALSE, 
+                             status = "info"),
+                           
+                           hr(),
                            
                            # Set color + 3D/2D
                            fluidRow(
                              column(3,
                                     # Color by which factor?
-                                    pickerInput(inputId = "colorFactor_rnaseq_norm",
-                                                label = "Color by:",
-                                                choices = colnames(rv$metaData_fil),
-                                                selected = rv$experimentName,
-                                                multiple = TRUE)
+                                    shinyWidgets::pickerInput(inputId = "colorFactor_PCA_rnaseq_norm",
+                                                              label = "Color by:",
+                                                              choices = colnames(rv$metaData_fil),
+                                                              selected = rv$experimentName,
+                                                              multiple = TRUE,
+                                                              options = list(
+                                                                style = "btn-info"))
                              ),
                              column(3,
-                                    br(),
-                                    # 3D plot?
-                                    materialSwitch(
-                                      inputId = "xyz_rnaseq_norm",
-                                      label = "3D",
-                                      value = FALSE, 
-                                      status = "danger")
-                                    
-                             )
-                           ),
-                           
-                           # Set axes
-                           fluidRow(
-                             column(3,
                                     #X-axis
-                                    selectInput(inputId = "xpca_rnaseq_norm", 
-                                                label = "x-axis",
-                                                choices = c("PC1","PC2","PC3", "PC4", "PC5",
-                                                            "PC6", "PC7", "PC8"),
-                                                selected = "PC1")
+                                    shinyWidgets::pickerInput(inputId = "xpca_rnaseq_norm", 
+                                                              label = "x-axis",
+                                                              choices = c("PC1","PC2","PC3", "PC4", "PC5",
+                                                                          "PC6", "PC7", "PC8"),
+                                                              selected = "PC1")
                              ),
                              column(3,
                                     #Y-axis
-                                    selectInput(inputId = "ypca_rnaseq_norm", 
-                                                label = "y-axis",
-                                                choices = c("PC1","PC2","PC3", "PC4", "PC5", 
-                                                            "PC6", "PC7", "PC8"),
-                                                selected = "PC2")
+                                    shinyWidgets::pickerInput(inputId = "ypca_rnaseq_norm", 
+                                                              label = "y-axis",
+                                                              choices = c("PC1","PC2","PC3", "PC4", "PC5", 
+                                                                          "PC6", "PC7", "PC8"),
+                                                              selected = "PC2")
                              ),
                              column(3,
                                     #Z-axis
                                     conditionalPanel(
                                       condition = "input.xyz_rnaseq_norm==true",
-                                      selectInput(inputId = "zpca_rnaseq_norm", 
-                                                  label = "z-axis",
-                                                  choices = c("PC1","PC2","PC3", "PC4", "PC5", 
-                                                              "PC6", "PC7", "PC8"),
-                                                  selected = "PC3")
+                                      shinyWidgets::pickerInput(inputId = "zpca_rnaseq_norm", 
+                                                                label = "z-axis",
+                                                                choices = c("PC1","PC2","PC3", "PC4", "PC5", 
+                                                                            "PC6", "PC7", "PC8"),
+                                                                selected = "PC3")
                                     )
                              )
                            ),
                            
-                           # Print plot
-                           fluidRow(
-                             hr(),
-                             plotlyOutput("PCA_rnaseq_norm")%>% 
-                               withSpinner(color="#0dc5c1")
-                           ) 
+                           hr(),
+                           downloadButton('download_PCA_rnaseq_norm', 
+                                          'Download figure'),
+                           br(),
+                           br(),
                            
-                  ), # EO PCA tabPanel
+                           fluidRow(
+                             
+                             # Customize PCA plot
+                             shinyWidgets::dropdownButton(
+                               
+                               uiOutput("UI_color_PCA_rnaseq_norm"),
+                               circle = TRUE, status = "info",
+                               icon = icon("fas fa-cog"), width = "300px",
+                               tooltip = shinyWidgets::tooltipOptions(
+                                 title = "Click to change colors!")
+                             ),
+                             
+                             # Make PCA plot
+                             plotly::plotlyOutput("PCA_rnaseq_norm",
+                                                  width = "55vw", height = "30vw")%>% 
+                               shinycssloaders::withSpinner(color="#0dc5c1"),
+                           ),
+                           
+                           
+                  ), # EO PCA tabpanel
                   
                   # TAB6: Settings table
                   tabPanel("Settings overview",
@@ -3461,8 +4051,7 @@ server <- function(input, output, session){
             # Calculate statistics
             if (isTRUE(input$addAnnotation_rnaseq_norm)){
               
-              counts <- 2^rv$normData - 1 
-              rv$top_table_list <- getStatistics_RNASeq_processed(normMatrix = counts, 
+              rv$top_table_list <- getStatistics_RNASeq_processed(normMatrix = rv$normData, 
                                                                   metaData = rv$metaData_fil, 
                                                                   expFactor = rv$experimentName, 
                                                                   covGroups_num = input$covGroups_num_rnaseq_norm, 
@@ -3475,8 +4064,7 @@ server <- function(input, output, session){
                                                                   biomart_filters = input$biomart_filter_rnaseq_norm)
               
             } else{
-              counts <- 2^rv$normData - 1 
-              rv$top_table_list <- getStatistics_RNASeq_processed(normMatrix = counts, 
+              rv$top_table_list <- getStatistics_RNASeq_processed(normMatrix = rv$normData, 
                                                                   metaData = rv$metaData_fil, 
                                                                   expFactor = rv$experimentName, 
                                                                   covGroups_num = input$covGroups_num_rnaseq_norm, 
@@ -3726,6 +4314,26 @@ server <- function(input, output, session){
             }, ignoreNULL = FALSE)
             
             
+            #********************************************************************#
+            # MA plot
+            #********************************************************************#
+            observeEvent(input$plot_MA_rnaseq_norm, {
+              req(rv$top_table)
+              req(input$rawp_MA_rnaseq_norm)
+              req(input$p_thres_MA_rnaseq_norm)
+              req(input$logFC_thres_MA_rnaseq_norm)
+              req(input$comparisons_view_rnaseq_norm)
+              
+              if (input$comparisons_view_rnaseq_norm %in% names(rv$top_table)){
+                p <- makeMAplot(top_table = rv$top_table[[input$comparisons_view_rnaseq_norm]], 
+                                 p = input$rawp_MA_rnaseq_norm, 
+                                 p_threshold = input$p_thres_MA_rnaseq_norm, 
+                                 logFC_threshold = input$logFC_thres_MA_rnaseq_norm)
+                
+                output$MA_rnaseq_norm <- plotly::renderPlotly(p)
+              }
+            }, ignoreNULL = FALSE)
+            
             #=========================================#
             #  # UI: Output in different tabs
             #=========================================#
@@ -3924,6 +4532,53 @@ server <- function(input, output, session){
                                br(),
                                # Volcano plot
                                plotlyOutput("volcano_rnaseq_norm")%>% 
+                                 withSpinner(color="#0dc5c1")
+                               
+                      ),
+                      
+                      #********************************************************************#
+                      # MA plot tab
+                      #********************************************************************#
+                      
+                      tabPanel("MA plot",
+                               icon = icon("fas fa-mouse-pointer"),
+                               br(),
+                               
+                               fluidRow(
+                                 column(3,
+                                        # Raw or adjusted P value?
+                                        prettyRadioButtons(
+                                          inputId = "rawp_MA_rnaseq_norm",
+                                          label = "P value", 
+                                          choices = 
+                                            c("Raw P value" = "raw", 
+                                              "Adjusted P value" = "adj"))
+                                 ),
+                                 column(3,
+                                        #P value threshold
+                                        numericInput(
+                                          inputId = "p_thres_MA_rnaseq_norm",
+                                          label = "P threshold",
+                                          value = 0.05)
+                                 ),
+                                 column(3,
+                                        #logFC threshold
+                                        numericInput(
+                                          inputId = "logFC_thres_MA_rnaseq_norm",
+                                          label = "logFC threshold",
+                                          value = 1)
+                                 )
+                               ),
+                               hr(),
+                               actionBttn(inputId = "plot_MA_rnaseq_norm", 
+                                          label = "Plot",
+                                          style = "jelly",
+                                          color = "primary",
+                                          icon = icon("sync")),
+                               br(),
+                               br(),
+                               # Volcano plot
+                               plotlyOutput("MA_rnaseq_norm")%>% 
                                  withSpinner(color="#0dc5c1")
                                
                       )
@@ -5166,19 +5821,139 @@ server <- function(input, output, session){
             # Heatmap of sample-sample correlations
             output$heatmap_microarray_raw  <- plotly::renderPlotly({
               
-              # Make colors
-              if(length(input$heatmapFactor_microarray_raw) > 1){
-                colorFactor <- factor(apply(rv$metaData_fil[,input$heatmapFactor_microarray_raw], 1, paste, collapse = "_" ))
+              # Make color factor
+              if(length(input$colorFactor_heatmap_microarray_raw) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_microarray_raw], 1, paste, collapse = "_" ))
               } else{
-                colorFactor <- factor(rv$metaData_fil[,input$heatmapFactor_microarray_raw])
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_microarray_raw])
               }
               
-              getHeatmap(experimentFactor = colorFactor, 
-                         normMatrix = rv$normMatrix,
-                         clusterOption1 = input$clusteroption1_microarray_raw,
-                         clusterOption2 = input$clusteroption2_microarray_raw,
-                         theme = input$heatmaptheme_microarray_raw)
+              # Set colors
+              if (length(levels(colorFactor)) > 5){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              } else{
+                legendColors <- c(input$heatmap_col1_microarray_raw,
+                                  input$heatmap_col2_microarray_raw,
+                                  input$heatmap_col3_microarray_raw,
+                                  input$heatmap_col4_microarray_raw,
+                                  input$heatmap_col5_microarray_raw)
+              }
+              if (length(legendColors) != length(levels(colorFactor))){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              }
+              names(legendColors) <- levels(colorFactor)
+              
+              # Make heatmap
+              rv$heatmap <- getHeatmap(experimentFactor = colorFactor,
+                                       legendColors = legendColors,
+                                       normMatrix = rv$normMatrix,
+                                       clusterOption1 = input$clusteroption1_microarray_raw,
+                                       clusterOption2 = input$clusteroption2_microarray_raw,
+                                       theme = input$heatmaptheme_microarray_raw)
+              return(rv$heatmap)
             })
+            
+            # Allow users to set colors
+            observe({
+              req(input$colorFactor_heatmap_microarray_raw)
+              if(length(input$colorFactor_heatmap_microarray_raw) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_microarray_raw], 1, paste, collapse = "_" ))
+              } else{
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_microarray_raw])
+              }
+              test <- length(levels(colorFactor))
+              
+              if (test == 2){
+                output$UI_color_heatmap_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2])
+                  )
+                })
+              }
+              
+              if (test == 3){
+                output$UI_color_heatmap_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("heatmap_col3_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_heatmap_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("heatmap_col3_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("heatmap_col4_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_heatmap_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("heatmap_col3_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("heatmap_col4_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4]),
+                    colourpicker::colourInput("heatmap_col5_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_heatmap_microarray_raw <- renderUI({
+                  NULL
+                })
+                
+              }
+              
+            })
+            
+            # Download plot
+            output$download_heatmap_microarray_raw <- downloadHandler(
+              filename = "QC_Heatmap.html",
+              content = function(file){
+                htmlwidgets::saveWidget(rv$heatmap, 
+                                        file)
+              }
+            )
+            
             
             #********************************************************************#
             # Output 5: PCA score plot
@@ -5188,28 +5963,146 @@ server <- function(input, output, session){
             rv$PCA_data <- prcomp(t(rv$normMatrix[apply(rv$normMatrix, 1, var) != 0,]),
                                   retx = TRUE, 
                                   center = TRUE,
-                                  scale.=TRUE)
+                                  scale.= TRUE)
             
             
             # Make PCA plot
-            output$PCA_microarray_raw <- renderPlotly({
+            output$PCA_microarray_raw <- plotly::renderPlotly({
               
-              # Get vector for colouring the samples
-              if(length(input$colorFactor_microarray_raw) > 1){
-                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_microarray_raw], 1, paste, collapse = "_" ))
+              # Get factor to color by
+              if(length(input$colorFactor_PCA_microarray_raw) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_microarray_raw], 1, paste, collapse = "_" ))
               } else{
-                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_microarray_raw])
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_microarray_raw])
               }
               
-              # Make PCA plot
-              plot_PCA(PC_data = rv$PCA_data, 
-                       colorFactor = colorFactor, 
-                       xpc = as.numeric(str_remove(input$xpca_microarray_raw,"PC")), 
-                       ypc = as.numeric(str_remove(input$ypca_microarray_raw,"PC")), 
-                       zpc = ifelse(input$xyz_microarray_raw,as.numeric(str_remove(input$zpca_microarray_raw,"PC")),3), 
-                       xyz = input$xyz_microarray_raw)
+              # Set colors
+              if (length(levels(colorFactor)) > 5){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              } else{
+                legendColors <- c(input$PCA_col1_microarray_raw,
+                                  input$PCA_col2_microarray_raw,
+                                  input$PCA_col3_microarray_raw,
+                                  input$PCA_col4_microarray_raw,
+                                  input$PCA_col5_microarray_raw)
+              }
+              if (length(legendColors) != length(levels(colorFactor))){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              }
+              
+              # Make PCA score plot
+              rv$PCAplot <- plot_PCA(PC_data = rv$PCA_data, 
+                                     colorFactor = colorFactor,
+                                     legendColors = legendColors, 
+                                     xpc = as.numeric(stringr::str_remove(input$xpca_microarray_raw,"PC")), 
+                                     ypc = as.numeric(stringr::str_remove(input$ypca_microarray_raw,"PC")), 
+                                     zpc = ifelse(input$xyz_microarray_raw,as.numeric(stringr::str_remove(input$zpca_microarray_raw,"PC")),3), 
+                                     xyz = input$xyz_microarray_raw)
+              return(rv$PCAplot)
+            })
+            
+            
+            # Allow users to set colors
+            observe({
+              req(input$colorFactor_PCA_microarray_raw)
+              if(length(input$colorFactor_PCA_microarray_raw) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_microarray_raw], 1, paste, collapse = "_" ))
+              } else{
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_microarray_raw])
+              }
+              test <- length(levels(colorFactor))
+              
+              if (test == 2){
+                output$UI_color_PCA_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2])
+                  )
+                })
+              }
+              
+              if (test == 3){
+                output$UI_color_PCA_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("PCA_col3_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_PCA_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("PCA_col3_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("PCA_col4_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_PCA_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("PCA_col3_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("PCA_col4_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4]),
+                    colourpicker::colourInput("PCA_col5_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_PCA_microarray_raw <- renderUI({
+                  NULL
+                })
+                
+              }
               
             })
+            
+            # Download plot
+            output$download_PCA_microarray_raw <- downloadHandler(
+              filename = "QC_PCA.html",
+              content = function(file){
+                
+                htmlwidgets::saveWidget(rv$PCAplot, 
+                                        file)
+              }
+            )
             
             #********************************************************************#
             # Output 6: Overview of pre-processing settings
@@ -5370,145 +6263,156 @@ server <- function(input, output, session){
                              shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
-                  # Sample-sample correlation heatmap
+                  # TAB4: Heatmap of sample-sample correlations
                   tabPanel("Correlation plot", 
                            icon = icon("fas fa-mouse-pointer"),
-                           
-                           br(),
-                           
+                           h3(strong("Heatmap of sample-sample correlations")),
+                           hr(),
                            fluidRow(
-                             
-                             #Distance method
-                             column(4,
+                             column(3,
+                                    shinyWidgets::pickerInput(
+                                      inputId = "colorFactor_heatmap_microarray_raw",
+                                      label = "Side color",
+                                      choices = colnames(rv$metaData_fil),
+                                      selected = rv$experimentName,
+                                      multiple = TRUE,
+                                      options = list(
+                                        style = "btn-info"))
+                             ),
+                             # Select distance method
+                             column(3,
                                     shinyWidgets::pickerInput(
                                       inputId = "clusteroption1_microarray_raw",
-                                      label = "Distance calculation 
-                                              method",
+                                      label = "Distance",
                                       choices = c("Pearson","Spearman",
-                                                  "Euclidean"),
-                                      options = list(
-                                        style = "btn-primary"))
+                                                  "Euclidean"))
                              ),
                              
-                             #Ckustering method
-                             column(4,
+                             #Clustering method
+                             column(3,
                                     shinyWidgets::pickerInput(
                                       inputId = "clusteroption2_microarray_raw",
-                                      label = "Clustering method",
+                                      label = "Clustering",
                                       choices = c("ward.D2","single",
                                                   "complete","average",
                                                   "mcquitty","median",
-                                                  "centroid"),
-                                      options = list(
-                                        style = "btn-info"))
-                             )),
-                           
+                                                  "centroid"))
+                             )
+                           ),
                            hr(),
+                           downloadButton('download_heatmap_microarray_raw', 
+                                          'Download figure'),
+                           br(),
+                           br(),
                            
-                           #Theme
-                           dropdownButton(
-                             tags$h3("Theme"),
-                             
-                             selectInput(inputId = "heatmapFactor_microarray_raw",
-                                         label = "Side colors",
-                                         choices = colnames(rv$metaData_fil),
-                                         selected = rv$experimentName,
-                                         multiple = TRUE),
-                             
+                           # customize heatmap
+                           shinyWidgets::dropdownButton(
+                             h4("Heatmap theme"),
                              selectInput(inputId = 'heatmaptheme_microarray_raw',
-                                         label = "Heatmap theme",
+                                         label = NULL,
                                          choices = c("Default", 
                                                      "Yellow-red", 
                                                      "Blues", 
                                                      "Reds")),
+                             br(),
+                             uiOutput("UI_color_heatmap_microarray_raw"),
+                             
                              circle = TRUE, status = "info",
                              icon = icon("fas fa-cog"), width = "300px",
-                             
                              tooltip = shinyWidgets::tooltipOptions(
                                title = "Click to change colors!")
-                             
                            ),
                            
-                           # Heatmap
+                           # Make heatmap
                            plotly::plotlyOutput("heatmap_microarray_raw", 
-                                                width = "1000px", 
-                                                height="600px") %>% 
+                                                width = "65vw", height = "35vw") %>% 
                              shinycssloaders::withSpinner(color="#0dc5c1", 
                                                           proxy.height = "400px")
                            
                   ),
                   
-                  # PCA score plot
+                  
+                  # TAB5: PCA score plot
                   tabPanel("PCA",
                            icon = icon("fas fa-mouse-pointer"),
                            # Title + text
-                           fluidRow(
-                             h3(strong("Principal Component Analysis (PCA)")),
-                             h5("Here you can view the PCA score plot."),
-                             hr(),
-                           ),
+                           h3(strong("Principal Component Analysis (PCA)")),
+                           shinyWidgets::materialSwitch(
+                             inputId = "xyz_microarray_raw",
+                             label = "3D",
+                             value = FALSE, 
+                             status = "info"),
+                           
+                           hr(),
                            
                            # Set color + 3D/2D
                            fluidRow(
                              column(3,
                                     # Color by which factor?
-                                    shinyWidgets::pickerInput(inputId = "colorFactor_microarray_raw",
+                                    shinyWidgets::pickerInput(inputId = "colorFactor_PCA_microarray_raw",
                                                               label = "Color by:",
                                                               choices = colnames(rv$metaData_fil),
                                                               selected = rv$experimentName,
-                                                              multiple = TRUE)
+                                                              multiple = TRUE,
+                                                              options = list(
+                                                                style = "btn-info"))
                              ),
                              column(3,
-                                    br(),
-                                    # 3D plot?
-                                    shinyWidgets::materialSwitch(
-                                      inputId = "xyz_microarray_raw",
-                                      label = "3D",
-                                      value = FALSE, 
-                                      status = "danger")
-                                    
-                             )
-                           ),
-                           
-                           # Set axes
-                           fluidRow(
-                             column(3,
                                     #X-axis
-                                    selectInput(inputId = "xpca_microarray_raw", 
-                                                label = "x-axis",
-                                                choices = c("PC1","PC2","PC3", "PC4", "PC5",
-                                                            "PC6", "PC7", "PC8"),
-                                                selected = "PC1")
+                                    shinyWidgets::pickerInput(inputId = "xpca_microarray_raw", 
+                                                              label = "x-axis",
+                                                              choices = c("PC1","PC2","PC3", "PC4", "PC5",
+                                                                          "PC6", "PC7", "PC8"),
+                                                              selected = "PC1")
                              ),
                              column(3,
                                     #Y-axis
-                                    selectInput(inputId = "ypca_microarray_raw", 
-                                                label = "y-axis",
-                                                choices = c("PC1","PC2","PC3", "PC4", "PC5", 
-                                                            "PC6", "PC7", "PC8"),
-                                                selected = "PC2")
+                                    shinyWidgets::pickerInput(inputId = "ypca_microarray_raw", 
+                                                              label = "y-axis",
+                                                              choices = c("PC1","PC2","PC3", "PC4", "PC5", 
+                                                                          "PC6", "PC7", "PC8"),
+                                                              selected = "PC2")
                              ),
                              column(3,
                                     #Z-axis
                                     conditionalPanel(
                                       condition = "input.xyz_microarray_raw==true",
-                                      selectInput(inputId = "zpca_microarray_raw", 
-                                                  label = "z-axis",
-                                                  choices = c("PC1","PC2","PC3", "PC4", "PC5", 
-                                                              "PC6", "PC7", "PC8"),
-                                                  selected = "PC3")
+                                      shinyWidgets::pickerInput(inputId = "zpca_microarray_raw", 
+                                                                label = "z-axis",
+                                                                choices = c("PC1","PC2","PC3", "PC4", "PC5", 
+                                                                            "PC6", "PC7", "PC8"),
+                                                                selected = "PC3")
                                     )
                              )
                            ),
                            
-                           # Print plot
-                           fluidRow(
-                             hr(),
-                             plotly::plotlyOutput("PCA_microarray_raw")%>% 
-                               shinycssloaders::withSpinner(color="#0dc5c1")
-                           ) 
+                           hr(),
+                           downloadButton('download_PCA_microarray_raw', 
+                                          'Download figure'),
+                           br(),
+                           br(),
                            
-                  ), 
+                           fluidRow(
+                             
+                             # Customize PCA plot
+                             shinyWidgets::dropdownButton(
+                               
+                               uiOutput("UI_color_PCA_microarray_raw"),
+                               circle = TRUE, status = "info",
+                               icon = icon("fas fa-cog"), width = "300px",
+                               tooltip = shinyWidgets::tooltipOptions(
+                                 title = "Click to change colors!")
+                             ),
+                             
+                             # Make PCA plot
+                             plotly::plotlyOutput("PCA_microarray_raw",
+                                                  width = "55vw", height = "30vw")%>% 
+                               shinycssloaders::withSpinner(color="#0dc5c1"),
+                           ),
+                           
+                           
+                  ), # EO PCA tabpanel
+                  
                   # Settings table
                   tabPanel("Settings overview",
                            icon = icon("fas fa-file"),
@@ -5965,6 +6869,36 @@ server <- function(input, output, session){
               
             }, ignoreNULL = FALSE) 
             
+            #********************************************************************#
+            # MA plot
+            #********************************************************************#
+            
+            # Re-render the volcano plot after pressing the "plot" button
+            # ignoreNULL = FALSE, so it will render the plot the first time 
+            # without needing to press the "plot" button.
+            observeEvent(input$plot_MA_microarray_raw, {
+              
+              # Requirements
+              req(rv$top_table) # Top table
+              req(input$rawp_MA_microarray_raw) # raw or adj. P value?
+              req(input$p_thres_MA_microarray_raw) # P value threshold?
+              req(input$logFC_thres_MA_microarray_raw) # log2FC threshold?
+              req(input$comparisons_view_microarray_raw)
+              
+              if (input$comparisons_view_microarray_raw %in% names(rv$top_table)){
+                
+                # Make plot
+                p <- makeMAplot(top_table = rv$top_table[[input$comparisons_view_microarray_raw]], 
+                                 p = input$rawp_MA_microarray_raw, 
+                                 p_threshold = input$p_thres_MA_microarray_raw, 
+                                 logFC_threshold = input$logFC_thres_MA_microarray_raw)
+                
+                # Render plot
+                output$MA_microarray_raw <- renderPlotly(p)
+              }
+              
+            }, ignoreNULL = FALSE) 
+            
             
             #--------------------------------------#
             # dynamic UI: Output in different tabs
@@ -6180,6 +7114,56 @@ server <- function(input, output, session){
                                
                                # Volcano plot
                                plotlyOutput("volcano_microarray_raw")%>% 
+                                 withSpinner(color="#0dc5c1")
+                               
+                      ),
+                      
+                      #********************************************************************#
+                      # MA plot tab
+                      #********************************************************************#
+                      
+                      tabPanel("MA plot",
+                               icon = icon("fas fa-mouse-pointer"),
+                               br(),
+                               
+                               fluidRow(
+                                 column(3,
+                                        # Raw or adjusted P value?
+                                        prettyRadioButtons(
+                                          inputId = "rawp_MA_microarray_raw",
+                                          label = "P value", 
+                                          choices = 
+                                            c("Raw P value" = "raw", 
+                                              "Adjusted P value" = "adj"))
+                                 ),
+                                 column(3,
+                                        # P value threshold
+                                        numericInput(
+                                          inputId = "p_thres_MA_microarray_raw",
+                                          label = "P threshold",
+                                          value = 0.05)
+                                 ),
+                                 column(3,
+                                        # log2FC threshold
+                                        numericInput(
+                                          inputId = "logFC_thres_MA_microarray_raw",
+                                          label = "logFC threshold",
+                                          value = 1)
+                                 )
+                               ),
+                               hr(),
+                               
+                               # Action button: press to (re-)render plot
+                               actionBttn(inputId = "plot_MA_microarray_raw", 
+                                          label = "Plot",
+                                          style = "jelly",
+                                          color = "primary",
+                                          icon = icon("sync")),
+                               br(),
+                               br(),
+                               
+                               # Volcano plot
+                               plotlyOutput("MA_microarray_raw")%>% 
                                  withSpinner(color="#0dc5c1")
                                
                       )
@@ -7350,22 +8334,139 @@ server <- function(input, output, session){
             # Output 4: Heatmap
             #********************************************************************#
             
-            # Heatmap of sample-sample correlations
-            output$heatmap_microarray_norm  <- renderPlotly({
+            output$heatmap_microarray_norm  <- plotly::renderPlotly({
               
-              # Make colors
-              if(length(input$heatmapFactor_microarray_norm) > 1){
-                colorFactor <- factor(apply(rv$metaData_fil[,input$heatmapFactor_microarray_norm], 1, paste, collapse = "_" ))
+              # Make color factor
+              if(length(input$colorFactor_heatmap_microarray_norm) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_microarray_norm], 1, paste, collapse = "_" ))
               } else{
-                colorFactor <- factor(rv$metaData_fil[,input$heatmapFactor_microarray_norm])
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_microarray_norm])
               }
               
-              getHeatmap(experimentFactor = colorFactor, 
-                         normMatrix = rv$normMatrix,
-                         clusterOption1 = input$clusteroption1_microarray_norm,
-                         clusterOption2 = input$clusteroption2_microarray_norm,
-                         theme = input$heatmaptheme_microarray_norm)
+              # Set colors
+              if (length(levels(colorFactor)) > 5){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              } else{
+                legendColors <- c(input$heatmap_col1_microarray_norm,
+                                  input$heatmap_col2_microarray_norm,
+                                  input$heatmap_col3_microarray_norm,
+                                  input$heatmap_col4_microarray_norm,
+                                  input$heatmap_col5_microarray_norm)
+              }
+              if (length(legendColors) != length(levels(colorFactor))){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              }
+              names(legendColors) <- levels(colorFactor)
+              
+              # Make heatmap
+              rv$heatmap <- getHeatmap(experimentFactor = colorFactor,
+                                       legendColors = legendColors,
+                                       normMatrix = rv$normMatrix,
+                                       clusterOption1 = input$clusteroption1_microarray_norm,
+                                       clusterOption2 = input$clusteroption2_microarray_norm,
+                                       theme = input$heatmaptheme_microarray_norm)
             })
+            
+            # Allow users to set colors
+            observe({
+              req(input$colorFactor_heatmap_microarray_norm)
+              if(length(input$colorFactor_heatmap_microarray_norm) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_microarray_norm], 1, paste, collapse = "_" ))
+              } else{
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_microarray_norm])
+              }
+              test <- length(levels(colorFactor))
+              
+              if (test == 2){
+                output$UI_color_heatmap_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2])
+                  )
+                })
+              }
+              
+              if (test == 3){
+                output$UI_color_heatmap_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("heatmap_col3_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_heatmap_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("heatmap_col3_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("heatmap_col4_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_heatmap_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Side color"),
+                    colourpicker::colourInput("heatmap_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("heatmap_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("heatmap_col3_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("heatmap_col4_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4]),
+                    colourpicker::colourInput("heatmap_col5_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_heatmap_microarray_norm <- renderUI({
+                  NULL
+                })
+                
+              }
+              
+            })
+            
+            # Download plot
+            output$download_heatmap_microarray_norm <- downloadHandler(
+              filename = "QC_Heatmap.html",
+              content = function(file){
+                htmlwidgets::saveWidget(rv$heatmap, 
+                                        file)
+              }
+            )
             
             
             #********************************************************************#
@@ -7380,22 +8481,142 @@ server <- function(input, output, session){
             
             
             # Make PCA plot
-            output$PCA_microarray_norm <- renderPlotly({
+            output$PCA_microarray_norm <- plotly::renderPlotly({
               
-              if(length(input$colorFactor_microarray_norm) > 1){
-                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_microarray_norm], 1, paste, collapse = "_" ))
+              # Get factor to color by
+              if(length(input$colorFactor_PCA_microarray_norm) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_microarray_norm], 1, paste, collapse = "_" ))
               } else{
-                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_microarray_norm])
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_microarray_norm])
               }
               
-              plot_PCA(PC_data = rv$PCA_data, 
-                       colorFactor = colorFactor, 
-                       xpc = as.numeric(str_remove(input$xpca_microarray_norm,"PC")), 
-                       ypc = as.numeric(str_remove(input$ypca_microarray_norm,"PC")), 
-                       zpc = ifelse(input$xyz_microarray_norm,as.numeric(str_remove(input$zpca_microarray_norm,"PC")),3), 
-                       xyz = input$xyz_microarray_norm)
+              # Set colors
+              if (length(levels(colorFactor)) > 5){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              } else{
+                legendColors <- c(input$PCA_col1_microarray_norm,
+                                  input$PCA_col2_microarray_norm,
+                                  input$PCA_col3_microarray_norm,
+                                  input$PCA_col4_microarray_norm,
+                                  input$PCA_col5_microarray_norm)
+              }
+              if (length(legendColors) != length(levels(colorFactor))){
+                legendColors <- colorsByFactor(colorFactor)$legendColors
+              }
+              
+              # Make PCA score plot
+              rv$PCAplot <- plot_PCA(PC_data = rv$PCA_data, 
+                                     colorFactor = colorFactor,
+                                     legendColors = legendColors, 
+                                     xpc = as.numeric(stringr::str_remove(input$xpca_microarray_norm,"PC")), 
+                                     ypc = as.numeric(stringr::str_remove(input$ypca_microarray_norm,"PC")), 
+                                     zpc = ifelse(input$xyz_microarray_norm,as.numeric(stringr::str_remove(input$zpca_microarray_norm,"PC")),3), 
+                                     xyz = input$xyz_microarray_norm)
+              return(rv$PCAplot)
+            })
+            
+            
+            # Allow users to set colors
+            observe({
+              req(input$colorFactor_PCA_microarray_norm)
+              if(length(input$colorFactor_PCA_microarray_norm) > 1){
+                colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_microarray_norm], 1, paste, collapse = "_" ))
+              } else{
+                colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_microarray_norm])
+              }
+              test <- length(levels(colorFactor))
+              
+              if (test == 2){
+                output$UI_color_PCA_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2])
+                  )
+                })
+              }
+              
+              if (test == 3){
+                output$UI_color_PCA_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("PCA_col3_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_PCA_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("PCA_col3_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("PCA_col4_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_PCA_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("PCA_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[1]),
+                    colourpicker::colourInput("PCA_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[2]),
+                    colourpicker::colourInput("PCA_col3_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[3]),
+                    colourpicker::colourInput("PCA_col4_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[4]),
+                    colourpicker::colourInput("PCA_col5_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(colorFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_PCA_microarray_norm <- renderUI({
+                  NULL
+                })
+                
+              }
               
             })
+            
+            # Download plot
+            output$download_PCA_microarray_norm <- downloadHandler(
+              filename = "QC_PCA.html",
+              content = function(file){
+                
+                htmlwidgets::saveWidget(rv$PCAplot, 
+                                        file)
+              }
+            )
             
             #********************************************************************#
             # Output 6: Overview of pre-processing settings
@@ -7555,143 +8776,154 @@ server <- function(input, output, session){
                              shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
-                  # TAB4: sample-sample correlations
+                  # TAB4: Heatmap of sample-sample correlations
                   tabPanel("Correlation plot", 
                            icon = icon("fas fa-mouse-pointer"),
-                           
-                           br(),
-                           
+                           h3(strong("Heatmap of sample-sample correlations")),
+                           hr(),
                            fluidRow(
-                             
-                             #Distance method
-                             column(4,
+                             column(3,
+                                    shinyWidgets::pickerInput(
+                                      inputId = "colorFactor_heatmap_microarray_norm",
+                                      label = "Side color",
+                                      choices = colnames(rv$metaData_fil),
+                                      selected = rv$experimentName,
+                                      multiple = TRUE,
+                                      options = list(
+                                        style = "btn-info"))
+                             ),
+                             # Select distance method
+                             column(3,
                                     shinyWidgets::pickerInput(
                                       inputId = "clusteroption1_microarray_norm",
-                                      label = "Distance calculation 
-                                              method",
+                                      label = "Distance",
                                       choices = c("Pearson","Spearman",
-                                                  "Euclidean"),
-                                      options = list(
-                                        style = "btn-primary"))
+                                                  "Euclidean"))
                              ),
                              
-                             #Ckustering method
-                             column(4,
+                             #Clustering method
+                             column(3,
                                     shinyWidgets::pickerInput(
                                       inputId = "clusteroption2_microarray_norm",
-                                      label = "Clustering method",
+                                      label = "Clustering",
                                       choices = c("ward.D2","single",
                                                   "complete","average",
                                                   "mcquitty","median",
-                                                  "centroid"),
-                                      options = list(
-                                        style = "btn-info"))
-                             )),
-                           
+                                                  "centroid"))
+                             )
+                           ),
                            hr(),
+                           downloadButton('download_heatmap_microarray_norm', 
+                                          'Download figure'),
+                           br(),
+                           br(),
                            
-                           #Theme
-                           dropdownButton(
-                             tags$h3("Theme"),
-                             
-                             selectInput(inputId = "heatmapFactor_microarray_norm",
-                                         label = "Side colors",
-                                         choices = colnames(rv$metaData_fil),
-                                         selected = rv$experimentName,
-                                         multiple = TRUE),
-                             
+                           # customize heatmap
+                           shinyWidgets::dropdownButton(
+                             h4("Heatmap theme"),
                              selectInput(inputId = 'heatmaptheme_microarray_norm',
-                                         label = "Heatmap theme",
+                                         label = NULL,
                                          choices = c("Default", 
                                                      "Yellow-red", 
                                                      "Blues", 
                                                      "Reds")),
+                             br(),
+                             uiOutput("UI_color_heatmap_microarray_norm"),
+                             
                              circle = TRUE, status = "info",
                              icon = icon("fas fa-cog"), width = "300px",
-                             tooltip = tooltipOptions(
+                             tooltip = shinyWidgets::tooltipOptions(
                                title = "Click to change colors!")
-                             
                            ),
                            
+                           # Make heatmap
                            plotly::plotlyOutput("heatmap_microarray_norm", 
-                                                width = "1000px", 
-                                                height="600px") %>% 
+                                                width = "65vw", height = "35vw") %>% 
                              shinycssloaders::withSpinner(color="#0dc5c1", 
                                                           proxy.height = "400px")
                            
                   ),
                   
-                  # TAB5: PCA
+                  # TAB5: PCA score plot
                   tabPanel("PCA",
                            icon = icon("fas fa-mouse-pointer"),
                            # Title + text
-                           fluidRow(
-                             h3(strong("Principal Component Analysis (PCA)")),
-                             h5("Here you can view the PCA score plot."),
-                             hr(),
-                           ),
+                           h3(strong("Principal Component Analysis (PCA)")),
+                           shinyWidgets::materialSwitch(
+                             inputId = "xyz_microarray_norm",
+                             label = "3D",
+                             value = FALSE, 
+                             status = "info"),
+                           
+                           hr(),
                            
                            # Set color + 3D/2D
                            fluidRow(
                              column(3,
                                     # Color by which factor?
-                                    shinyWidgets::pickerInput(inputId = "colorFactor_microarray_norm",
+                                    shinyWidgets::pickerInput(inputId = "colorFactor_PCA_microarray_norm",
                                                               label = "Color by:",
                                                               choices = colnames(rv$metaData_fil),
                                                               selected = rv$experimentName,
-                                                              multiple = TRUE)
+                                                              multiple = TRUE,
+                                                              options = list(
+                                                                style = "btn-info"))
                              ),
                              column(3,
-                                    br(),
-                                    # 3D plot?
-                                    shinyWidgets::materialSwitch(
-                                      inputId = "xyz_microarray_norm",
-                                      label = "3D",
-                                      value = FALSE, 
-                                      status = "danger")
-                                    
-                             )
-                           ),
-                           
-                           # Set axes
-                           fluidRow(
-                             column(3,
                                     #X-axis
-                                    selectInput(inputId = "xpca_microarray_norm", 
-                                                label = "x-axis",
-                                                choices = c("PC1","PC2","PC3", "PC4", "PC5",
-                                                            "PC6", "PC7", "PC8"),
-                                                selected = "PC1")
+                                    shinyWidgets::pickerInput(inputId = "xpca_microarray_norm", 
+                                                              label = "x-axis",
+                                                              choices = c("PC1","PC2","PC3", "PC4", "PC5",
+                                                                          "PC6", "PC7", "PC8"),
+                                                              selected = "PC1")
                              ),
                              column(3,
                                     #Y-axis
-                                    selectInput(inputId = "ypca_microarray_norm", 
-                                                label = "y-axis",
-                                                choices = c("PC1","PC2","PC3", "PC4", "PC5", 
-                                                            "PC6", "PC7", "PC8"),
-                                                selected = "PC2")
+                                    shinyWidgets::pickerInput(inputId = "ypca_microarray_norm", 
+                                                              label = "y-axis",
+                                                              choices = c("PC1","PC2","PC3", "PC4", "PC5", 
+                                                                          "PC6", "PC7", "PC8"),
+                                                              selected = "PC2")
                              ),
                              column(3,
                                     #Z-axis
                                     conditionalPanel(
                                       condition = "input.xyz_microarray_norm==true",
-                                      selectInput(inputId = "zpca_microarray_norm", 
-                                                  label = "z-axis",
-                                                  choices = c("PC1","PC2","PC3", "PC4", "PC5", 
-                                                              "PC6", "PC7", "PC8"),
-                                                  selected = "PC3")
+                                      shinyWidgets::pickerInput(inputId = "zpca_microarray_norm", 
+                                                                label = "z-axis",
+                                                                choices = c("PC1","PC2","PC3", "PC4", "PC5", 
+                                                                            "PC6", "PC7", "PC8"),
+                                                                selected = "PC3")
                                     )
                              )
                            ),
                            
-                           # Print plot
-                           fluidRow(
-                             hr(),
-                             plotly::plotlyOutput("PCA_microarray_norm")%>% 
-                               withSpinner(color="#0dc5c1")
-                           ) 
+                           hr(),
+                           downloadButton('download_PCA_microarray_norm', 
+                                          'Download figure'),
+                           br(),
+                           br(),
                            
-                  ), # PCA tabpanel
+                           fluidRow(
+                             
+                             # Customize PCA plot
+                             shinyWidgets::dropdownButton(
+                               
+                               uiOutput("UI_color_PCA_microarray_norm"),
+                               circle = TRUE, status = "info",
+                               icon = icon("fas fa-cog"), width = "300px",
+                               tooltip = shinyWidgets::tooltipOptions(
+                                 title = "Click to change colors!")
+                             ),
+                             
+                             # Make PCA plot
+                             plotly::plotlyOutput("PCA_microarray_norm",
+                                                  width = "55vw", height = "30vw")%>% 
+                               shinycssloaders::withSpinner(color="#0dc5c1"),
+                           ),
+                           
+                           
+                  ), # EO PCA tabpanel
                   
                   # # TAB6: settings table
                   tabPanel("Settings overview",
@@ -8092,6 +9324,28 @@ server <- function(input, output, session){
             }, ignoreNULL = FALSE)
             
             
+            #********************************************************************#
+            # MA plot
+            #********************************************************************#
+            observeEvent(input$plot_volcano_microarray_norm, {
+              req(rv$top_table)
+              req(input$rawp_MA_microarray_norm)
+              req(input$p_thres_MA_microarray_norm)
+              req(input$logFC_thres_MA_microarray_norm)
+              
+              req(input$comparisons_view_microarray_norm)
+              
+              if (input$comparisons_view_microarray_norm %in% names(rv$top_table)){
+                p <- makeMAplot(top_table = rv$top_table[[input$comparisons_view_microarray_norm]], 
+                                 p = input$rawp_MA_microarray_norm, 
+                                 p_threshold = input$p_thres_MA_microarray_norm, 
+                                 logFC_threshold = input$logFC_thres_MA_microarray_norm)
+                
+                output$MA_microarray_norm <- renderPlotly(p)
+              }
+            }, ignoreNULL = FALSE)
+            
+            
             #=========================================#
             #  # UI: Output in different tabs
             #=========================================#
@@ -8293,6 +9547,53 @@ server <- function(input, output, session){
                                br(),
                                # Volcano plot
                                plotlyOutput("volcano_microarray_norm")%>% 
+                                 withSpinner(color="#0dc5c1")
+                               
+                      ),
+                      
+                      #********************************************************************#
+                      # MA plot tab
+                      #********************************************************************#
+                      
+                      tabPanel("MA plot",
+                               icon = icon("fas fa-mouse-pointer"),
+                               br(),
+                               
+                               fluidRow(
+                                 column(3,
+                                        # Raw or adjusted P value?
+                                        prettyRadioButtons(
+                                          inputId = "rawp_MA_microarray_norm",
+                                          label = "P value", 
+                                          choices = 
+                                            c("Raw P value" = "raw", 
+                                              "Adjusted P value" = "adj"))
+                                 ),
+                                 column(3,
+                                        #P value threshold
+                                        numericInput(
+                                          inputId = "p_thres_MA_microarray_norm",
+                                          label = "P threshold",
+                                          value = 0.05)
+                                 ),
+                                 column(3,
+                                        #logFC threshold
+                                        numericInput(
+                                          inputId = "logFC_thres_MA_microarray_norm",
+                                          label = "logFC threshold",
+                                          value = 1)
+                                 )
+                               ),
+                               hr(),
+                               actionBttn(inputId = "plot_MA_microarray_norm", 
+                                          label = "Plot",
+                                          style = "jelly",
+                                          color = "primary",
+                                          icon = icon("sync")),
+                               br(),
+                               br(),
+                               # Volcano plot
+                               plotlyOutput("MA_microarray_norm")%>% 
                                  withSpinner(color="#0dc5c1")
                                
                       )

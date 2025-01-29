@@ -1,4 +1,4 @@
-![alt text](https://github.com/jarnokoetsier/ArrayAnalysis_Shiny/blob/main/www/logo.PNG)
+![alt text](https://github.com/jarnokoetsier/ArrayAnalysis_Shiny/blob/main/www/logo_main.PNG)
 
 [![CC BY 4.0][cc-by-shield]][cc-by]
 

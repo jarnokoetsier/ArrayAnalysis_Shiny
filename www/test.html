@@ -1716,7 +1716,9 @@ A preview of the <b>expression matrix</b> and <b>metadata</b> table will be show
 <div id="rr_preprocessing" class="section level2">
 <h3>Pre-processing</h3>
 <p><b>Input</b></p>
-<p>The data preprocessing is performed using the <a href = "https://doi.org/10.1186/s13059-014-0550-8" target="_blank">DESeq2</a> package. For this, you can provide the following inputs:</p>
+<p>The data preprocessing is performed using the <a href = "https://doi.org/10.1186/s13059-014-0550-8" target="_blank">DESeq2</a> package. 
+The data undergoes DESeq2 normalization and, for PCA and sample-sample correlations, additional correlation unblinded variance stabilizing transformation is performed.
+For the preprocessing, you can provide the following inputs:</p>
 <p>1. <b>Remove samples</b> (optional). Via this option, you can remove outliers or samples from experimental groups that you would like to exclude from the analysis.</p>
 <p>2. <b>Select experimental group</b>. The experimental group is the variable that defines the cases and controls (<i>e.g.</i>, disease status). 
 By selecting more than one variable, you can combine multiple variables into a single experimental variable. This can be useful if you, for example, want to compare cases and controls 
@@ -1833,8 +1835,7 @@ The expression profile of a gene can be viewed by clicking on the table.</p>
 <div id="rn_statanalysis" class="section level2">
 <h3>Statistical Analysis</h3>
 <p><b>Input</b></p>
-<p> Statistical analysis is performed using the <a href = "https://doi.org/10.1093/nar/gkv007" target="_blank">limma</a> package, 
-including <a href = "https://doi.org/10.1186/gb-2014-15-2-r29" target="_blank">Voom transformation</a>. 
+<p> Statistical analysis is performed using the <a href = "https://doi.org/10.1093/nar/gkv007" target="_blank">limma</a> package (limma-trend).
 To perform statistical analysis, you can provide three inputs:</p>
 <p>1. <b>Statistical comparison(s)</b>. You can select one or more statistical comparisons of interest. Note that the direction of the statistical comparison is usually defined 
 as <b>Case - Control</b>.</p>

@@ -951,10 +951,10 @@ getDensityplots <- function(experimentFactor, normMatrix, RNASeq = FALSE){
   names(legendColors) <- levels(experimentFactor)
   
   if (!isTRUE(RNASeq)){
-    xaxis_name <- "Normalized log intensity"
+    xaxis_name <- "Normalized log<sub>2</sub> intensity"
   }
   if (isTRUE(RNASeq)){
-    xaxis_name <- "Normalized log counts"
+    xaxis_name <- "Normalized log<sub>2</sub> counts"
   }
   
   
@@ -970,22 +970,85 @@ getDensityplots <- function(experimentFactor, normMatrix, RNASeq = FALSE){
     ggplot2::theme_minimal() +
     ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
                    plot.subtitle = ggplot2::element_text(hjust = 0.5),
-                   panel.grid.major.y = element_blank(),
-                   panel.grid.minor.y = element_blank(),
-                   axis.text.y = element_blank(),
-                   axis.ticks.y = element_blank(),
+                   panel.grid.major.y = ggplot2::element_blank(),
+                   panel.grid.minor.y = ggplot2::element_blank(),
+                   axis.text.y = ggplot2::element_blank(),
+                   axis.ticks.y = ggplot2::element_blank(),
                    legend.title = ggplot2::element_blank()) +
     ggplot2::guides(shape=guide_legend(title="Group",
                                        override.aes = list(
                                          colour = legendColors)),
                     colour = "none")
   
-  p <-  plotly::ggplotly(densityPlot) #%>% 
+  p <-  plotly::ggplotly(densityPlot) %>% 
+    layout(xaxis = list(   
+             title=xaxis_name),   
+           yaxis = list(   
+             title='Density'))#%>% 
     #plotly::layout(height = 600, width = 1000)
   return(p)
   
 }
 
+#==============================================================================#
+# getDensityplots_static()
+#==============================================================================#
+
+# DESCRIPTION:
+# Make interactive density plot
+
+# VARIABLES:
+# experimentFactor: factor with experimental groups (will be used for colouring)
+# normMatrix: normalized expression matrix
+
+getDensityplots_static <- function(experimentFactor, normMatrix, RNASeq = FALSE){
+  
+  # Prepare dataframe
+  plot_df <- tidyr::gather(as.data.frame(normMatrix))
+  plot_df$GeneID <- rep(rownames(normMatrix),ncol(normMatrix))
+  plot_df$Group <- rep(experimentFactor, each = nrow(normMatrix))
+  
+  # Make colors
+  myPalette <- colorsByFactor(experimentFactor)
+  plotColors <- myPalette$plotColors
+  names(plotColors) <- colnames(normMatrix)
+  
+  legendColors <- myPalette$legendColors
+  names(legendColors) <- levels(experimentFactor)
+  
+  if (!isTRUE(RNASeq)){
+    xaxis_name <- expression("Normalized"~log[2]~"intensity")
+  }
+  if (isTRUE(RNASeq)){
+    xaxis_name <- expression("Normalized"~log[2]~"counts")
+  }
+  
+  
+  #Make density plot
+  densityPlot <- ggplot2::ggplot(plot_df, 
+                                 ggplot2::aes(x = value, colour = key, shape = Group)) +
+    ggplot2::geom_density(size = 1) +
+    ggplot2::scale_colour_manual(values = plotColors) +
+    ggplot2::geom_hline(yintercept = 0, color = "darkgrey", linewidth = 1.1) +
+    #ggplot2::geom_vline(xintercept = 0, color = "darkgrey", linewidth = 1.1) +
+    ggplot2::xlab(xaxis_name) +
+    ggplot2::ylab("Density") +
+    ggplot2::theme_minimal() +
+    ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
+                   plot.subtitle = ggplot2::element_text(hjust = 0.5),
+                   panel.grid.major.y = ggplot2::element_blank(),
+                   panel.grid.minor.y = ggplot2::element_blank(),
+                   axis.text.y = ggplot2::element_blank(),
+                   axis.ticks.y = ggplot2::element_blank(),
+                   legend.title = ggplot2::element_blank()) +
+    ggplot2::guides(shape=guide_legend(title="Group",
+                                       override.aes = list(
+                                         colour = legendColors)),
+                    colour = "none")
+  
+  return(densityPlot)
+  
+}
 
 #==============================================================================#
 # getHeatmap()
@@ -1001,22 +1064,18 @@ getDensityplots <- function(experimentFactor, normMatrix, RNASeq = FALSE){
 # clusterOption2: linkage method (e.g. ward.D2)
 # theme: color theme of heatmap
 getHeatmap <- function(experimentFactor,
+                       legendColors,
                        normMatrix,
                        clusterOption1,
                        clusterOption2,
                        theme){
   
   # Make color palette
-  myPalette <- colorsByFactor(experimentFactor)
-
-  # Plot colors
-  myPalette <- colorsByFactor(experimentFactor)
-  plotColors <- myPalette$plotColors
-  names(plotColors) <- colnames(normMatrix)
+  #myPalette <- colorsByFactor(experimentFactor)
   
   # Legend colors
-  legendColors <- myPalette$legendColors
-  names(legendColors) <- levels(experimentFactor)
+  #legendColors <- myPalette$legendColors
+  #names(legendColors) <- levels(experimentFactor)
   
   #note: for computing array correlation, euclidean would not make sense
   #only use euclidean distance to compute the similarity of the correlation
@@ -1039,7 +1098,6 @@ getHeatmap <- function(experimentFactor,
   
   # Perform clustering
   my.hclust <- function(d) hclust(d, method=clusterOption2)
-  names(legendColors) <- levels(experimentFactor)
   sidecolors <- data.frame(experimentFactor)
   colnames(sidecolors) <- "Experimental group"
   
@@ -1071,6 +1129,95 @@ getHeatmap <- function(experimentFactor,
   return(p)
 }
 
+
+#==============================================================================#
+# getHeatmap_static()
+#==============================================================================#
+
+# DESCRIPTION:
+# Make interactive heatmap of sample-sample correlations
+
+# VARIABLES:
+# experimentFactor: factor with experimental groups (will be used for colouring)
+# normMatrix: normalized expression matrix
+# clusterOption1: distance method (e.g., spearman, pearson, euclidean)
+# clusterOption2: linkage method (e.g. ward.D2)
+# theme: color theme of heatmap
+getHeatmap_static <- function(experimentFactor,
+                       legendColors,
+                       normMatrix,
+                       clusterOption1,
+                       clusterOption2,
+                       theme){
+  
+  # Make color palette
+  #myPalette <- colorsByFactor(experimentFactor)
+  
+  # Legend colors
+  #legendColors <- myPalette$legendColors
+  #names(legendColors) <- levels(experimentFactor)
+  
+  #note: for computing array correlation, euclidean would not make sense
+  #only use euclidean distance to compute the similarity of the correlation
+  #vectors for the arrays
+  COpt1 <- "pearson"
+  if (tolower(clusterOption1) == "spearman") COpt1 <- "spearman"
+  crp <- cor(normMatrix, use="complete.obs", method=COpt1)
+  
+  switch(tolower(clusterOption1),
+         "pearson" = {
+           my.dist <- function(x) cor.dist(x, abs=FALSE)
+         },
+         "spearman" = {
+           my.dist <- function(x) spearman.dist(x, abs=FALSE)
+         },
+         "euclidean" = {
+           my.dist <- function(x) euc(x)
+         }
+  )
+  
+  # Perform clustering
+  my.hclust <- function(d) hclust(d, method=clusterOption2)
+  sidecolors <- data.frame(experimentFactor)
+  colnames(sidecolors) <- "Experimental group"
+  
+  # Select heatmap theme colour
+  if (theme == "Default"){
+    gradient = viridis(n = 256, alpha = 1, begin = 0, end = 1,
+                       option = "viridis")
+  }
+  
+  if (theme == "Yellow-red"){
+    gradient = heat.colors(100)
+  }
+  
+  if (theme == "Blues"){
+    gradient = RColorBrewer::brewer.pal(9, "Blues")
+  }
+  if (theme == "Reds"){
+    gradient = RColorBrewer::brewer.pal(9, "Reds")
+  }
+  
+  # p <- heatmaply::ggheatmap(crp, distfun = my.dist,
+  #                           hclustfun = my.hclust, symm = TRUE, seriate = "mean",
+  #                           titleX = FALSE, titleY = FALSE, key.title = NULL,
+  #                           show_dendrogram = c(TRUE, FALSE), col_side_colors = sidecolors,
+  #                           col_side_palette = legendColors, column_text_angle = 90,
+  #                           colors = gradient)
+  # 
+  # return(p)
+  print(legendColors)
+  # Make heatmap
+  gplots::heatmap.2(crp, distfun = my.dist,
+                            hclustfun = my.hclust, symm = TRUE,
+                            key.title = NULL, trace = "none", key = FALSE,
+                            dendrogram = "row", ColSideColors = colorsByFactor(experimentFactor)$plotColors,
+                            #colCol = legendColors, #column_text_angle = 90,
+                            col = gradient)
+
+  
+}
+
 #==============================================================================#
 # plot_PCA()
 #==============================================================================#
@@ -1086,7 +1233,7 @@ getHeatmap <- function(experimentFactor,
 # zpc: Principal component on z-axis (for 3D plot only)
 # xyz: Plot in 3D
 
-plot_PCA <- function(PC_data, colorFactor, xpc = 1, ypc = 2, zpc = 3, xyz = FALSE) {
+plot_PCA <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2, zpc = 3, xyz = FALSE) {
   
   #get PCs
   PCA_df <- data.frame(x = as.data.frame(PC_data$x)[,xpc],
@@ -1095,16 +1242,13 @@ plot_PCA <- function(PC_data, colorFactor, xpc = 1, ypc = 2, zpc = 3, xyz = FALS
                        Group = colorFactor,
                        sampleID = rownames(PC_data$x))
   
-  # Make color palette
-  myPalette <- colorsByFactor(colorFactor)
-  
-  # Plot colors
-  plotColors <- myPalette$plotColors
-  names(plotColors) <- rownames(PC_data$x)
-  
-  # Legend colors
-  legendColors <- myPalette$legendColors
-  names(legendColors) <- levels(colorFactor)
+  # # Make color palette
+  # myPalette <- colorsByFactor(colorFactor)
+  # 
+  # 
+  # # Legend colors
+  # legendColors <- myPalette$legendColors
+  # names(legendColors) <- levels(colorFactor)
   
   #calculate explained variance
   perc_expl <- round(((PC_data$sdev^2)/sum(PC_data$sdev^2))*100,2)
@@ -1121,10 +1265,11 @@ plot_PCA <- function(PC_data, colorFactor, xpc = 1, ypc = 2, zpc = 3, xyz = FALS
       ggplot2::theme_classic() +
       ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
                      plot.subtitle = ggplot2::element_text(hjust = 0.5),
+                     axis.title = ggplot2::element_text(face = "bold", size = 12),
                      legend.title = ggplot2::element_blank())
     
-    p <- plotly::ggplotly(pca2d, tooltip = c("x", "y", "colour", "text")) %>% 
-      plotly::layout(height = 500, width = 800)
+    p <- plotly::ggplotly(pca2d, tooltip = c("x", "y", "colour", "text")) #%>% 
+      #plotly::layout(height = 500, width = 800)
     
     return(p)
   }
@@ -1142,8 +1287,8 @@ plot_PCA <- function(PC_data, colorFactor, xpc = 1, ypc = 2, zpc = 3, xyz = FALS
     pca3d <- pca3d %>% plotly::layout(scene = list(xaxis = list(title = paste0('PC', xpc, " (", perc_expl[xpc], "%)")),
                                                    yaxis = list(title = paste0('PC', ypc, " (", perc_expl[ypc], "%)")),
                                                    zaxis = list(title = paste0('PC', zpc, " (", perc_expl[zpc], "%)"))))
-    p <- pca3d %>% 
-      plotly::layout(height = 600, width = 800)
+    p <- pca3d #%>% 
+      #plotly::layout(height = 600, width = 800)
     
     return(p)
   }
@@ -1657,6 +1802,17 @@ makeVolcano <- function(top_table,
     
     
     volcano <- plotly::plot_ly() %>%
+      # unchanged
+      plotly::add_trace(
+        data = plotDF[plotDF$Colour == "unchanged",],
+        x = ~log2FC,
+        y = ~logP,
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "darkgrey"),
+        hoverinfo = "none",
+        name = "Unchanged"
+      ) %>%
       # downregulated
       plotly::add_trace(
         data = plotDF[plotDF$Colour == "downregulated",],
@@ -1668,17 +1824,6 @@ makeVolcano <- function(top_table,
         hoverinfo = "text",
         text = ~GeneID,
         name = "Downregulated"
-      ) %>%
-      # unchanged
-      plotly::add_trace(
-        data = plotDF[plotDF$Colour == "unchanged",],
-        x = ~log2FC,
-        y = ~logP,
-        type = "scatter",
-        mode = "markers",
-        marker = list(color = "darkgrey"),
-        hoverinfo = "none",
-        name = "Unchanged"
       ) %>%
       # upregulated
       plotly::add_trace(
@@ -1710,6 +1855,17 @@ makeVolcano <- function(top_table,
     
     
     volcano <- plotly::plot_ly() %>%
+      # unchanged
+      plotly::add_trace(
+        data = plotDF[plotDF$Colour == "unchanged",],
+        x = ~log2FC,
+        y = ~logP,
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "darkgrey"),
+        hoverinfo = "none",
+        name = "Unchanged"
+      ) %>%
       # downregulated
       plotly::add_trace(
         data = plotDF[plotDF$Colour == "downregulated",],
@@ -1721,17 +1877,6 @@ makeVolcano <- function(top_table,
         hoverinfo = "text",
         text = ~GeneID,
         name = "Downregulated"
-      ) %>%
-      # unchanged
-      plotly::add_trace(
-        data = plotDF[plotDF$Colour == "unchanged",],
-        x = ~log2FC,
-        y = ~logP,
-        type = "scatter",
-        mode = "markers",
-        marker = list(color = "darkgrey"),
-        hoverinfo = "none",
-        name = "Unchanged"
       ) %>%
       # upregulated
       plotly::add_trace(
@@ -1753,6 +1898,141 @@ makeVolcano <- function(top_table,
   }
   
   p <- plotly::ggplotly(volcano, tooltip = "text")
+  
+  return(p)
+  
+  
+}
+
+
+#==============================================================================#
+# makeMAplot()
+#==============================================================================#
+
+# DESCRIPTION:
+# Make MA plot
+
+# VARIABLES:
+# top_table: top table from the "getStatistics" function
+# p: raw ("raw") or adjusted ("adj") P value
+# p_threshold: P value threshold
+# logFC_threshold: log2FC threshold
+
+makeMAplot <- function(top_table, 
+                        p = "raw", 
+                        p_threshold = 0.05, 
+                        logFC_threshold = 1){
+  
+  plotDF <- data.frame(log2FC = top_table[,"log2FC"],
+                       Pvalue = top_table[,"p-value"],
+                       logP = -log10(top_table[,"p-value"]),
+                       adjPvalue = top_table[,"adj. p-value"],
+                       meanExpr = top_table[,"meanExpr"],
+                       GeneID = top_table[,"GeneID"])
+  
+  plotDF$meanExpr <- log2(plotDF$meanExpr +1)
+  
+  if (p == "raw"){
+    plotDF$Colour[(plotDF$log2FC < logFC_threshold & plotDF$log2FC > (-1*logFC_threshold)) | plotDF$Pvalue > p_threshold] <- "unchanged"
+    plotDF$Colour[plotDF$log2FC < (-1*logFC_threshold) & plotDF$Pvalue <= p_threshold] <- "downregulated"
+    plotDF$Colour[plotDF$log2FC >= logFC_threshold & plotDF$Pvalue <= p_threshold] <- "upregulated"
+    
+    
+    MA <- plotly::plot_ly() %>%
+      # unchanged
+      plotly::add_trace(
+        data = plotDF[plotDF$Colour == "unchanged",],
+        x = ~meanExpr,
+        y = ~log2FC,
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "darkgrey"),
+        hoverinfo = "none",
+        name = "Unchanged"
+      ) %>%
+      # downregulated
+      plotly::add_trace(
+        data = plotDF[plotDF$Colour == "downregulated",],
+        x = ~meanExpr,
+        y = ~log2FC,
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "blue"),
+        hoverinfo = "text",
+        text = ~GeneID,
+        name = "Downregulated"
+      ) %>%
+      # upregulated
+      plotly::add_trace(
+        data = plotDF[plotDF$Colour == "upregulated",],
+        x = ~meanExpr,
+        y = ~log2FC,
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "red"),
+        hoverinfo = "text",
+        text = ~GeneID,
+        name = "Upregulated"
+      )%>%
+      layout(yaxis = list(title = 'log<sub>2</sub>FC'), 
+             xaxis = list(title = 'Normalized log<sub>2</sub> expression'),
+             shapes = list(hline(logFC_threshold), 
+                           hline(-1*logFC_threshold)))
+  }
+  
+  
+  
+  
+  
+  if (p == "adj"){
+    plotDF$Colour[(plotDF$log2FC < logFC_threshold & plotDF$log2FC > (-1*logFC_threshold)) | plotDF$adjPvalue > p_threshold] <- "unchanged"
+    plotDF$Colour[plotDF$log2FC < (-1*logFC_threshold) & plotDF$adjPvalue <= p_threshold] <- "downregulated"
+    plotDF$Colour[plotDF$log2FC >= logFC_threshold & plotDF$adjPvalue <= p_threshold] <- "upregulated"
+    
+    
+    MA <- plotly::plot_ly() %>%
+      # unchanged
+      plotly::add_trace(
+        data = plotDF[plotDF$Colour == "unchanged",],
+        x = ~meanExpr,
+        y = ~log2FC,
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "darkgrey"),
+        hoverinfo = "none",
+        name = "Unchanged"
+      ) %>%
+      # downregulated
+      plotly::add_trace(
+        data = plotDF[plotDF$Colour == "downregulated",],
+        x = ~meanExpr,
+        y = ~log2FC,
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "blue"),
+        hoverinfo = "text",
+        text = ~GeneID,
+        name = "Downregulated"
+      ) %>%
+      # upregulated
+      plotly::add_trace(
+        data = plotDF[plotDF$Colour == "upregulated",],
+        x = ~meanExpr,
+        y = ~log2FC,
+        type = "scatter",
+        mode = "markers",
+        marker = list(color = "red"),
+        hoverinfo = "text",
+        text = ~GeneID,
+        name = "Upregulated"
+      )%>%
+      layout(yaxis = list(title = 'log<sub>2</sub>FC'), 
+             xaxis = list(title = 'Normalized log<sub>2</sub> expression'),
+             shapes = list(hline(logFC_threshold), 
+                           hline(-1*logFC_threshold)))
+  }
+  
+  p <- plotly::ggplotly(MA, tooltip = "text")
   
   return(p)
   
@@ -2350,9 +2630,9 @@ RNASeqNormalization <- function(gxData,
                                 smallestGroupSize){
   
   # Generate DESeqDataSet object
-  dds <- DESeq2::DESeqDataSetFromMatrix(countData = gxData,
+  dds <- DESeq2::DESeqDataSetFromMatrix(countData = round(gxData),
                                         colData = metaData,
-                                        design = ~0)
+                                        design = as.formula("~ experimentFactor"))
   
   # Filtering
   keep <- rowSums(counts(dds) >= filterThres) >= smallestGroupSize
@@ -2362,7 +2642,9 @@ RNASeqNormalization <- function(gxData,
   dds <- BiocGenerics::estimateSizeFactors(dds)
   
   # Return normalized counts
-  normalized_counts <- log2(counts(dds, normalized=TRUE)+1)
+  normalized_counts <- list()
+  normalized_counts[["counts"]] <- log2(counts(dds, normalized=TRUE)+1)
+  normalized_counts[["vst"]] <- assay(DESeq2::vst(dds, blind = FALSE))
   return(normalized_counts)
 }
 
@@ -2785,11 +3067,9 @@ getStatistics_RNASeq_processed <- function(normMatrix,
     colnames(design)[1:length(levels(experimentFactor))] <- make.names(levels(factor(experimentFactor)))
     colnames(design) <- make.names(colnames(design))
     
-    # Voom transformation
-    v <- voom(normMatrix, design, plot=FALSE)
     
     #fit linear model
-    data.fit <- limma::lmFit(v,design)
+    data.fit <- limma::lmFit(normMatrix,design)
     
     # Perform statistical comparison for each of the selected comparison
     top_table <- list()
@@ -2801,8 +3081,8 @@ getStatistics_RNASeq_processed <- function(normMatrix,
       # Fit contrasts
       data.fit.con <- limma::contrasts.fit(data.fit,contrast.matrix)
       
-      # eBayes
-      data.fit.eb <- limma::eBayes(data.fit.con)
+      # eBayes (limma trend)
+      data.fit.eb <- limma::eBayes(data.fit.con, trend = TRUE)
       
       temp_toptable <- limma::topTable(data.fit.eb, 
                                        sort.by = "P",
