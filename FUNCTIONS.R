@@ -723,11 +723,32 @@ geneBoxplot <- function(experimentFactor,
 # normData: normalized expression data (ExpressionSet)
 
 getBoxplots <- function(experimentFactor, 
+                        legendColors,
                         normData, 
                         RNASeq = FALSE,
                         width = 1000,
                         height = 1414,
                         showAlways = TRUE){
+  
+  plotColors <- colorsByFactor(experimentFactor)$plotColors
+  names(legendColors) <- levels(experimentFactor)
+  
+  for (i in 1:length(legendColors)){
+    group_length <- sum(experimentFactor == levels(experimentFactor)[i])
+    colors <-  c(colorspace::lighten(legendColors[i], amount = rev(seq(0,0.5,length.out = round(group_length/2)))),
+                 colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)))
+    )
+    
+    plotColors[experimentFactor == levels(experimentFactor)[i]] <- colors
+  }
+  
+  if (isTRUE(RNASeq)){
+    names(plotColors) <- colnames(normData)
+  }
+  if (!isTRUE(RNASeq)){
+    names(plotColors) <- sampleNames(normData)
+  }
+  
   
   # Width of all the plots
   WIDTH <- ifelse(is.null(width), 1000, width)
@@ -740,13 +761,6 @@ getBoxplots <- function(experimentFactor,
   
   # Maximum number of arrays that can be computed
   MAXARRAY <- 41
-  
-  # Make colors
-  myPalette <- colorsByFactor(experimentFactor)
-  plotColors <- myPalette$plotColors
-  
-  # Legend colors
-  legendColors <- myPalette$legendColors
   
   # Plot symbols
   plotSymbols <- 18-as.numeric(experimentFactor)
@@ -857,20 +871,34 @@ getBoxplots <- function(experimentFactor,
 # normData: normalized expression data (ExpressionSet)
 
 getBoxplots_download <- function(experimentFactor, 
+                                 legendColors,
                                  normData, 
                                  RNASeq = FALSE,
                                  width = 1000,
                                  height = 1414){
   
+  plotColors <- colorsByFactor(experimentFactor)$plotColors
+  names(legendColors) <- levels(experimentFactor)
+  
+  for (i in 1:length(legendColors)){
+    group_length <- sum(experimentFactor == levels(experimentFactor)[i])
+    colors <-  c(colorspace::lighten(legendColors[i], amount = rev(seq(0,0.5,length.out = round(group_length/2)))),
+                 colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)))
+    )
+    
+    plotColors[experimentFactor == levels(experimentFactor)[i]] <- colors
+  }
+  
+  if (isTRUE(RNASeq)){
+    names(plotColors) <- colnames(normData)
+  }
+  if (!isTRUE(RNASeq)){
+    names(plotColors) <- sampleNames(normData)
+  }
+  
+  
   # Maximum number of arrays that can be computed
   MAXARRAY <- 41
-  
-  # Make colors
-  myPalette <- colorsByFactor(experimentFactor)
-  plotColors <- myPalette$plotColors
-  
-  # Legend colors
-  legendColors <- myPalette$legendColors
   
   # Plot symbols
   plotSymbols <- 18-as.numeric(experimentFactor)
@@ -935,20 +963,29 @@ getBoxplots_download <- function(experimentFactor,
 # experimentFactor: factor with experimental groups (will be used for colouring)
 # normMatrix: normalized expression matrix
 
-getDensityplots <- function(experimentFactor, normMatrix, RNASeq = FALSE){
+getDensityplots <- function(experimentFactor,
+                            legendColors,
+                            normMatrix, RNASeq = FALSE){
   
   # Prepare dataframe
   plot_df <- tidyr::gather(as.data.frame(normMatrix))
   plot_df$GeneID <- rep(rownames(normMatrix),ncol(normMatrix))
   plot_df$Group <- rep(experimentFactor, each = nrow(normMatrix))
   
-  # Make colors
-  myPalette <- colorsByFactor(experimentFactor)
-  plotColors <- myPalette$plotColors
-  names(plotColors) <- colnames(normMatrix)
   
-  legendColors <- myPalette$legendColors
+  plotColors <- colorsByFactor(experimentFactor)$plotColors
   names(legendColors) <- levels(experimentFactor)
+  
+  for (i in 1:length(legendColors)){
+    group_length <- sum(experimentFactor == levels(experimentFactor)[i])
+    colors <-  c(colorspace::lighten(legendColors[i], amount = rev(seq(0,0.5,length.out = round(group_length/2)))),
+                 colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)))
+                 )
+    
+    plotColors[experimentFactor == levels(experimentFactor)[i]] <- colors
+  }
+  names(plotColors) <- colnames(normMatrix)
+
   
   if (!isTRUE(RNASeq)){
     xaxis_name <- "Normalized log<sub>2</sub> intensity"
@@ -984,8 +1021,8 @@ getDensityplots <- function(experimentFactor, normMatrix, RNASeq = FALSE){
     layout(xaxis = list(   
              title=xaxis_name),   
            yaxis = list(   
-             title='Density'))#%>% 
-    #plotly::layout(height = 600, width = 1000)
+             title='Density'))
+
   return(p)
   
 }

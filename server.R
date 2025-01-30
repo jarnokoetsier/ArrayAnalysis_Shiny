@@ -717,13 +717,113 @@ server <- function(input, output, session){
             output$boxplots_rnaseq_raw <- renderImage({
               req(session$clientData$output_boxplots_rnaseq_raw_width)
               req(session$clientData$output_boxplots_rnaseq_raw_height)
+              
+              if (length(levels(rv$experimentFactor)) > 5){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              } else{
+                legendColors <- c(input$boxplots_col1_rnaseq_raw,
+                                  input$boxplots_col2_rnaseq_raw,
+                                  input$boxplots_col3_rnaseq_raw,
+                                  input$boxplots_col4_rnaseq_raw,
+                                  input$boxplots_col5_rnaseq_raw)
+              }
+              if (length(legendColors) != length(levels(rv$experimentFactor))){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              }
+              names(legendColors) <- levels(rv$experimentFactor)
+            
               getBoxplots(experimentFactor = rv$experimentFactor,
+                          legendColors = legendColors,
                           normData = rv$normData,
                           RNASeq = TRUE,
                           width = session$clientData$output_boxplots_rnaseq_raw_width,
                           height = session$clientData$output_boxplots_rnaseq_raw_height)
             }, deleteFile = TRUE)
             
+            # Allow users to set colors
+            observe({
+              test <- length(levels(rv$experimentFactor))
+              
+              if (test == 2){
+                output$UI_color_boxplots_rnaseq_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2])
+                  )
+                })
+              }
+              if (test == 3){
+                output$UI_color_boxplots_rnaseq_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("boxplots_col3_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_boxplots_rnaseq_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("boxplots_col3_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("boxplots_col4_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_boxplots_rnaseq_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("boxplots_col3_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("boxplots_col4_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4]),
+                    colourpicker::colourInput("boxplots_col5_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_boxplots_rnaseq_raw <- renderUI({
+                  h5("There are too many experimental groups to select colour manually")
+                })
+                
+              }
+              
+            })
             
             #***************************#
             # Modal to download figure
@@ -737,7 +837,23 @@ server <- function(input, output, session){
                     width=input$width_boxplots_rnaseq_raw,
                     height=input$height_boxplots_rnaseq_raw,
                     pointsize=24)
+                
+                if (length(levels(rv$experimentFactor)) > 5){
+                  legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+                } else{
+                  legendColors <- c(input$boxplots_col1_rnaseq_raw,
+                                    input$boxplots_col2_rnaseq_raw,
+                                    input$boxplots_col3_rnaseq_raw,
+                                    input$boxplots_col4_rnaseq_raw,
+                                    input$boxplots_col5_rnaseq_raw)
+                }
+                if (length(legendColors) != length(levels(rv$experimentFactor))){
+                  legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+                }
+                names(legendColors) <- levels(rv$experimentFactor)
+                
                 getBoxplots_download(experimentFactor = rv$experimentFactor,
+                                     legendColors = legendColors,
                                      normData = rv$normData,
                                      RNASeq = TRUE)
                 dev.off()
@@ -784,22 +900,120 @@ server <- function(input, output, session){
             # Output 3: Density plots
             #********************************************************************#
             
-            # Densityplots of all genes together
+            # Density plots of all genes together
             output$densityplots_rnaseq_raw <- plotly::renderPlotly({
-              getDensityplots(experimentFactor = rv$experimentFactor,
+              
+              if (length(levels(rv$experimentFactor)) > 5){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              } else{
+                legendColors <- c(input$density_col1_rnaseq_raw,
+                                  input$density_col2_rnaseq_raw,
+                                  input$density_col3_rnaseq_raw,
+                                  input$density_col4_rnaseq_raw,
+                                  input$density_col5_rnaseq_raw)
+              }
+              if (length(legendColors) != length(levels(rv$experimentFactor))){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              }
+              names(legendColors) <- levels(rv$experimentFactor)
+
+              rv$density <- getDensityplots(experimentFactor = rv$experimentFactor,
+                              legendColors = legendColors,
                               normMatrix = rv$normData,
                               RNASeq = TRUE)
 
+            })
+            
+            # Allow users to set colors
+            observe({
+              test <- length(levels(rv$experimentFactor))
+              
+              if (test == 2){
+                output$UI_color_density_rnaseq_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2])
+                  )
+                })
+              }
+              if (test == 3){
+                output$UI_color_density_rnaseq_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("density_col3_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_density_rnaseq_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("density_col3_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("density_col4_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_density_rnaseq_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("density_col3_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("density_col4_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4]),
+                    colourpicker::colourInput("density_col5_rnaseq_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_density_rnaseq_raw <- renderUI({
+                  h5("There are too many experimental groups to select colour manually")
+                })
+                
+              }
+              
             })
             
             # Download plot
             output$download_densityplots_rnaseq_raw <- downloadHandler(
               filename = "QC_Density.html",
               content = function(file){
-                p <- getDensityplots(experimentFactor = rv$experimentFactor,
-                                     normMatrix = rv$normData,
-                                     RNASeq = TRUE)
-                htmlwidgets::saveWidget(p, 
+                htmlwidgets::saveWidget(rv$density, 
                                         file)
               }
             )
@@ -1241,6 +1455,16 @@ server <- function(input, output, session){
                            actionButton("download_boxplots_rnaseq_raw", 
                                         "Download figure",
                                         icon = shiny::icon("download")),
+                           br(),
+                           br(),
+                           # customize heatmap
+                           shinyWidgets::dropdownButton(
+                             uiOutput("UI_color_boxplots_rnaseq_raw"),
+                             circle = TRUE, status = "info",
+                             icon = icon("fas fa-cog"), width = "300px",
+                             tooltip = shinyWidgets::tooltipOptions(
+                               title = "Click to change colors!")
+                           ),
                            plotOutput(outputId = "boxplots_rnaseq_raw",
                                       width = "65vw", height = "80vw")%>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
@@ -1252,6 +1476,16 @@ server <- function(input, output, session){
                            br(),
                            downloadButton('download_densityplots_rnaseq_raw', 
                                           'Download figure'),
+                           br(),
+                           br(),
+                           # customize heatmap
+                           shinyWidgets::dropdownButton(
+                             uiOutput("UI_color_density_rnaseq_raw"),
+                             circle = TRUE, status = "info",
+                             icon = icon("fas fa-cog"), width = "300px",
+                             tooltip = shinyWidgets::tooltipOptions(
+                               title = "Click to change colors!")
+                           ),
                            h2(strong("Density plot of normalized counts"), align = "center"),
                            h4("Distributions should be comparable between samples", align = "center"),
                            plotly::plotlyOutput(outputId = "densityplots_rnaseq_raw",
@@ -3251,12 +3485,113 @@ server <- function(input, output, session){
             output$boxplots_rnaseq_norm <- renderImage({
               req(session$clientData$output_boxplots_rnaseq_norm_width)
               req(session$clientData$output_boxplots_rnaseq_norm_height)
+              
+              if (length(levels(rv$experimentFactor)) > 5){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              } else{
+                legendColors <- c(input$boxplots_col1_rnaseq_norm,
+                                  input$boxplots_col2_rnaseq_norm,
+                                  input$boxplots_col3_rnaseq_norm,
+                                  input$boxplots_col4_rnaseq_norm,
+                                  input$boxplots_col5_rnaseq_norm)
+              }
+              if (length(legendColors) != length(levels(rv$experimentFactor))){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              }
+              names(legendColors) <- levels(rv$experimentFactor)
+              
               getBoxplots(experimentFactor = rv$experimentFactor,
+                          legendColors = legendColors,
                           normData = rv$normData,
                           RNASeq = TRUE,
                           width = session$clientData$output_boxplots_rnaseq_norm_width,
                           height = session$clientData$output_boxplots_rnaseq_norm_height)
             }, deleteFile = TRUE)
+            
+            # Allow users to set colors
+            observe({
+              test <- length(levels(rv$experimentFactor))
+              
+              if (test == 2){
+                output$UI_color_boxplots_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2])
+                  )
+                })
+              }
+              if (test == 3){
+                output$UI_color_boxplots_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("boxplots_col3_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_boxplots_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("boxplots_col3_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("boxplots_col4_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_boxplots_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("boxplots_col3_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("boxplots_col4_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4]),
+                    colourpicker::colourInput("boxplots_col5_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_boxplots_rnaseq_norm <- renderUI({
+                  h5("There are too many experimental groups to select colour manually")
+                })
+                
+              }
+              
+            })
             
             #***************************#
             # Modal to download figure
@@ -3270,7 +3605,23 @@ server <- function(input, output, session){
                     width=input$width_boxplots_rnaseq_norm,
                     height=input$height_boxplots_rnaseq_norm,
                     pointsize=24)
+                
+                if (length(levels(rv$experimentFactor)) > 5){
+                  legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+                } else{
+                  legendColors <- c(input$boxplots_col1_rnaseq_norm,
+                                    input$boxplots_col2_rnaseq_norm,
+                                    input$boxplots_col3_rnaseq_norm,
+                                    input$boxplots_col4_rnaseq_norm,
+                                    input$boxplots_col5_rnaseq_norm)
+                }
+                if (length(legendColors) != length(levels(rv$experimentFactor))){
+                  legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+                }
+                names(legendColors) <- levels(rv$experimentFactor)
+                
                 getBoxplots_download(experimentFactor = rv$experimentFactor,
+                                     legendColors = legendColors,
                                      normData = rv$normData,
                                      RNASeq = TRUE)
                 dev.off()
@@ -3317,13 +3668,124 @@ server <- function(input, output, session){
             # Densityplots
             #********************************************************************#
             
-            # Densityplots of all genes together
+            # Density plots of all genes together
             output$densityplots_rnaseq_norm <- plotly::renderPlotly({
-              getDensityplots(experimentFactor = rv$experimentFactor,
+              
+              if (length(levels(rv$experimentFactor)) > 5){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              } else{
+                legendColors <- c(input$density_col1_rnaseq_norm,
+                                  input$density_col2_rnaseq_norm,
+                                  input$density_col3_rnaseq_norm,
+                                  input$density_col4_rnaseq_norm,
+                                  input$density_col5_rnaseq_norm)
+              }
+              if (length(legendColors) != length(levels(rv$experimentFactor))){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              }
+              names(legendColors) <- levels(rv$experimentFactor)
+              
+              rv$density <- getDensityplots(experimentFactor = rv$experimentFactor,
+                              legendColors = legendColors,
                               normMatrix = rv$normData,
                               RNASeq = TRUE)
               
             })
+            
+            # Allow users to set colors
+            observe({
+              test <- length(levels(rv$experimentFactor))
+              
+              if (test == 2){
+                output$UI_color_density_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2])
+                  )
+                })
+              }
+              if (test == 3){
+                output$UI_color_density_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("density_col3_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_density_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("density_col3_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("density_col4_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_density_rnaseq_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("density_col3_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("density_col4_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4]),
+                    colourpicker::colourInput("density_col5_rnaseq_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_density_rnaseq_norm <- renderUI({
+                  h5("There are too many experimental groups to select colour manually")
+                })
+                
+              }
+              
+            })
+            
+            # Download plot
+            output$download_densityplots_rnaseq_norm <- downloadHandler(
+              filename = "QC_Density.html",
+              content = function(file){
+                htmlwidgets::saveWidget(rv$density, 
+                                        file)
+              }
+            )
+            
             
             #********************************************************************#
             # Heatmap
@@ -3750,6 +4212,16 @@ server <- function(input, output, session){
                            actionButton("download_boxplots_rnaseq_norm", 
                                         "Download figure",
                                         icon = shiny::icon("download")),
+                           br(),
+                           br(),
+                           # customize heatmap
+                           shinyWidgets::dropdownButton(
+                             uiOutput("UI_color_boxplots_rnaseq_norm"),
+                             circle = TRUE, status = "info",
+                             icon = icon("fas fa-cog"), width = "300px",
+                             tooltip = shinyWidgets::tooltipOptions(
+                               title = "Click to change colors!")
+                           ),
                            plotOutput(outputId = "boxplots_rnaseq_norm",
                                       width = "65vw", height = "80vw")%>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
@@ -3758,6 +4230,18 @@ server <- function(input, output, session){
                   tabPanel("Density plots",
                            icon = icon("fas fa-mouse-pointer"),
                            br(),
+                           downloadButton('download_densityplots_rnaseq_norm', 
+                                          'Download figure'),
+                           br(),
+                           br(),
+                           # customize heatmap
+                           shinyWidgets::dropdownButton(
+                             uiOutput("UI_color_density_rnaseq_norm"),
+                             circle = TRUE, status = "info",
+                             icon = icon("fas fa-cog"), width = "300px",
+                             tooltip = shinyWidgets::tooltipOptions(
+                               title = "Click to change colors!")
+                           ),
                            h2(strong("Density plot of normalized counts"), align = "center"),
                            h4("Distributions should be comparable between samples", align = "center"),
                            plotly::plotlyOutput(outputId = "densityplots_rnaseq_norm",
@@ -5740,12 +6224,113 @@ server <- function(input, output, session){
             output$boxplots_microarray_raw <- renderImage({
               req(session$clientData$output_boxplots_microarray_raw_width)
               req(session$clientData$output_boxplots_microarray_raw_height)
+              
+              if (length(levels(rv$experimentFactor)) > 5){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              } else{
+                legendColors <- c(input$boxplots_col1_microarray_raw,
+                                  input$boxplots_col2_microarray_raw,
+                                  input$boxplots_col3_microarray_raw,
+                                  input$boxplots_col4_microarray_raw,
+                                  input$boxplots_col5_microarray_raw)
+              }
+              if (length(legendColors) != length(levels(rv$experimentFactor))){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              }
+              names(legendColors) <- levels(rv$experimentFactor)
+              
               getBoxplots(experimentFactor = rv$experimentFactor,
+                          legendColors = legendColors,
                           normData = rv$normData,
                           RNASeq = FALSE,
                           width = session$clientData$output_boxplots_microarray_raw_width,
                           height = session$clientData$output_boxplots_microarray_raw_height)
             }, deleteFile = TRUE)
+            
+            # Allow users to set colors
+            observe({
+              test <- length(levels(rv$experimentFactor))
+              
+              if (test == 2){
+                output$UI_color_boxplots_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2])
+                  )
+                })
+              }
+              if (test == 3){
+                output$UI_color_boxplots_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("boxplots_col3_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_boxplots_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("boxplots_col3_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("boxplots_col4_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_boxplots_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("boxplots_col3_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("boxplots_col4_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4]),
+                    colourpicker::colourInput("boxplots_col5_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_boxplots_microarray_raw <- renderUI({
+                  h5("There are too many experimental groups to select colour manually")
+                })
+                
+              }
+              
+            })
             
             #***************************#
             # Modal to download figure
@@ -5759,7 +6344,23 @@ server <- function(input, output, session){
                     width=input$width_boxplots_microarray_raw,
                     height=input$height_boxplots_microarray_raw,
                     pointsize=24)
+                
+                if (length(levels(rv$experimentFactor)) > 5){
+                  legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+                } else{
+                  legendColors <- c(input$boxplots_col1_microarray_raw,
+                                    input$boxplots_col2_microarray_raw,
+                                    input$boxplots_col3_microarray_raw,
+                                    input$boxplots_col4_microarray_raw,
+                                    input$boxplots_col5_microarray_raw)
+                }
+                if (length(legendColors) != length(levels(rv$experimentFactor))){
+                  legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+                }
+                names(legendColors) <- levels(rv$experimentFactor)
+                
                 getBoxplots_download(experimentFactor = rv$experimentFactor,
+                                     legendColors = legendColors,
                                      normData = rv$normData,
                                      RNASeq = FALSE)
                 dev.off()
@@ -5802,17 +6403,128 @@ server <- function(input, output, session){
               ))
             })
             
-            
             #********************************************************************#
             # Output 3: Densityplots
             #********************************************************************#
             
-            # Densityplots of all genes together
+            # Density plots of all genes together
             output$densityplots_microarray_raw <- plotly::renderPlotly({
-              getDensityplots(experimentFactor = rv$experimentFactor,
-                              normMatrix = rv$normMatrix)
+              
+              if (length(levels(rv$experimentFactor)) > 5){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              } else{
+                legendColors <- c(input$density_col1_microarray_raw,
+                                  input$density_col2_microarray_raw,
+                                  input$density_col3_microarray_raw,
+                                  input$density_col4_microarray_raw,
+                                  input$density_col5_microarray_raw)
+              }
+              if (length(legendColors) != length(levels(rv$experimentFactor))){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              }
+              names(legendColors) <- levels(rv$experimentFactor)
+              
+              rv$density <- getDensityplots(experimentFactor = rv$experimentFactor,
+                                            legendColors = legendColors,
+                                            normMatrix = rv$normMatrix,
+                                            RNASeq = FALSE)
               
             })
+            
+            # Allow users to set colors
+            observe({
+              test <- length(levels(rv$experimentFactor))
+              
+              if (test == 2){
+                output$UI_color_density_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2])
+                  )
+                })
+              }
+              if (test == 3){
+                output$UI_color_density_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("density_col3_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_density_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("density_col3_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("density_col4_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_density_microarray_raw <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("density_col3_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("density_col4_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4]),
+                    colourpicker::colourInput("density_col5_microarray_raw", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_density_microarray_raw <- renderUI({
+                  h5("There are too many experimental groups to select colour manually")
+                })
+                
+              }
+              
+            })
+            
+            # Download plot
+            output$download_densityplots_microarray_raw <- downloadHandler(
+              filename = "QC_Density.html",
+              content = function(file){
+                htmlwidgets::saveWidget(rv$density, 
+                                        file)
+              }
+            )
+            
             
             #********************************************************************#
             # Output 4: Sample-sample correlation heatmap
@@ -6247,6 +6959,16 @@ server <- function(input, output, session){
                            actionButton("download_boxplots_microarray_raw", 
                                         "Download figure",
                                         icon = shiny::icon("download")),
+                           br(),
+                           br(),
+                           # customize heatmap
+                           shinyWidgets::dropdownButton(
+                             uiOutput("UI_color_boxplots_microarray_raw"),
+                             circle = TRUE, status = "info",
+                             icon = icon("fas fa-cog"), width = "300px",
+                             tooltip = shinyWidgets::tooltipOptions(
+                               title = "Click to change colors!")
+                           ),
                            plotOutput(outputId = "boxplots_microarray_raw",
                                       width = "65vw", height = "80vw")%>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
@@ -6256,8 +6978,20 @@ server <- function(input, output, session){
                   tabPanel("Density plots",
                            icon = icon("fas fa-mouse-pointer"),
                            br(),
+                           downloadButton('download_densityplots_microarray_raw', 
+                                          'Download figure'),
+                           br(),
+                           br(),
+                           # customize heatmap
+                           shinyWidgets::dropdownButton(
+                             uiOutput("UI_color_density_microarray_raw"),
+                             circle = TRUE, status = "info",
+                             icon = icon("fas fa-cog"), width = "300px",
+                             tooltip = shinyWidgets::tooltipOptions(
+                               title = "Click to change colors!")
+                           ),
                            h2(strong("Density plot of normalized intensities"), align = "center"),
-                           h4("Distributions should be comparable between arrays", align = "center"),
+                           h4("Distributions should be comparable between samples", align = "center"),
                            plotly::plotlyOutput(outputId = "densityplots_microarray_raw",
                                                 width = "65vw", height = "40vw") %>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
@@ -8256,12 +8990,113 @@ server <- function(input, output, session){
             output$boxplots_microarray_norm <- renderImage({
               req(session$clientData$output_boxplots_microarray_norm_width)
               req(session$clientData$output_boxplots_microarray_norm_height)
+              
+              if (length(levels(rv$experimentFactor)) > 5){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              } else{
+                legendColors <- c(input$boxplots_col1_microarray_norm,
+                                  input$boxplots_col2_microarray_norm,
+                                  input$boxplots_col3_microarray_norm,
+                                  input$boxplots_col4_microarray_norm,
+                                  input$boxplots_col5_microarray_norm)
+              }
+              if (length(legendColors) != length(levels(rv$experimentFactor))){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              }
+              names(legendColors) <- levels(rv$experimentFactor)
+              
               getBoxplots(experimentFactor = rv$experimentFactor,
+                          legendColors = legendColors,
                           normData = rv$normData,
                           RNASeq = FALSE,
                           width = session$clientData$output_boxplots_microarray_norm_width,
                           height = session$clientData$output_boxplots_microarray_norm_height)
             }, deleteFile = TRUE)
+            
+            # Allow users to set colors
+            observe({
+              test <- length(levels(rv$experimentFactor))
+              
+              if (test == 2){
+                output$UI_color_boxplots_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2])
+                  )
+                })
+              }
+              if (test == 3){
+                output$UI_color_boxplots_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("boxplots_col3_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_boxplots_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("boxplots_col3_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("boxplots_col4_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_boxplots_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("boxplots_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("boxplots_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("boxplots_col3_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("boxplots_col4_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4]),
+                    colourpicker::colourInput("boxplots_col5_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_boxplots_microarray_norm <- renderUI({
+                  h5("There are too many experimental groups to select colour manually")
+                })
+                
+              }
+              
+            })
             
             #***************************#
             # Modal to download figure
@@ -8275,7 +9110,23 @@ server <- function(input, output, session){
                     width=input$width_boxplots_microarray_norm,
                     height=input$height_boxplots_microarray_norm,
                     pointsize=24)
+                
+                if (length(levels(rv$experimentFactor)) > 5){
+                  legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+                } else{
+                  legendColors <- c(input$boxplots_col1_microarray_norm,
+                                    input$boxplots_col2_microarray_norm,
+                                    input$boxplots_col3_microarray_norm,
+                                    input$boxplots_col4_microarray_norm,
+                                    input$boxplots_col5_microarray_norm)
+                }
+                if (length(legendColors) != length(levels(rv$experimentFactor))){
+                  legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+                }
+                names(legendColors) <- levels(rv$experimentFactor)
+                
                 getBoxplots_download(experimentFactor = rv$experimentFactor,
+                                     legendColors = legendColors,
                                      normData = rv$normData,
                                      RNASeq = FALSE)
                 dev.off()
@@ -8319,16 +9170,130 @@ server <- function(input, output, session){
             })
             
             
+            
             #********************************************************************#
             # Output 3: Densityplots
             #********************************************************************#
             
-            # Densityplots of all genes together
-            output$densityplots_microarray_norm <- renderPlotly({
-              getDensityplots(experimentFactor = rv$experimentFactor,
-                              normMatrix = rv$normMatrix)
+            # Density plots of all genes together
+            output$densityplots_microarray_norm <- plotly::renderPlotly({
+              
+              if (length(levels(rv$experimentFactor)) > 5){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              } else{
+                legendColors <- c(input$density_col1_microarray_norm,
+                                  input$density_col2_microarray_norm,
+                                  input$density_col3_microarray_norm,
+                                  input$density_col4_microarray_norm,
+                                  input$density_col5_microarray_norm)
+              }
+              if (length(legendColors) != length(levels(rv$experimentFactor))){
+                legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+              }
+              names(legendColors) <- levels(rv$experimentFactor)
+              
+              rv$density <- getDensityplots(experimentFactor = rv$experimentFactor,
+                                            legendColors = legendColors,
+                                            normMatrix = rv$normMatrix,
+                                            RNASeq = FALSE)
+              return(rv$density)
               
             })
+            
+            # Allow users to set colors
+            observe({
+              test <- length(levels(rv$experimentFactor))
+              
+              if (test == 2){
+                output$UI_color_density_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2])
+                  )
+                })
+              }
+              if (test == 3){
+                output$UI_color_density_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("density_col3_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3])
+                  )
+                })
+              }
+              if (test == 4){
+                output$UI_color_density_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("density_col3_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("density_col4_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4])
+                  )
+                })
+                
+              }
+              if (test == 5){
+                output$UI_color_density_microarray_norm <- renderUI({
+                  tagList(
+                    h4("Set colors"),
+                    colourpicker::colourInput("density_col1_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                    colourpicker::colourInput("density_col2_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                    colourpicker::colourInput("density_col3_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                    colourpicker::colourInput("density_col4_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[4]),
+                    colourpicker::colourInput("density_col5_microarray_norm", 
+                                              NULL, 
+                                              colorsByFactor(rv$experimentFactor)$legendColors[5])
+                  )
+                })
+                
+              }
+              if (test > 5){
+                output$UI_color_density_microarray_norm <- renderUI({
+                  h5("There are too many experimental groups to select colour manually")
+                })
+                
+              }
+              
+            })
+            
+            # Download plot
+            output$download_densityplots_microarray_norm <- downloadHandler(
+              filename = "QC_Density.html",
+              content = function(file){
+                htmlwidgets::saveWidget(rv$density, 
+                                        file)
+              }
+            )
+            
             
             #********************************************************************#
             # Output 4: Heatmap
@@ -8760,8 +9725,18 @@ server <- function(input, output, session){
                            actionButton("download_boxplots_microarray_norm", 
                                         "Download figure",
                                         icon = shiny::icon("download")),
+                           br(),
+                           br(),
+                           # customize heatmap
+                           shinyWidgets::dropdownButton(
+                             uiOutput("UI_color_boxplots_microarray_norm"),
+                             circle = TRUE, status = "info",
+                             icon = icon("fas fa-cog"), width = "300px",
+                             tooltip = shinyWidgets::tooltipOptions(
+                               title = "Click to change colors!")
+                           ),
                            plotOutput(outputId = "boxplots_microarray_norm",
-                                      width = "65vw", height = "80vw") %>% 
+                                      width = "65vw", height = "80vw")%>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
                   ),
                   
@@ -8769,8 +9744,20 @@ server <- function(input, output, session){
                   tabPanel("Density plots",
                            icon = icon("fas fa-mouse-pointer"),
                            br(),
+                           downloadButton('download_densityplots_microarray_norm', 
+                                          'Download figure'),
+                           br(),
+                           br(),
+                           # customize heatmap
+                           shinyWidgets::dropdownButton(
+                             uiOutput("UI_color_density_microarray_norm"),
+                             circle = TRUE, status = "info",
+                             icon = icon("fas fa-cog"), width = "300px",
+                             tooltip = shinyWidgets::tooltipOptions(
+                               title = "Click to change colors!")
+                           ),
                            h2(strong("Density plot of normalized intensities"), align = "center"),
-                           h4("Distributions should be comparable between arrays", align = "center"),
+                           h4("Distributions should be comparable between samples", align = "center"),
                            plotly::plotlyOutput(outputId = "densityplots_microarray_norm",
                                                 width = "65vw", height = "40vw") %>% 
                              shinycssloaders::withSpinner(color="#0dc5c1")
