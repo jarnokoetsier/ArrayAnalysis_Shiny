@@ -1548,7 +1548,7 @@ getStatistics <- function(normMatrix,
           message <- "Statistical analysis has been performed. 
           Gene annotation was performed with biomaRt. You can download 
               the results as well as view them in interactive plots."
-          return(list(annotations, message))
+          list(annotations, message)
         },
         error = function(cond){
           
@@ -1612,7 +1612,7 @@ getStatistics <- function(normMatrix,
           The Ensembl database was not available.
           So, the gene annotation was performed with the bioconductor annotation package. 
           You can download the results as well as view them in interactive plots."
-          return(list(annotations, message))
+          list(annotations, message)
         })
         annotations <- annotation_list[[1]]
         message <- annotation_list[[2]]
@@ -2912,7 +2912,7 @@ getStatistics_RNASeq <- function(rawMatrix,
         message <- "Statistical analysis has been performed. 
           Gene annotation was performed with biomaRt. You can download 
               the results as well as view them in interactive plots."
-        return(list(annotations, message))
+        list(annotations, message)
       },
       error = function(cond){
         
@@ -2976,7 +2976,7 @@ getStatistics_RNASeq <- function(rawMatrix,
           The Ensembl database was not available.
           So, the gene annotation was performed with the bioconductor annotation package. 
           You can download the results as well as view them in interactive plots."
-        return(list(annotations, message))
+        list(annotations, message)
       })
       annotations <- annotation_list[[1]]
       message <- annotation_list[[2]]
@@ -3184,7 +3184,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
           message <- "Statistical analysis has been performed. 
           Gene annotation was performed with biomaRt. You can download 
               the results as well as view them in interactive plots."
-          return(list(annotations, message))
+          list(annotations, message)
         },
         error = function(cond){
           
@@ -3248,7 +3248,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
           The Ensembl database was not available.
           So, the gene annotation was performed with the bioconductor annotation package. 
           You can download the results as well as view them in interactive plots."
-          return(list(annotations, message))
+          list(annotations, message)
         })
         annotations <- annotation_list[[1]]
         message <- annotation_list[[2]]
