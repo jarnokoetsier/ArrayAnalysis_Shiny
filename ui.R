@@ -86,7 +86,7 @@ ui <- tagList(
                                  br(),
                                  
                                  # ArrayAnalysis logo
-                                 img(src = "logo_main.png", width = "100%"),
+                                 img(src = "logo_main.PNG", width = "100%"),
                                  
                                  # Welcome message
                                  h1(strong(span(style = "color:#000000", 

@@ -32,28 +32,27 @@ firstup <- function(x) {
 
 getCELs <- function(zippath, shiny_upload = TRUE){
   tryCatch({
-    unlink("Data_unzipped", recursive = TRUE, force = TRUE)
     if (shiny_upload){
-      # Unzip files
-      if(!file.exists(paste0("Data_unzipped/unzipped_",stringr::str_remove(zippath$name, ".zip")))){
-        unzip(zippath$datapath, exdir = paste0("Data_unzipped/unzipped_",stringr::str_remove(zippath$name, ".zip")))
-      }
       
-      # list CEL files
-      celfiles <- list.files(tail(list.dirs(paste0("Data_unzipped/unzipped_",stringr::str_remove(zippath$name, ".zip"))),1),
+      # Unzip
+      unzip(zippath$datapath, 
+            exdir = paste0(tempdir(), "/CELfiles"))
+      
+      # List CEL files
+      celfiles <- list.files(tail(list.dirs(paste0(tempdir(), "/CELfiles")),1),
                              pattern = "CEL", 
-                             full.names = TRUE) 
+                             full.names = TRUE)
     }
     if (!shiny_upload){
-      # Unzip files
-      if(!file.exists(paste0("Data_unzipped/unzipped_",stringr::str_remove(zippath, ".zip")))){
-        unzip(zippath, exdir = paste0("Data_unzipped/unzipped_",stringr::str_remove(basename(zippath), ".zip")))
-      }
       
-      # list CEL files
-      celfiles <- list.files(tail(list.dirs(paste0("Data_unzipped/unzipped_",stringr::str_remove(basename(zippath), ".zip"))),1),
+      # Unzip
+      unzip(zippath, 
+            exdir = paste0(tempdir(), "/CELfiles"))
+      
+      # List CEL files
+      celfiles <- list.files(tail(list.dirs(paste0(tempdir(), "/CELfiles")),1),
                              pattern = "CEL", 
-                             full.names = TRUE) 
+                             full.names = TRUE)
     }
     return(celfiles)
     
@@ -75,16 +74,31 @@ getCELs <- function(zippath, shiny_upload = TRUE){
 
 readCELs <- function(celfiles, zippath, rm = FALSE){
   tryCatch({
-    if(!file.exists(paste0("Data_unzipped/unzipped_",stringr::str_remove(zippath, ".zip")))){
-      unzip(zippath, exdir = paste0("Data_unzipped/unzipped_",stringr::str_remove(basename(zippath), ".zip")))
+
+    # List CEL files
+    celfiles <- list.files(tail(list.dirs(paste0(tempdir(), "/CELfiles")),1),
+                           pattern = "CEL", 
+                           full.names = TRUE)
+    
+    if(length(celfiles) < 1){
+      # Unzip
+      unzip(zippath$datapath, 
+            exdir = paste0(tempdir(), "/CELfiles"))
+      
+      # List CEL files
+      celfiles <- list.files(tail(list.dirs(paste0(tempdir(), "/CELfiles")),1),
+                             pattern = "CEL", 
+                             full.names = TRUE) 
+      
     }
     
+    
     gxData <- affy::ReadAffy(filenames = celfiles)
-    if(rm){unlink("./Data_unzipped/", recursive = TRUE, force = TRUE)}
+    if(rm){unlink(paste0(tempdir(), "/CELfiles"), recursive = TRUE, force = TRUE)}
     return(gxData)
   }, error = function(cond){
     gxData <- oligo::read.celfiles(filenames = celfiles)
-    if(rm){unlink("Data_unzipped", recursive = TRUE, force = TRUE)}
+    if(rm){unlink(paste0(tempdir(), "/CELfiles"), recursive = TRUE, force = TRUE)}
     return(gxData)
   })
 }
@@ -106,7 +120,7 @@ getMetaData <- function(path, celfiles, filetype){
   if (filetype == ".tsv/.csv file"){
     
     # Read .tsv/.csv file
-    if (str_detect(path, ".tsv")){
+    if (stringr::str_detect(path, ".tsv")){
       metaData <- as.data.frame(data.table::fread(path, sep = "\t"))
     } else{
       metaData <- as.data.frame(data.table::fread(path))
@@ -252,19 +266,19 @@ autoGroup <- function(metaData){
 getOrganism <- function(gxData){
   
   organism <- "Homo sapiens"
-  if (str_detect(gxData@annotation,regex("Cattle|Bos|taurus|Bt",ignore_case = T))){
+  if (stringr::str_detect(gxData@annotation,regex("Cattle|Bos|taurus|Bt",ignore_case = T))){
     organism <- "Bos taurus"
   }
-  if (str_detect(gxData@annotation,regex("nematode|Caenorhabditis|elegans|Ce",ignore_case = T))){
+  if (stringr::str_detect(gxData@annotation,regex("nematode|Caenorhabditis|elegans|Ce",ignore_case = T))){
     organism <- "Caenorhabditis elegans"
   }
-  if (str_detect(gxData@annotation,regex("Rat|Rattus|norvegicus|Rn",ignore_case = T))){
+  if (stringr::str_detect(gxData@annotation,regex("Rat|Rattus|norvegicus|Rn",ignore_case = T))){
     organism <- "Rattus norvegicus"
   }
-  if (str_detect(gxData@annotation,regex("mouse|Mus|musculus|Mm",ignore_case = T))){
+  if (stringr::str_detect(gxData@annotation,regex("mouse|Mus|musculus|Mm",ignore_case = T))){
     organism <- "Mus musculus"
   }
-  if (str_detect(gxData@annotation,regex("human|Homo|sapiens|Hs",ignore_case = T))){
+  if (stringr::str_detect(gxData@annotation,regex("human|Homo|sapiens|Hs",ignore_case = T))){
     organism <- "Homo sapiens"
   }
   return(organism)
@@ -736,7 +750,7 @@ getBoxplots <- function(experimentFactor,
   for (i in 1:length(legendColors)){
     group_length <- sum(experimentFactor == levels(experimentFactor)[i])
     colors <-  c(colorspace::lighten(legendColors[i], amount = rev(seq(0,0.5,length.out = round(group_length/2)))),
-                 colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)))
+                 colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)+1)[-1])
     )
     
     plotColors[experimentFactor == levels(experimentFactor)[i]] <- colors
@@ -883,7 +897,7 @@ getBoxplots_download <- function(experimentFactor,
   for (i in 1:length(legendColors)){
     group_length <- sum(experimentFactor == levels(experimentFactor)[i])
     colors <-  c(colorspace::lighten(legendColors[i], amount = rev(seq(0,0.5,length.out = round(group_length/2)))),
-                 colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)))
+                 colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)+1)[-1])
     )
     
     plotColors[experimentFactor == levels(experimentFactor)[i]] <- colors
@@ -979,7 +993,7 @@ getDensityplots <- function(experimentFactor,
   for (i in 1:length(legendColors)){
     group_length <- sum(experimentFactor == levels(experimentFactor)[i])
     colors <-  c(colorspace::lighten(legendColors[i], amount = rev(seq(0,0.5,length.out = round(group_length/2)))),
-                 colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)))
+                 colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)+1)[-1])
                  )
     
     plotColors[experimentFactor == levels(experimentFactor)[i]] <- colors
