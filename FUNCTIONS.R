@@ -1347,6 +1347,58 @@ plot_PCA <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2, zpc =
 }
 
 #==============================================================================#
+# plot_PCA_static()
+#==============================================================================#
+
+# DESCRIPTION:
+# Make interactive PCA plot
+
+# VARIABLES:
+# PCA_data: PCA object retrieved from the prcomp function
+# colorFactor: A factor the color the samples in the plot
+# xpc: Principal component on horizontal axis
+# ypc: Principal component on vertical axis
+# zpc: Principal component on z-axis (for 3D plot only)
+# xyz: Plot in 3D
+
+plot_PCA_static <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2) {
+  
+  #get PCs
+  PCA_df <- data.frame(x = as.data.frame(PC_data$x)[,xpc],
+                       y = as.data.frame(PC_data$x)[,ypc],
+                       Group = colorFactor,
+                       sampleID = rownames(PC_data$x))
+  
+  # # Make color palette
+  # myPalette <- colorsByFactor(colorFactor)
+  # 
+  # 
+  # # Legend colors
+  # legendColors <- myPalette$legendColors
+  # names(legendColors) <- levels(colorFactor)
+  
+  #calculate explained variance
+  perc_expl <- round(((PC_data$sdev^2)/sum(PC_data$sdev^2))*100,2)
+  
+  # Make 2D plot
+  
+  p <- ggplot2::ggplot(data = PCA_df, 
+                       ggplot2::aes(x = x, y = y, colour = Group, shape = Group, 
+                                    text = paste("Sample:", sampleID))) +
+    ggplot2::geom_point(size = 2) +
+    ggplot2::scale_colour_manual(values = legendColors) +
+    ggplot2::xlab(paste0("PC",xpc, " (", perc_expl[xpc], "%)")) +
+    ggplot2::ylab(paste0("PC",ypc, " (", perc_expl[ypc], "%)")) +
+    ggplot2::theme_classic() +
+    ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
+                   plot.subtitle = ggplot2::element_text(hjust = 0.5),
+                   axis.title = ggplot2::element_text(face = "bold", size = 12),
+                   legend.title = ggplot2::element_blank())
+  
+  return(p)
+}
+
+#==============================================================================#
 # makeComparisons()
 #==============================================================================#
 
@@ -1725,76 +1777,6 @@ makePHistogram <- function(P){
 }
 
 #==============================================================================#
-# makeVolcano_alt()
-#==============================================================================#
-
-# DESCRIPTION:
-# Make volcano plot
-
-# VARIABLES:
-# top_table: top table from the "getStatistics" function
-# p: raw ("raw") or adjusted ("adj") P value
-# p_threshold: P value threshold
-# logFC_threshold: log2FC threshold
-
-makeVolcano_alt <- function(top_table, 
-                        p = "raw", 
-                        p_threshold = 0.05, 
-                        logFC_threshold = 1){
-  
-  plotDF <- data.frame(log2FC = top_table[,"log2FC"],
-                       Pvalue = top_table[,"p-value"],
-                       adjPvalue = top_table[,"adj. p-value"],
-                       GeneID = top_table[,"GeneID"])
-  
-  if (p == "raw"){
-    plotDF$Colour[(plotDF$log2FC < logFC_threshold & plotDF$log2FC > (-1*logFC_threshold)) | plotDF$Pvalue > p_threshold] <- "unchanged"
-    plotDF$Colour[plotDF$log2FC < (-1*logFC_threshold) & plotDF$Pvalue <= p_threshold] <- "downregulated"
-    plotDF$Colour[plotDF$log2FC >= logFC_threshold & plotDF$Pvalue <= p_threshold] <- "upregulated"
-    
-    
-    volcano <- ggplot2::ggplot(plotDF,  
-                               ggplot2::aes(text = paste0("Gene ID: ", GeneID))) +
-      ggplot2::geom_point(ggplot2::aes(x = log2FC, y = -log10(Pvalue), colour = Colour)) +
-      ggplot2::geom_hline(yintercept = -log10(p_threshold), color = "grey", linetype = "dotted", size = 0.5) +
-      ggplot2::geom_vline(xintercept = c(-1*logFC_threshold, logFC_threshold), color = "grey", linetype = "dotted", size = 0.5) +
-      ggplot2::xlab("log2 FC") +
-      ggplot2::ylab("log10 P value") +
-      ggplot2::labs(color = " ") +
-      ggplot2::theme_classic() +
-      ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5)) +
-      ggplot2::scale_color_manual(values = setNames(c("darkgrey", "red", "blue"),
-                                                    c("unchanged", "upregulated", "downregulated")))
-  }
-  
-  if (p == "adj"){
-    plotDF$Colour[(plotDF$log2FC < logFC_threshold & plotDF$log2FC > (-1*logFC_threshold)) | plotDF$adjPvalue > p_threshold] <- "unchanged"
-    plotDF$Colour[plotDF$log2FC < (-1*logFC_threshold) & plotDF$adjPvalue <= p_threshold] <- "downregulated"
-    plotDF$Colour[plotDF$log2FC >= logFC_threshold & plotDF$adjPvalue <= p_threshold] <- "upregulated"
-    
-    
-    volcano <- ggplot2::ggplot(plotDF,  
-                               ggplot2::aes(text = paste0("Gene ID: ",GeneID))) +
-      ggplot2::geom_point(aes(x = log2FC, y = -log10(adjPvalue), colour = Colour)) +
-      ggplot2::geom_hline(yintercept = -log10(p_threshold), color = "grey", linetype = "dotted", size = 0.5) +
-      ggplot2::geom_vline(xintercept = c(-1*logFC_threshold, logFC_threshold), color = "grey", linetype = "dotted", size = 0.5) +
-      ggplot2::xlab("log2 FC") +
-      ggplot2::ylab("log10 P value") +
-      ggplot2::labs(color = " ") +
-      ggplot2::theme_classic() +
-      ggplot2::theme(plot.title = element_text(face = "bold", hjust = 0.5)) +
-      ggplot2::scale_color_manual(values = setNames(c("darkgrey", "red", "blue"),
-                                                    c("unchanged", "upregulated", "downregulated")))
-  }
-  
-  p <- plotly::ggplotly(volcano, tooltip = "text")
-  
-  return(p)
-  
-  
-}
-
-#==============================================================================#
 # makeVolcano()
 #==============================================================================#
 
@@ -1892,7 +1874,8 @@ makeVolcano <- function(top_table,
              yaxis = list(title = '-log<sub>10</sub> P value'),
              shapes = list(vline(logFC_threshold), 
                            vline(-1*logFC_threshold),
-                           hline(-log10(p_threshold))))
+                           hline(-log10(p_threshold))),
+             legend = list(traceorder = "alphabetical"))
   }
   
   
@@ -1945,16 +1928,97 @@ makeVolcano <- function(top_table,
              yaxis = list(title = '-log<sub>10</sub> P value'),
              shapes = list(vline(logFC_threshold), 
                            vline(-1*logFC_threshold),
-                           hline(-log10(p_threshold))))
+                           hline(-log10(p_threshold))),
+             legend = list(traceorder = "alphabetical"))
   }
   
-  p <- plotly::ggplotly(volcano, tooltip = "text")
+  #p <- plotly::ggplotly(volcano, tooltip = "text")
   
-  return(p)
+  return(volcano)
   
   
 }
 
+
+#==============================================================================#
+# makeVolcano_static()
+#==============================================================================#
+
+# DESCRIPTION:
+# Make volcano plot (static)
+
+# VARIABLES:
+# top_table: top table from the "getStatistics" function
+# p: raw ("raw") or adjusted ("adj") P value
+# p_threshold: P value threshold
+# logFC_threshold: log2FC threshold
+
+makeVolcano_static <- function(top_table, 
+                        p = "raw", 
+                        p_threshold = 0.05, 
+                        logFC_threshold = 1){
+  
+  plotDF <- data.frame(log2FC = top_table[,"log2FC"],
+                       Pvalue = top_table[,"p-value"],
+                       logP = -log10(top_table[,"p-value"]),
+                       adjPvalue = top_table[,"adj. p-value"],
+                       GeneID = top_table[,"GeneID"])
+  
+  if (p == "raw"){
+    plotDF$Colour[(plotDF$log2FC < logFC_threshold & plotDF$log2FC > (-1*logFC_threshold)) | plotDF$Pvalue > p_threshold] <- "unchanged"
+    plotDF$Colour[plotDF$log2FC < (-1*logFC_threshold) & plotDF$Pvalue <= p_threshold] <- "downregulated"
+    plotDF$Colour[plotDF$log2FC >= logFC_threshold & plotDF$Pvalue <= p_threshold] <- "upregulated"
+    
+    
+    volcano <- ggplot2::ggplot() +
+      ggplot2:: geom_point(data = plotDF[plotDF$Colour == "unchanged",],
+                           ggplot2::aes(x = log2FC, y = logP, color = "Unchanged")) +
+      ggplot2::geom_point(data = plotDF[plotDF$Colour == "downregulated",],
+                          ggplot2::aes(x = log2FC, y = logP, color = "Downregulated")) +
+      ggplot2::geom_point(data = plotDF[plotDF$Colour == "upregulated",],
+                          ggplot2::aes(x = log2FC, y = logP, color = "Upregulated")) +
+      ggplot2::geom_hline(yintercept = -log10(p_threshold), linetype = "dashed", color = "lightgrey") +
+      ggplot2::geom_vline(xintercept = -1*logFC_threshold, linetype = "dashed", color = "lightgrey") +
+      ggplot2::geom_vline(xintercept = logFC_threshold, linetype = "dashed", color = "lightgrey") +
+      ggplot2::scale_color_manual(values = setNames(c("darkgrey", "blue", "red"),
+                                           c("Unchanged", "Downregulated", "Upregulated"))) +
+      ggplot2::xlab(expression(log[2]~"FC")) +
+      ggplot2::ylab(expression(-log[10]~"P value")) +
+      ggplot2::labs(color = NULL) +
+      ggplot2::theme_minimal()
+    
+   
+  }
+  
+  if (p == "adj"){
+    plotDF$Colour[(plotDF$log2FC < logFC_threshold & plotDF$log2FC > (-1*logFC_threshold)) | plotDF$adjPvalue > p_threshold] <- "unchanged"
+    plotDF$Colour[plotDF$log2FC < (-1*logFC_threshold) & plotDF$adjPvalue <= p_threshold] <- "downregulated"
+    plotDF$Colour[plotDF$log2FC >= logFC_threshold & plotDF$adjPvalue <= p_threshold] <- "upregulated"
+    
+    
+    volcano <- ggplot2::ggplot() +
+      ggplot2:: geom_point(data = plotDF[plotDF$Colour == "unchanged",],
+                           ggplot2::aes(x = log2FC, y = logP, color = "Unchanged")) +
+      ggplot2::geom_point(data = plotDF[plotDF$Colour == "downregulated",],
+                          ggplot2::aes(x = log2FC, y = logP, color = "Downregulated")) +
+      ggplot2::geom_point(data = plotDF[plotDF$Colour == "upregulated",],
+                          ggplot2::aes(x = log2FC, y = logP, color = "Upregulated")) +
+      ggplot2::geom_hline(yintercept = -log10(p_threshold), linetype = "dashed", color = "lightgrey") +
+      ggplot2::geom_vline(xintercept = -1*logFC_threshold, linetype = "dashed", color = "lightgrey") +
+      ggplot2::geom_vline(xintercept = logFC_threshold, linetype = "dashed", color = "lightgrey") +
+      ggplot2::scale_color_manual(values = setNames(c("darkgrey", "blue", "red"),
+                                                    c("Unchanged", "Downregulated", "Upregulated"))) +
+      ggplot2::xlab(expression(log[2]~"FC")) +
+      ggplot2::ylab(expression(-log[10]~"P value")) +
+      ggplot2::labs(color = NULL) +
+      ggplot2::theme_minimal()
+    
+  }
+  
+  return(volcano)
+  
+  
+}
 
 #==============================================================================#
 # makeMAplot()
@@ -2083,13 +2147,94 @@ makeMAplot <- function(top_table,
                            hline(-1*logFC_threshold)))
   }
   
-  p <- plotly::ggplotly(MA, tooltip = "text")
-  
-  return(p)
+  return(MA)
   
   
 }
 
+
+#==============================================================================#
+# makeMAplot_static()
+#==============================================================================#
+
+# DESCRIPTION:
+# Make MA plot
+
+# VARIABLES:
+# top_table: top table from the "getStatistics" function
+# p: raw ("raw") or adjusted ("adj") P value
+# p_threshold: P value threshold
+# logFC_threshold: log2FC threshold
+
+makeMAplot_static <- function(top_table, 
+                       p = "raw", 
+                       p_threshold = 0.05, 
+                       logFC_threshold = 1){
+  
+  plotDF <- data.frame(log2FC = top_table[,"log2FC"],
+                       Pvalue = top_table[,"p-value"],
+                       logP = -log10(top_table[,"p-value"]),
+                       adjPvalue = top_table[,"adj. p-value"],
+                       meanExpr = top_table[,"meanExpr"],
+                       GeneID = top_table[,"GeneID"])
+  
+  plotDF$meanExpr <- log2(plotDF$meanExpr +1)
+  
+  if (p == "raw"){
+    plotDF$Colour[(plotDF$log2FC < logFC_threshold & plotDF$log2FC > (-1*logFC_threshold)) | plotDF$Pvalue > p_threshold] <- "unchanged"
+    plotDF$Colour[plotDF$log2FC < (-1*logFC_threshold) & plotDF$Pvalue <= p_threshold] <- "downregulated"
+    plotDF$Colour[plotDF$log2FC >= logFC_threshold & plotDF$Pvalue <= p_threshold] <- "upregulated"
+    
+    
+    MA <- ggplot2::ggplot() +
+      ggplot2:: geom_point(data = plotDF[plotDF$Colour == "unchanged",],
+                           ggplot2::aes(x = meanExpr, y = log2FC, color = "Unchanged")) +
+      ggplot2::geom_point(data = plotDF[plotDF$Colour == "downregulated",],
+                          ggplot2::aes(x = meanExpr, y = log2FC, color = "Downregulated")) +
+      ggplot2::geom_point(data = plotDF[plotDF$Colour == "upregulated",],
+                          ggplot2::aes(x = meanExpr, y = log2FC, color = "Upregulated")) +
+      ggplot2::geom_hline(yintercept = -1*logFC_threshold, linetype = "dashed", color = "lightgrey") +
+      ggplot2::geom_hline(yintercept = logFC_threshold, linetype = "dashed", color = "lightgrey") +
+      ggplot2::scale_color_manual(values = setNames(c("darkgrey", "blue", "red"),
+                                                    c("Unchanged", "Downregulated", "Upregulated"))) +
+      ggplot2::xlab(expression("Normalized"~log[2]~"expression")) +
+      ggplot2::ylab(expression(log[2]~"FC")) +
+      ggplot2::labs(color = NULL) +
+      ggplot2::theme_minimal()
+  }
+  
+  
+  
+  
+  
+  if (p == "adj"){
+    plotDF$Colour[(plotDF$log2FC < logFC_threshold & plotDF$log2FC > (-1*logFC_threshold)) | plotDF$adjPvalue > p_threshold] <- "unchanged"
+    plotDF$Colour[plotDF$log2FC < (-1*logFC_threshold) & plotDF$adjPvalue <= p_threshold] <- "downregulated"
+    plotDF$Colour[plotDF$log2FC >= logFC_threshold & plotDF$adjPvalue <= p_threshold] <- "upregulated"
+    
+    
+    
+    MA <- ggplot2::ggplot() +
+      ggplot2:: geom_point(data = plotDF[plotDF$Colour == "unchanged",],
+                           ggplot2::aes(x = meanExpr, y = log2FC, color = "Unchanged")) +
+      ggplot2::geom_point(data = plotDF[plotDF$Colour == "downregulated",],
+                          ggplot2::aes(x = meanExpr, y = log2FC, color = "Downregulated")) +
+      ggplot2::geom_point(data = plotDF[plotDF$Colour == "upregulated",],
+                          ggplot2::aes(x = meanExpr, y = log2FC, color = "Upregulated")) +
+      ggplot2::geom_hline(yintercept = -1*logFC_threshold, linetype = "dashed", color = "lightgrey") +
+      ggplot2::geom_hline(yintercept = logFC_threshold, linetype = "dashed", color = "lightgrey") +
+      ggplot2::scale_color_manual(values = setNames(c("darkgrey", "blue", "red"),
+                                                    c("Unchanged", "Downregulated", "Upregulated"))) +
+      ggplot2::xlab(expression("Normalized"~log[2]~"expression")) +
+      ggplot2::ylab(expression(log[2]~"FC")) +
+      ggplot2::labs(color = NULL) +
+      ggplot2::theme_minimal()
+  }
+  
+  return(MA)
+  
+  
+}
 #==============================================================================#
 # selID()
 #==============================================================================#

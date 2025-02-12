@@ -1248,7 +1248,7 @@ ui <- tagList(
                           #Title
                           h2(strong("Data upload")),
                           h5("Before you can run the analysis workflow, you first 
-                           need to upload the expression data as well as the meta data."),
+                           need to upload the expression data and the meta data."),
                           
                           hr(),
                           
@@ -1369,7 +1369,8 @@ ui <- tagList(
                               ) 
                             ) |>
                               add_prompt(message = "The experimental groups are the 
-                                       groups that you would like to compare, like disease status groups.", 
+                                       groups that you would like to compare to each other 
+                                       in the statistical analysis (e.g., disease or treatment status). ", 
                                          position = "right",
                                          size = "large")
                           ))),
@@ -1387,9 +1388,10 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Select the minimum number of  
-                                         counts that is required for n = size of the smallest 
-                                         experimental group", 
+                              add_prompt(message = "Select the filtering threshold.
+                              Genes with at least this number of (raw) counts 
+                              in the smallest group size will be kept for the statistical analysis. 
+                                         A value of 10 is often recommended for bulk RNA-seq", 
                                          position = "right",
                                          size = "large")
                           ))),
@@ -1490,7 +1492,8 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Add gene annotations to 
+                              prompter::add_prompt(message = "Add gene annotations 
+                              (e.g., ENSEMBL IDs, ENTREZGENE IDs, and/or HGNC symbols) to 
                                        the output.", 
                                                    position = "right",
                                                    size = "large")
@@ -1984,7 +1987,7 @@ ui <- tagList(
                           br(),
                           
                           h4(strong(tags$span(
-                            "2. Add covariated",
+                            "2. Add covariates",
                             tags$span(
                               icon(
                                 name = "question-circle",

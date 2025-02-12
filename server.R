@@ -249,7 +249,7 @@ server <- function(input, output, session){
                                shinycssloaders::withSpinner(color="#0dc5c1")),
                     tabPanel("Meta data",                  # Meta table
                              h3(strong("Meta data")),
-                             h5("This is a preview of the meta data. Please check if the data 
+                             h5("This is a preview of the meta data table. Please check if the data 
                has been correctly imported."),
                              hr(),
                              DT::dataTableOutput(outputId = "metaTable_rnaseq_raw") %>% 
@@ -380,8 +380,8 @@ server <- function(input, output, session){
                              DT::dataTableOutput(outputId = "exprTable_upload_rnaseq_raw") %>% 
                                shinycssloaders::withSpinner(color="#0dc5c1")),
                     tabPanel("Meta data",                  # Meta table
-                             h3(strong("Metadata table")),
-                             h5("This is a preview of the metadata table. Please check if the data 
+                             h3(strong("Meta data")),
+                             h5("This is a preview of the meta data table. Please check if the data 
                has been correctly imported."),
                              hr(),
                              DT::dataTableOutput(outputId = "metaTable_rnaseq_raw") %>% 
@@ -1201,6 +1201,7 @@ server <- function(input, output, session){
                        ypc = as.numeric(stringr::str_remove(input$ypca_rnaseq_raw,"PC")), 
                        zpc = ifelse(input$xyz_rnaseq_raw,as.numeric(stringr::str_remove(input$zpca_rnaseq_raw,"PC")),3), 
                        xyz = input$xyz_rnaseq_raw)
+              
               return(rv$PCAplot)
             })
             
@@ -1297,15 +1298,108 @@ server <- function(input, output, session){
               
             })
             
+            
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
             # Download plot
-            output$download_PCA_rnaseq_raw <- downloadHandler(
-              filename = "QC_PCA.html",
+            output$realdownload_pca_rnaseq_raw <- downloadHandler(
+              filename = function(){ifelse(input$static_pca_rnaseq_raw, "QC_PCA.png", "QC_PCA.html")},
               content = function(file){
                 
-                htmlwidgets::saveWidget(rv$PCAplot, 
-                                        file)
+                if (input$static_pca_rnaseq_raw){
+                  
+                  # Get factor to color by
+                  if(length(input$colorFactor_PCA_rnaseq_raw) > 1){
+                    colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_raw], 1, paste, collapse = "_" ))
+                  } else{
+                    colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_raw])
+                  }
+                  
+                  # Set colors
+                  if (length(levels(colorFactor)) > 5){
+                    legendColors <- colorsByFactor(colorFactor)$legendColors
+                  } else{
+                    legendColors <- c(input$PCA_col1_rnaseq_raw,
+                                      input$PCA_col2_rnaseq_raw,
+                                      input$PCA_col3_rnaseq_raw,
+                                      input$PCA_col4_rnaseq_raw,
+                                      input$PCA_col5_rnaseq_raw)
+                  }
+                  if (length(legendColors) != length(levels(colorFactor))){
+                    legendColors <- colorsByFactor(colorFactor)$legendColors
+                  }
+                  
+                  # Make PCA score plot
+                  p <- plot_PCA_static(PC_data = rv$PCA_data, 
+                                       colorFactor = colorFactor,
+                                       legendColors = legendColors, 
+                                       xpc = as.numeric(stringr::str_remove(input$xpca_rnaseq_raw,"PC")), 
+                                       ypc = as.numeric(stringr::str_remove(input$ypca_rnaseq_raw,"PC")))
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_pca_rnaseq_raw,
+                                  height = input$height_pca_rnaseq_raw,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$PCAplot, 
+                                          file)
+                }
               }
             )
+            
+            
+            # Make modal
+            observeEvent(input$download_pca_rnaseq_raw, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(12, align = "left",
+                           shinyWidgets::materialSwitch(
+                             inputId = "static_pca_rnaseq_raw",
+                             label = "Click to make static plot",
+                             value = FALSE, 
+                             status = "primary"))
+                  ),
+                  fluidRow(
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_pca_rnaseq_raw==true",
+                             sliderInput("height_pca_rnaseq_raw", 
+                                         "Height",
+                                         min = 800, max = 2000,
+                                         value = 1200, step = 10,
+                                         width = "100%")
+                           )
+                    ),
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_pca_rnaseq_raw==true",
+                             sliderInput("width_pca_rnaseq_raw", 
+                                         "Width",
+                                         min = 800, max = 2000,
+                                         value = 1500, step = 10,
+                                         width = "100%")
+                           )
+                    )
+                  ),
+                  
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_pca_rnaseq_raw', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
             
             #********************************************************************#
             # Output 6: Overview of pre-processing settings
@@ -1338,8 +1432,9 @@ server <- function(input, output, session){
                            icon = icon("fas fa-mouse-pointer"),
                            
                            # Title + description
-                           h3(strong("Normalized expression values")),
-                           h5("Here you can view the normalized log intensity (expression) values."),
+                           h3(strong("Normalized counts")),
+                           h5("Here you can view the normalized and log-transformed counts. 
+                              Click on the table explore the data!"),
                            hr(),
                            
                            # Table
@@ -1449,7 +1544,7 @@ server <- function(input, output, session){
                   ),
                   
                   # TAB2: Boxplots of all gene's expression values
-                  tabPanel("Boxplots",
+                  tabPanel("Boxplot",
                            icon = icon("fas fa-file"),
                            br(),
                            actionButton("download_boxplots_rnaseq_raw", 
@@ -1471,7 +1566,7 @@ server <- function(input, output, session){
                   ),
                   
                   # TAB3: Density plots of all gene's expression values
-                  tabPanel("Density plots",
+                  tabPanel("Density plot",
                            icon = icon("fas fa-mouse-pointer"),
                            br(),
                            downloadButton('download_densityplots_rnaseq_raw', 
@@ -1616,8 +1711,9 @@ server <- function(input, output, session){
                            ),
                            
                            hr(),
-                           downloadButton('download_PCA_rnaseq_raw', 
-                                          'Download figure'),
+                           actionButton("download_pca_rnaseq_raw", 
+                                        "Download figure",
+                                        icon = shiny::icon("download")),
                            br(),
                            br(),
                            
@@ -1646,7 +1742,7 @@ server <- function(input, output, session){
                   tabPanel("Settings overview",
                            icon = icon("fas fa-file"),
                            h3(strong("Pre-processing settings")),
-                           h5("Here you can see an overview of the chosen pre-processing settings."),
+                           h5("To enhance reproducibility, view and download the overview of the chosen pre-processing settings."),
                            hr(),
                            DT::dataTableOutput(outputId = "processingSettings_rnaseq_raw") %>% 
                              withSpinner(color="#0dc5c1"),
@@ -2048,15 +2144,97 @@ server <- function(input, output, session){
               req(input$comparisons_view_rnaseq_raw)
               
               if (input$comparisons_view_rnaseq_raw %in% names(rv$top_table)){
-                p <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_rnaseq_raw]], 
+                rv$volcano <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_rnaseq_raw]], 
                                  p = input$rawp_volcano_rnaseq_raw, 
                                  p_threshold = input$p_thres_volcano_rnaseq_raw, 
                                  logFC_threshold = input$logFC_thres_volcano_rnaseq_raw)
                 
-                output$volcano_rnaseq_raw <- plotly::renderPlotly(p)
+                output$volcano_rnaseq_raw <- plotly::renderPlotly(rv$volcano)
               }
             }, ignoreNULL = FALSE) 
             # ignoreNULL: generate plot even if action button is not pressed
+            
+            
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
+            # Download plot
+            output$realdownload_volcano_rnaseq_raw <- downloadHandler(
+              filename = function(){ifelse(input$static_volcano_rnaseq_raw, "Volcano.png", "Volcano.html")},
+              content = function(file){
+                
+                if (input$static_volcano_rnaseq_raw){
+                  
+                  
+                  # Make PCA score plot
+                  p <- makeVolcano_static(top_table = rv$top_table[[input$comparisons_view_rnaseq_raw]], 
+                                          p = input$rawp_volcano_rnaseq_raw, 
+                                          p_threshold = input$p_thres_volcano_rnaseq_raw, 
+                                          logFC_threshold = input$logFC_thres_volcano_rnaseq_raw)
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_volcano_rnaseq_raw,
+                                  height = input$height_volcano_rnaseq_raw,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$volcano, 
+                                          file)
+                }
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_volcano_rnaseq_raw, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(12, align = "left",
+                           shinyWidgets::materialSwitch(
+                             inputId = "static_volcano_rnaseq_raw",
+                             label = "Click to make static plot",
+                             value = FALSE, 
+                             status = "primary"))
+                  ),
+                  fluidRow(
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_volcano_rnaseq_raw==true",
+                             sliderInput("height_volcano_rnaseq_raw", 
+                                         "Height",
+                                         min = 800, max = 2000,
+                                         value = 1200, step = 10,
+                                         width = "100%")
+                           )
+                    ),
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_volcano_rnaseq_raw==true",
+                             sliderInput("width_volcano_rnaseq_raw", 
+                                         "Width",
+                                         min = 800, max = 2000,
+                                         value = 1500, step = 10,
+                                         width = "100%")
+                           )
+                    )
+                  ),
+                  
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_volcano_rnaseq_raw', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
             
             #********************************************************************#
             # TAB4: MA plot
@@ -2070,15 +2248,96 @@ server <- function(input, output, session){
               req(input$comparisons_view_rnaseq_raw)
               
               if (input$comparisons_view_rnaseq_raw %in% names(rv$top_table)){
-                p <- makeMAplot(top_table = rv$top_table[[input$comparisons_view_rnaseq_raw]], 
+                rv$MA <- makeMAplot(top_table = rv$top_table[[input$comparisons_view_rnaseq_raw]], 
                                 p = input$rawp_MA_rnaseq_raw, 
                                 p_threshold = input$p_thres_MA_rnaseq_raw, 
                                 logFC_threshold = input$logFC_thres_MA_rnaseq_raw)
                 
-                output$MA_rnaseq_raw <- plotly::renderPlotly(p)
+                output$MA_rnaseq_raw <- plotly::renderPlotly(rv$MA)
               }
             }, ignoreNULL = FALSE) 
             # ignoreNULL: generate plot even if action button is not pressed
+            
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
+            # Download plot
+            output$realdownload_MA_rnaseq_raw <- downloadHandler(
+              filename = function(){ifelse(input$static_MA_rnaseq_raw, "MA.png", "MA.html")},
+              content = function(file){
+                
+                if (input$static_MA_rnaseq_raw){
+                  
+                  
+                  # Make PCA score plot
+                  p <- makeMAplot_static(top_table = rv$top_table[[input$comparisons_view_rnaseq_raw]], 
+                                          p = input$rawp_MA_rnaseq_raw, 
+                                          p_threshold = input$p_thres_MA_rnaseq_raw, 
+                                          logFC_threshold = input$logFC_thres_MA_rnaseq_raw)
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_MA_rnaseq_raw,
+                                  height = input$height_MA_rnaseq_raw,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$MA, 
+                                          file)
+                }
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_MA_rnaseq_raw, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(12, align = "left",
+                           shinyWidgets::materialSwitch(
+                             inputId = "static_MA_rnaseq_raw",
+                             label = "Click to make static plot",
+                             value = FALSE, 
+                             status = "primary"))
+                  ),
+                  fluidRow(
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_MA_rnaseq_raw==true",
+                             sliderInput("height_MA_rnaseq_raw", 
+                                         "Height",
+                                         min = 800, max = 2000,
+                                         value = 1200, step = 10,
+                                         width = "100%")
+                           )
+                    ),
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_MA_rnaseq_raw==true",
+                             sliderInput("width_MA_rnaseq_raw", 
+                                         "Width",
+                                         min = 800, max = 2000,
+                                         value = 1500, step = 10,
+                                         width = "100%")
+                           )
+                    )
+                  ),
+                  
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_MA_rnaseq_raw', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
             
             #=========================================#
             #  # UI: Output in different tabs
@@ -2178,8 +2437,9 @@ server <- function(input, output, session){
                     tabPanel("Top table",
                              icon = icon("fas fa-mouse-pointer"),
                              br(),
-                             h3(strong("Top Table")),
-                             h5("The Top Table includes the output of the selected statistical analysis."),
+                             h3(strong("Top table")),
+                             h5("The Top table includes the output of the selected statistical analysis. 
+                                Click on the table to explore the data!"),
                              hr(),
                              DT::dataTableOutput(outputId = "top_table_rnaseq_raw") %>% 
                                shinycssloaders::withSpinner(color="#0dc5c1"),
@@ -2273,7 +2533,7 @@ server <- function(input, output, session){
                                )
                              ),
                              hr(),
-                             
+
                              # Button to reload the volcano plot
                              shinyWidgets::actionBttn(inputId = "plot_volcano_rnaseq_raw", 
                                                       label = "Plot",
@@ -2284,7 +2544,11 @@ server <- function(input, output, session){
                              br(),
                              # Volcano plot output
                              plotly::plotlyOutput("volcano_rnaseq_raw")%>% 
-                               withSpinner(color="#0dc5c1")
+                               withSpinner(color="#0dc5c1"),
+                             br(),
+                             actionButton("download_volcano_rnaseq_raw", 
+                                          "Download figure",
+                                          icon = shiny::icon("download"))
                              
                     ),
                     
@@ -2333,7 +2597,11 @@ server <- function(input, output, session){
                              br(),
                              # Volcano plot output
                              plotly::plotlyOutput("MA_rnaseq_raw")%>% 
-                               withSpinner(color="#0dc5c1")
+                               withSpinner(color="#0dc5c1"),
+                             br(),
+                             actionButton("download_MA_rnaseq_raw", 
+                                          "Download figure",
+                                          icon = shiny::icon("download"))
                              
                     )
                     
@@ -4065,15 +4333,107 @@ server <- function(input, output, session){
               
             })
             
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
             # Download plot
-            output$download_PCA_rnaseq_norm <- downloadHandler(
-              filename = "QC_PCA.html",
+            output$realdownload_pca_rnaseq_norm <- downloadHandler(
+              filename = function(){ifelse(input$static_pca_rnaseq_norm, "QC_PCA.png", "QC_PCA.html")},
               content = function(file){
                 
-                htmlwidgets::saveWidget(rv$PCAplot, 
-                                        file)
+                if (input$static_pca_rnaseq_norm){
+                  
+                  # Get factor to color by
+                  if(length(input$colorFactor_PCA_rnaseq_norm) > 1){
+                    colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm], 1, paste, collapse = "_" ))
+                  } else{
+                    colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm])
+                  }
+                  
+                  # Set colors
+                  if (length(levels(colorFactor)) > 5){
+                    legendColors <- colorsByFactor(colorFactor)$legendColors
+                  } else{
+                    legendColors <- c(input$PCA_col1_rnaseq_norm,
+                                      input$PCA_col2_rnaseq_norm,
+                                      input$PCA_col3_rnaseq_norm,
+                                      input$PCA_col4_rnaseq_norm,
+                                      input$PCA_col5_rnaseq_norm)
+                  }
+                  if (length(legendColors) != length(levels(colorFactor))){
+                    legendColors <- colorsByFactor(colorFactor)$legendColors
+                  }
+                  
+                  # Make PCA score plot
+                  p <- plot_PCA_static(PC_data = rv$PCA_data, 
+                                       colorFactor = colorFactor,
+                                       legendColors = legendColors, 
+                                       xpc = as.numeric(stringr::str_remove(input$xpca_rnaseq_norm,"PC")), 
+                                       ypc = as.numeric(stringr::str_remove(input$ypca_rnaseq_norm,"PC")))
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_pca_rnaseq_norm,
+                                  height = input$height_pca_rnaseq_norm,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$PCAplot, 
+                                          file)
+                }
               }
             )
+            
+            
+            # Make modal
+            observeEvent(input$download_pca_rnaseq_norm, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(12, align = "left",
+                           shinyWidgets::materialSwitch(
+                             inputId = "static_pca_rnaseq_norm",
+                             label = "Click to make static plot",
+                             value = FALSE, 
+                             status = "primary"))
+                  ),
+                  fluidRow(
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_pca_rnaseq_norm==true",
+                             sliderInput("height_pca_rnaseq_norm", 
+                                         "Height",
+                                         min = 800, max = 2000,
+                                         value = 1200, step = 10,
+                                         width = "100%")
+                           )
+                    ),
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_pca_rnaseq_norm==true",
+                             sliderInput("width_pca_rnaseq_norm", 
+                                         "Width",
+                                         min = 800, max = 2000,
+                                         value = 1500, step = 10,
+                                         width = "100%")
+                           )
+                    )
+                  ),
+                  
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_pca_rnaseq_norm', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
             
             #********************************************************************#
             # Output 6: Overview of pre-processing settings
@@ -4103,7 +4463,8 @@ server <- function(input, output, session){
                   tabPanel("Expression values",
                            icon = icon("fas fa-mouse-pointer"),
                            h3(strong("Normalized expression values")),
-                           h5("Here you can view the normalized log intensity (expression) values."),
+                           h5("Here you can view the normalized and log-transformed counts. 
+                              Click on the table to explore the data!"),
                            hr(),
                            dataTableOutput(outputId = "exprTable_rnaseq_norm") %>% 
                              withSpinner(color="#0dc5c1"),
@@ -4372,8 +4733,9 @@ server <- function(input, output, session){
                            ),
                            
                            hr(),
-                           downloadButton('download_PCA_rnaseq_norm', 
-                                          'Download figure'),
+                           actionButton("download_pca_rnaseq_norm", 
+                                        "Download figure",
+                                        icon = shiny::icon("download")),
                            br(),
                            br(),
                            
@@ -4604,7 +4966,7 @@ server <- function(input, output, session){
             # Make outputs:
             
             #********************************************************************#
-            # top table
+            # TAB1: Top table
             #********************************************************************#
             
             observe({
@@ -4757,7 +5119,7 @@ server <- function(input, output, session){
             
             
             #********************************************************************#
-            # Histograms
+            # TAB2: Histograms
             #********************************************************************#
             observe({
               req(input$comparisons_view_rnaseq_norm)
@@ -4776,10 +5138,10 @@ server <- function(input, output, session){
                 })
               }
             })
+            #********************************************************************#
+            # TAB3: Volcano plot
+            #********************************************************************#
             
-            #********************************************************************#
-            # Volcano plot
-            #********************************************************************#
             observeEvent(input$plot_volcano_rnaseq_norm, {
               req(rv$top_table)
               req(input$rawp_volcano_rnaseq_norm)
@@ -4788,19 +5150,102 @@ server <- function(input, output, session){
               req(input$comparisons_view_rnaseq_norm)
               
               if (input$comparisons_view_rnaseq_norm %in% names(rv$top_table)){
-                p <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_rnaseq_norm]], 
-                                 p = input$rawp_volcano_rnaseq_norm, 
-                                 p_threshold = input$p_thres_volcano_rnaseq_norm, 
-                                 logFC_threshold = input$logFC_thres_volcano_rnaseq_norm)
+                rv$volcano <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_rnaseq_norm]], 
+                                          p = input$rawp_volcano_rnaseq_norm, 
+                                          p_threshold = input$p_thres_volcano_rnaseq_norm, 
+                                          logFC_threshold = input$logFC_thres_volcano_rnaseq_norm)
                 
-                output$volcano_rnaseq_norm <- plotly::renderPlotly(p)
+                output$volcano_rnaseq_norm <- plotly::renderPlotly(rv$volcano)
               }
-            }, ignoreNULL = FALSE)
+            }, ignoreNULL = FALSE) 
+            # ignoreNULL: generate plot even if action button is not pressed
             
             
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
+            # Download plot
+            output$realdownload_volcano_rnaseq_norm <- downloadHandler(
+              filename = function(){ifelse(input$static_volcano_rnaseq_norm, "Volcano.png", "Volcano.html")},
+              content = function(file){
+                
+                if (input$static_volcano_rnaseq_norm){
+                  
+                  
+                  # Make PCA score plot
+                  p <- makeVolcano_static(top_table = rv$top_table[[input$comparisons_view_rnaseq_norm]], 
+                                          p = input$rawp_volcano_rnaseq_norm, 
+                                          p_threshold = input$p_thres_volcano_rnaseq_norm, 
+                                          logFC_threshold = input$logFC_thres_volcano_rnaseq_norm)
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_volcano_rnaseq_norm,
+                                  height = input$height_volcano_rnaseq_norm,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$volcano, 
+                                          file)
+                }
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_volcano_rnaseq_norm, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(12, align = "left",
+                           shinyWidgets::materialSwitch(
+                             inputId = "static_volcano_rnaseq_norm",
+                             label = "Click to make static plot",
+                             value = FALSE, 
+                             status = "primary"))
+                  ),
+                  fluidRow(
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_volcano_rnaseq_norm==true",
+                             sliderInput("height_volcano_rnaseq_norm", 
+                                         "Height",
+                                         min = 800, max = 2000,
+                                         value = 1200, step = 10,
+                                         width = "100%")
+                           )
+                    ),
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_volcano_rnaseq_norm==true",
+                             sliderInput("width_volcano_rnaseq_norm", 
+                                         "Width",
+                                         min = 800, max = 2000,
+                                         value = 1500, step = 10,
+                                         width = "100%")
+                           )
+                    )
+                  ),
+                  
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_volcano_rnaseq_norm', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
+            
             #********************************************************************#
-            # MA plot
+            # TAB4: MA plot
             #********************************************************************#
+            
             observeEvent(input$plot_MA_rnaseq_norm, {
               req(rv$top_table)
               req(input$rawp_MA_rnaseq_norm)
@@ -4809,14 +5254,97 @@ server <- function(input, output, session){
               req(input$comparisons_view_rnaseq_norm)
               
               if (input$comparisons_view_rnaseq_norm %in% names(rv$top_table)){
-                p <- makeMAplot(top_table = rv$top_table[[input$comparisons_view_rnaseq_norm]], 
-                                 p = input$rawp_MA_rnaseq_norm, 
-                                 p_threshold = input$p_thres_MA_rnaseq_norm, 
-                                 logFC_threshold = input$logFC_thres_MA_rnaseq_norm)
+                rv$MA <- makeMAplot(top_table = rv$top_table[[input$comparisons_view_rnaseq_norm]], 
+                                    p = input$rawp_MA_rnaseq_norm, 
+                                    p_threshold = input$p_thres_MA_rnaseq_norm, 
+                                    logFC_threshold = input$logFC_thres_MA_rnaseq_norm)
                 
-                output$MA_rnaseq_norm <- plotly::renderPlotly(p)
+                output$MA_rnaseq_norm <- plotly::renderPlotly(rv$MA)
               }
-            }, ignoreNULL = FALSE)
+            }, ignoreNULL = FALSE) 
+            # ignoreNULL: generate plot even if action button is not pressed
+            
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
+            # Download plot
+            output$realdownload_MA_rnaseq_norm <- downloadHandler(
+              filename = function(){ifelse(input$static_MA_rnaseq_norm, "MA.png", "MA.html")},
+              content = function(file){
+                
+                if (input$static_MA_rnaseq_norm){
+                  
+                  
+                  # Make PCA score plot
+                  p <- makeMAplot_static(top_table = rv$top_table[[input$comparisons_view_rnaseq_norm]], 
+                                         p = input$rawp_MA_rnaseq_norm, 
+                                         p_threshold = input$p_thres_MA_rnaseq_norm, 
+                                         logFC_threshold = input$logFC_thres_MA_rnaseq_norm)
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_MA_rnaseq_norm,
+                                  height = input$height_MA_rnaseq_norm,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$MA, 
+                                          file)
+                }
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_MA_rnaseq_norm, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(12, align = "left",
+                           shinyWidgets::materialSwitch(
+                             inputId = "static_MA_rnaseq_norm",
+                             label = "Click to make static plot",
+                             value = FALSE, 
+                             status = "primary"))
+                  ),
+                  fluidRow(
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_MA_rnaseq_norm==true",
+                             sliderInput("height_MA_rnaseq_norm", 
+                                         "Height",
+                                         min = 800, max = 2000,
+                                         value = 1200, step = 10,
+                                         width = "100%")
+                           )
+                    ),
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_MA_rnaseq_norm==true",
+                             sliderInput("width_MA_rnaseq_norm", 
+                                         "Width",
+                                         min = 800, max = 2000,
+                                         value = 1500, step = 10,
+                                         width = "100%")
+                           )
+                    )
+                  ),
+                  
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_MA_rnaseq_norm', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
+            
             
             #=========================================#
             #  # UI: Output in different tabs
@@ -4915,8 +5443,9 @@ server <- function(input, output, session){
                       tabPanel("Top table",
                                icon = icon("fas fa-mouse-pointer"),
                                br(),
-                               h3(strong("Top Table")),
-                               h5("The Top Table includes the output of the selected statistical analysis."),
+                               h3(strong("Top table")),
+                               h5("The top table includes the output of the statistical analysis. 
+                                  Click on the table to explore the data!"),
                                hr(),
                                dataTableOutput(outputId = "top_table_rnaseq_norm") %>% 
                                  withSpinner(color="#0dc5c1"),
@@ -5016,7 +5545,11 @@ server <- function(input, output, session){
                                br(),
                                # Volcano plot
                                plotlyOutput("volcano_rnaseq_norm")%>% 
-                                 withSpinner(color="#0dc5c1")
+                                 withSpinner(color="#0dc5c1"),
+                               br(),
+                               actionButton("download_volcano_rnaseq_norm", 
+                                            "Download figure",
+                                            icon = shiny::icon("download"))
                                
                       ),
                       
@@ -5061,9 +5594,13 @@ server <- function(input, output, session){
                                           icon = icon("sync")),
                                br(),
                                br(),
-                               # Volcano plot
+                               # MA plot
                                plotlyOutput("MA_rnaseq_norm")%>% 
-                                 withSpinner(color="#0dc5c1")
+                                 withSpinner(color="#0dc5c1"),
+                               br(),
+                               actionButton("download_MA_rnaseq_norm", 
+                                            "Download figure",
+                                            icon = shiny::icon("download"))
                                
                       )
                       
@@ -6806,15 +7343,108 @@ server <- function(input, output, session){
               
             })
             
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
             # Download plot
-            output$download_PCA_microarray_raw <- downloadHandler(
-              filename = "QC_PCA.html",
+            output$realdownload_pca_microarray_raw <- downloadHandler(
+              filename = function(){ifelse(input$static_pca_microarray_raw, "QC_PCA.png", "QC_PCA.html")},
               content = function(file){
                 
-                htmlwidgets::saveWidget(rv$PCAplot, 
-                                        file)
+                if (input$static_pca_microarray_raw){
+                  
+                  # Get factor to color by
+                  if(length(input$colorFactor_PCA_microarray_raw) > 1){
+                    colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_microarray_raw], 1, paste, collapse = "_" ))
+                  } else{
+                    colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_microarray_raw])
+                  }
+                  
+                  # Set colors
+                  if (length(levels(colorFactor)) > 5){
+                    legendColors <- colorsByFactor(colorFactor)$legendColors
+                  } else{
+                    legendColors <- c(input$PCA_col1_microarray_raw,
+                                      input$PCA_col2_microarray_raw,
+                                      input$PCA_col3_microarray_raw,
+                                      input$PCA_col4_microarray_raw,
+                                      input$PCA_col5_microarray_raw)
+                  }
+                  if (length(legendColors) != length(levels(colorFactor))){
+                    legendColors <- colorsByFactor(colorFactor)$legendColors
+                  }
+                  
+                  # Make PCA score plot
+                  p <- plot_PCA_static(PC_data = rv$PCA_data, 
+                                       colorFactor = colorFactor,
+                                       legendColors = legendColors, 
+                                       xpc = as.numeric(stringr::str_remove(input$xpca_microarray_raw,"PC")), 
+                                       ypc = as.numeric(stringr::str_remove(input$ypca_microarray_raw,"PC")))
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_pca_microarray_raw,
+                                  height = input$height_pca_microarray_raw,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$PCAplot, 
+                                          file)
+                }
               }
             )
+            
+            
+            # Make modal
+            observeEvent(input$download_pca_microarray_raw, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(12, align = "left",
+                           shinyWidgets::materialSwitch(
+                             inputId = "static_pca_microarray_raw",
+                             label = "Click to make static plot",
+                             value = FALSE, 
+                             status = "primary"))
+                  ),
+                  fluidRow(
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_pca_microarray_raw==true",
+                             sliderInput("height_pca_microarray_raw", 
+                                         "Height",
+                                         min = 800, max = 2000,
+                                         value = 1200, step = 10,
+                                         width = "100%")
+                           )
+                    ),
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_pca_microarray_raw==true",
+                             sliderInput("width_pca_microarray_raw", 
+                                         "Width",
+                                         min = 800, max = 2000,
+                                         value = 1500, step = 10,
+                                         width = "100%")
+                           )
+                    )
+                  ),
+                  
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_pca_microarray_raw', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
+            
             
             #********************************************************************#
             # Output 6: Overview of pre-processing settings
@@ -6848,7 +7478,8 @@ server <- function(input, output, session){
                   tabPanel("Expression values",
                            icon = icon("fas fa-mouse-pointer"),
                            h3(strong("Normalized expression values")),
-                           h5("Here you can view the normalized log intensity (expression) values."),
+                           h5("Here you can view the normalized and log-transformed intensities. 
+                              Click on the table to explore the data!"),
                            hr(),
                            DT::dataTableOutput(outputId = "exprTable_microarray_raw") %>% 
                              withSpinner(color="#0dc5c1"),
@@ -7121,8 +7752,10 @@ server <- function(input, output, session){
                            ),
                            
                            hr(),
-                           downloadButton('download_PCA_microarray_raw', 
-                                          'Download figure'),
+                           
+                           actionButton("download_pca_microarray_raw", 
+                                        "Download figure",
+                                        icon = shiny::icon("download")),
                            br(),
                            br(),
                            
@@ -7574,64 +8207,212 @@ server <- function(input, output, session){
             })
             
             #********************************************************************#
-            # Volcano plot
+            # TAB3: Volcano plot
             #********************************************************************#
             
-            # Re-render the volcano plot after pressing the "plot" button
-            # ignoreNULL = FALSE, so it will render the plot the first time 
-            # without needing to press the "plot" button.
             observeEvent(input$plot_volcano_microarray_raw, {
-              
-              # Requirements
-              req(rv$top_table) # Top table
-              req(input$rawp_volcano_microarray_raw) # raw or adj. P value?
-              req(input$p_thres_volcano_microarray_raw) # P value threshold?
-              req(input$logFC_thres_volcano_microarray_raw) # log2FC threshold?
+              req(rv$top_table)
+              req(input$rawp_volcano_microarray_raw)
+              req(input$p_thres_volcano_microarray_raw)
+              req(input$logFC_thres_volcano_microarray_raw)
               req(input$comparisons_view_microarray_raw)
               
               if (input$comparisons_view_microarray_raw %in% names(rv$top_table)){
+                rv$volcano <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_microarray_raw]], 
+                                          p = input$rawp_volcano_microarray_raw, 
+                                          p_threshold = input$p_thres_volcano_microarray_raw, 
+                                          logFC_threshold = input$logFC_thres_volcano_microarray_raw)
                 
-                # Make plot
-                p <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_microarray_raw]], 
-                                 p = input$rawp_volcano_microarray_raw, 
-                                 p_threshold = input$p_thres_volcano_microarray_raw, 
-                                 logFC_threshold = input$logFC_thres_volcano_microarray_raw)
-                
-                # Render plot
-                output$volcano_microarray_raw <- renderPlotly(p)
+                output$volcano_microarray_raw <- plotly::renderPlotly(rv$volcano)
               }
-              
             }, ignoreNULL = FALSE) 
+            # ignoreNULL: generate plot even if action button is not pressed
+            
+            
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
+            # Download plot
+            output$realdownload_volcano_microarray_raw <- downloadHandler(
+              filename = function(){ifelse(input$static_volcano_microarray_raw, "Volcano.png", "Volcano.html")},
+              content = function(file){
+                
+                if (input$static_volcano_microarray_raw){
+                  
+                  
+                  # Make PCA score plot
+                  p <- makeVolcano_static(top_table = rv$top_table[[input$comparisons_view_microarray_raw]], 
+                                          p = input$rawp_volcano_microarray_raw, 
+                                          p_threshold = input$p_thres_volcano_microarray_raw, 
+                                          logFC_threshold = input$logFC_thres_volcano_microarray_raw)
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_volcano_microarray_raw,
+                                  height = input$height_volcano_microarray_raw,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$volcano, 
+                                          file)
+                }
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_volcano_microarray_raw, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(12, align = "left",
+                           shinyWidgets::materialSwitch(
+                             inputId = "static_volcano_microarray_raw",
+                             label = "Click to make static plot",
+                             value = FALSE, 
+                             status = "primary"))
+                  ),
+                  fluidRow(
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_volcano_microarray_raw==true",
+                             sliderInput("height_volcano_microarray_raw", 
+                                         "Height",
+                                         min = 800, max = 2000,
+                                         value = 1200, step = 10,
+                                         width = "100%")
+                           )
+                    ),
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_volcano_microarray_raw==true",
+                             sliderInput("width_volcano_microarray_raw", 
+                                         "Width",
+                                         min = 800, max = 2000,
+                                         value = 1500, step = 10,
+                                         width = "100%")
+                           )
+                    )
+                  ),
+                  
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_volcano_microarray_raw', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
             
             #********************************************************************#
-            # MA plot
+            # TAB4: MA plot
             #********************************************************************#
             
-            # Re-render the volcano plot after pressing the "plot" button
-            # ignoreNULL = FALSE, so it will render the plot the first time 
-            # without needing to press the "plot" button.
             observeEvent(input$plot_MA_microarray_raw, {
-              
-              # Requirements
-              req(rv$top_table) # Top table
-              req(input$rawp_MA_microarray_raw) # raw or adj. P value?
-              req(input$p_thres_MA_microarray_raw) # P value threshold?
-              req(input$logFC_thres_MA_microarray_raw) # log2FC threshold?
+              req(rv$top_table)
+              req(input$rawp_MA_microarray_raw)
+              req(input$p_thres_MA_microarray_raw)
+              req(input$logFC_thres_MA_microarray_raw)
               req(input$comparisons_view_microarray_raw)
               
               if (input$comparisons_view_microarray_raw %in% names(rv$top_table)){
+                rv$MA <- makeMAplot(top_table = rv$top_table[[input$comparisons_view_microarray_raw]], 
+                                    p = input$rawp_MA_microarray_raw, 
+                                    p_threshold = input$p_thres_MA_microarray_raw, 
+                                    logFC_threshold = input$logFC_thres_MA_microarray_raw)
                 
-                # Make plot
-                p <- makeMAplot(top_table = rv$top_table[[input$comparisons_view_microarray_raw]], 
-                                 p = input$rawp_MA_microarray_raw, 
-                                 p_threshold = input$p_thres_MA_microarray_raw, 
-                                 logFC_threshold = input$logFC_thres_MA_microarray_raw)
-                
-                # Render plot
-                output$MA_microarray_raw <- renderPlotly(p)
+                output$MA_microarray_raw <- plotly::renderPlotly(rv$MA)
               }
-              
             }, ignoreNULL = FALSE) 
+            # ignoreNULL: generate plot even if action button is not pressed
+            
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
+            # Download plot
+            output$realdownload_MA_microarray_raw <- downloadHandler(
+              filename = function(){ifelse(input$static_MA_microarray_raw, "MA.png", "MA.html")},
+              content = function(file){
+                
+                if (input$static_MA_microarray_raw){
+                  
+                  
+                  # Make PCA score plot
+                  p <- makeMAplot_static(top_table = rv$top_table[[input$comparisons_view_microarray_raw]], 
+                                         p = input$rawp_MA_microarray_raw, 
+                                         p_threshold = input$p_thres_MA_microarray_raw, 
+                                         logFC_threshold = input$logFC_thres_MA_microarray_raw)
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_MA_microarray_raw,
+                                  height = input$height_MA_microarray_raw,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$MA, 
+                                          file)
+                }
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_MA_microarray_raw, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(12, align = "left",
+                           shinyWidgets::materialSwitch(
+                             inputId = "static_MA_microarray_raw",
+                             label = "Click to make static plot",
+                             value = FALSE, 
+                             status = "primary"))
+                  ),
+                  fluidRow(
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_MA_microarray_raw==true",
+                             sliderInput("height_MA_microarray_raw", 
+                                         "Height",
+                                         min = 800, max = 2000,
+                                         value = 1200, step = 10,
+                                         width = "100%")
+                           )
+                    ),
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_MA_microarray_raw==true",
+                             sliderInput("width_MA_microarray_raw", 
+                                         "Width",
+                                         min = 800, max = 2000,
+                                         value = 1500, step = 10,
+                                         width = "100%")
+                           )
+                    )
+                  ),
+                  
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_MA_microarray_raw', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
+            
             
             
             #--------------------------------------#
@@ -7733,7 +8514,8 @@ server <- function(input, output, session){
                                
                                # Title + description
                                h3(strong("Top Table")),
-                               h5("The Top Table includes the output of the selected statistical analysis."),
+                               h5("The top table includes the output of the statistical analysis. 
+                                  Click on the table to explore the data!"),
                                hr(),
                                
                                # Top table
@@ -7848,7 +8630,11 @@ server <- function(input, output, session){
                                
                                # Volcano plot
                                plotlyOutput("volcano_microarray_raw")%>% 
-                                 withSpinner(color="#0dc5c1")
+                                 withSpinner(color="#0dc5c1"),
+                               br(),
+                               actionButton("download_volcano_microarray_raw", 
+                                            "Download figure",
+                                            icon = shiny::icon("download"))
                                
                       ),
                       
@@ -7896,9 +8682,13 @@ server <- function(input, output, session){
                                br(),
                                br(),
                                
-                               # Volcano plot
+                               # MA plot
                                plotlyOutput("MA_microarray_raw")%>% 
-                                 withSpinner(color="#0dc5c1")
+                                 withSpinner(color="#0dc5c1"),
+                               br(),
+                               actionButton("download_MA_microarray_raw", 
+                                            "Download figure",
+                                            icon = shiny::icon("download"))
                                
                       )
                       
@@ -9573,15 +10363,107 @@ server <- function(input, output, session){
               
             })
             
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
             # Download plot
-            output$download_PCA_microarray_norm <- downloadHandler(
-              filename = "QC_PCA.html",
+            output$realdownload_pca_microarray_norm <- downloadHandler(
+              filename = function(){ifelse(input$static_pca_microarray_norm, "QC_PCA.png", "QC_PCA.html")},
               content = function(file){
                 
-                htmlwidgets::saveWidget(rv$PCAplot, 
-                                        file)
+                if (input$static_pca_microarray_norm){
+                  
+                  # Get factor to color by
+                  if(length(input$colorFactor_PCA_microarray_norm) > 1){
+                    colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_microarray_norm], 1, paste, collapse = "_" ))
+                  } else{
+                    colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_microarray_norm])
+                  }
+                  
+                  # Set colors
+                  if (length(levels(colorFactor)) > 5){
+                    legendColors <- colorsByFactor(colorFactor)$legendColors
+                  } else{
+                    legendColors <- c(input$PCA_col1_microarray_norm,
+                                      input$PCA_col2_microarray_norm,
+                                      input$PCA_col3_microarray_norm,
+                                      input$PCA_col4_microarray_norm,
+                                      input$PCA_col5_microarray_norm)
+                  }
+                  if (length(legendColors) != length(levels(colorFactor))){
+                    legendColors <- colorsByFactor(colorFactor)$legendColors
+                  }
+                  
+                  # Make PCA score plot
+                  p <- plot_PCA_static(PC_data = rv$PCA_data, 
+                                       colorFactor = colorFactor,
+                                       legendColors = legendColors, 
+                                       xpc = as.numeric(stringr::str_remove(input$xpca_microarray_norm,"PC")), 
+                                       ypc = as.numeric(stringr::str_remove(input$ypca_microarray_norm,"PC")))
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_pca_microarray_norm,
+                                  height = input$height_pca_microarray_norm,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$PCAplot, 
+                                          file)
+                }
               }
             )
+            
+            
+            # Make modal
+            observeEvent(input$download_pca_microarray_norm, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(12, align = "left",
+                           shinyWidgets::materialSwitch(
+                             inputId = "static_pca_microarray_norm",
+                             label = "Click to make static plot",
+                             value = FALSE, 
+                             status = "primary"))
+                  ),
+                  fluidRow(
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_pca_microarray_norm==true",
+                             sliderInput("height_pca_microarray_norm", 
+                                         "Height",
+                                         min = 800, max = 2000,
+                                         value = 1200, step = 10,
+                                         width = "100%")
+                           )
+                    ),
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_pca_microarray_norm==true",
+                             sliderInput("width_pca_microarray_norm", 
+                                         "Width",
+                                         min = 800, max = 2000,
+                                         value = 1500, step = 10,
+                                         width = "100%")
+                           )
+                    )
+                  ),
+                  
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_pca_microarray_norm', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
             
             #********************************************************************#
             # Output 6: Overview of pre-processing settings
@@ -9614,7 +10496,8 @@ server <- function(input, output, session){
                   tabPanel("Expression values",
                            icon = icon("fas fa-mouse-pointer"),
                            h3(strong("Normalized expression values")),
-                           h5("Here you can view the normalized log intensity (expression) values."),
+                           h5("Here you can view the normalized and log-transformed intensities. 
+                              Click on the table to explore the data!"),
                            hr(),
                            DT::dataTableOutput(outputId = "exprTable_microarray_norm") %>% 
                              withSpinner(color="#0dc5c1"),
@@ -9886,8 +10769,9 @@ server <- function(input, output, session){
                            ),
                            
                            hr(),
-                           downloadButton('download_PCA_microarray_norm', 
-                                          'Download figure'),
+                           actionButton("download_pca_microarray_norm", 
+                                        "Download figure",
+                                        icon = shiny::icon("download")),
                            br(),
                            br(),
                            
@@ -10290,47 +11174,211 @@ server <- function(input, output, session){
             })
             
             #********************************************************************#
-            # Volcano plot
+            # TAB3: Volcano plot
             #********************************************************************#
+            
             observeEvent(input$plot_volcano_microarray_norm, {
               req(rv$top_table)
               req(input$rawp_volcano_microarray_norm)
               req(input$p_thres_volcano_microarray_norm)
               req(input$logFC_thres_volcano_microarray_norm)
-              
               req(input$comparisons_view_microarray_norm)
               
               if (input$comparisons_view_microarray_norm %in% names(rv$top_table)){
-                p <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_microarray_norm]], 
-                                 p = input$rawp_volcano_microarray_norm, 
-                                 p_threshold = input$p_thres_volcano_microarray_norm, 
-                                 logFC_threshold = input$logFC_thres_volcano_microarray_norm)
+                rv$volcano <- makeVolcano(top_table = rv$top_table[[input$comparisons_view_microarray_norm]], 
+                                          p = input$rawp_volcano_microarray_norm, 
+                                          p_threshold = input$p_thres_volcano_microarray_norm, 
+                                          logFC_threshold = input$logFC_thres_volcano_microarray_norm)
                 
-                output$volcano_microarray_norm <- renderPlotly(p)
+                output$volcano_microarray_norm <- plotly::renderPlotly(rv$volcano)
               }
-            }, ignoreNULL = FALSE)
+            }, ignoreNULL = FALSE) 
+            # ignoreNULL: generate plot even if action button is not pressed
             
             
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
+            # Download plot
+            output$realdownload_volcano_microarray_norm <- downloadHandler(
+              filename = function(){ifelse(input$static_volcano_microarray_norm, "Volcano.png", "Volcano.html")},
+              content = function(file){
+                
+                if (input$static_volcano_microarray_norm){
+                  
+                  
+                  # Make PCA score plot
+                  p <- makeVolcano_static(top_table = rv$top_table[[input$comparisons_view_microarray_norm]], 
+                                          p = input$rawp_volcano_microarray_norm, 
+                                          p_threshold = input$p_thres_volcano_microarray_norm, 
+                                          logFC_threshold = input$logFC_thres_volcano_microarray_norm)
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_volcano_microarray_norm,
+                                  height = input$height_volcano_microarray_norm,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$volcano, 
+                                          file)
+                }
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_volcano_microarray_norm, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(12, align = "left",
+                           shinyWidgets::materialSwitch(
+                             inputId = "static_volcano_microarray_norm",
+                             label = "Click to make static plot",
+                             value = FALSE, 
+                             status = "primary"))
+                  ),
+                  fluidRow(
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_volcano_microarray_norm==true",
+                             sliderInput("height_volcano_microarray_norm", 
+                                         "Height",
+                                         min = 800, max = 2000,
+                                         value = 1200, step = 10,
+                                         width = "100%")
+                           )
+                    ),
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_volcano_microarray_norm==true",
+                             sliderInput("width_volcano_microarray_norm", 
+                                         "Width",
+                                         min = 800, max = 2000,
+                                         value = 1500, step = 10,
+                                         width = "100%")
+                           )
+                    )
+                  ),
+                  
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_volcano_microarray_norm', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
+            
             #********************************************************************#
-            # MA plot
+            # TAB4: MA plot
             #********************************************************************#
-            observeEvent(input$plot_volcano_microarray_norm, {
+            
+            observeEvent(input$plot_MA_microarray_norm, {
               req(rv$top_table)
               req(input$rawp_MA_microarray_norm)
               req(input$p_thres_MA_microarray_norm)
               req(input$logFC_thres_MA_microarray_norm)
-              
               req(input$comparisons_view_microarray_norm)
               
               if (input$comparisons_view_microarray_norm %in% names(rv$top_table)){
-                p <- makeMAplot(top_table = rv$top_table[[input$comparisons_view_microarray_norm]], 
-                                 p = input$rawp_MA_microarray_norm, 
-                                 p_threshold = input$p_thres_MA_microarray_norm, 
-                                 logFC_threshold = input$logFC_thres_MA_microarray_norm)
+                rv$MA <- makeMAplot(top_table = rv$top_table[[input$comparisons_view_microarray_norm]], 
+                                    p = input$rawp_MA_microarray_norm, 
+                                    p_threshold = input$p_thres_MA_microarray_norm, 
+                                    logFC_threshold = input$logFC_thres_MA_microarray_norm)
                 
-                output$MA_microarray_norm <- renderPlotly(p)
+                output$MA_microarray_norm <- plotly::renderPlotly(rv$MA)
               }
-            }, ignoreNULL = FALSE)
+            }, ignoreNULL = FALSE) 
+            # ignoreNULL: generate plot even if action button is not pressed
+            
+            #***************************#
+            # Modal to download figure
+            #***************************#
+            
+            # Download plot
+            output$realdownload_MA_microarray_norm <- downloadHandler(
+              filename = function(){ifelse(input$static_MA_microarray_norm, "MA.png", "MA.html")},
+              content = function(file){
+                
+                if (input$static_MA_microarray_norm){
+                  
+                  
+                  # Make PCA score plot
+                  p <- makeMAplot_static(top_table = rv$top_table[[input$comparisons_view_microarray_norm]], 
+                                         p = input$rawp_MA_microarray_norm, 
+                                         p_threshold = input$p_thres_MA_microarray_norm, 
+                                         logFC_threshold = input$logFC_thres_MA_microarray_norm)
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_MA_microarray_norm,
+                                  height = input$height_MA_microarray_norm,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$MA, 
+                                          file)
+                }
+              }
+            )
+            
+            
+            # Make modal
+            observeEvent(input$download_MA_microarray_norm, {
+              showModal(modalDialog(
+                title = NULL,
+                easyClose = TRUE,
+                size = "m",
+                footer = tagList(
+                  fluidRow(
+                    column(12, align = "left",
+                           shinyWidgets::materialSwitch(
+                             inputId = "static_MA_microarray_norm",
+                             label = "Click to make static plot",
+                             value = FALSE, 
+                             status = "primary"))
+                  ),
+                  fluidRow(
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_MA_microarray_norm==true",
+                             sliderInput("height_MA_microarray_norm", 
+                                         "Height",
+                                         min = 800, max = 2000,
+                                         value = 1200, step = 10,
+                                         width = "100%")
+                           )
+                    ),
+                    column(6,
+                           conditionalPanel(
+                             condition = "input.static_MA_microarray_norm==true",
+                             sliderInput("width_MA_microarray_norm", 
+                                         "Width",
+                                         min = 800, max = 2000,
+                                         value = 1500, step = 10,
+                                         width = "100%")
+                           )
+                    )
+                  ),
+                  
+                  fluidRow(
+                    column(12, align = "left",
+                           downloadButton('realdownload_MA_microarray_norm', 
+                                          'Download')
+                    )
+                  )
+                  
+                )
+                
+              ))
+            })
             
             
             #=========================================#
@@ -10430,8 +11478,9 @@ server <- function(input, output, session){
                       tabPanel("Top table",
                                icon = icon("fas fa-mouse-pointer"),
                                br(),
-                               h3(strong("Top Table")),
-                               h5("The Top Table includes the output of the selected statistical analysis."),
+                               h3(strong("Top table")),
+                               h5("The top table includes the output of the statistical analysis. 
+                                  Click on the table to explore the data!"),
                                hr(),
                                dataTableOutput(outputId = "top_table_microarray_norm") %>% 
                                  withSpinner(color="#0dc5c1"),
@@ -10534,7 +11583,11 @@ server <- function(input, output, session){
                                br(),
                                # Volcano plot
                                plotlyOutput("volcano_microarray_norm")%>% 
-                                 withSpinner(color="#0dc5c1")
+                                 withSpinner(color="#0dc5c1"),
+                               br(),
+                               actionButton("download_volcano_microarray_norm", 
+                                            "Download figure",
+                                            icon = shiny::icon("download"))
                                
                       ),
                       
@@ -10581,7 +11634,11 @@ server <- function(input, output, session){
                                br(),
                                # Volcano plot
                                plotlyOutput("MA_microarray_norm")%>% 
-                                 withSpinner(color="#0dc5c1")
+                                 withSpinner(color="#0dc5c1"),
+                               br(),
+                               actionButton("download_MA_microarray_norm", 
+                                            "Download figure",
+                                            icon = shiny::icon("download"))
                                
                       )
                       
