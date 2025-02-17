@@ -4,7 +4,8 @@ cat("\014")
 gc()
 
 # Source global file
-source("D:/ArrayAnalysis_Shiny/global.R")
+setwd("C:/Users/jarno/OneDrive/Documents/GitHub/ArrayAnalysis_Shiny")
+source("global.R")
 
 organisms <- c("Homo_sapiens",
                "Bos_taurus",
@@ -62,7 +63,7 @@ for (o in organisms){
 test <- listAttributes(ensembl_dataset)
 
 # Save file
-save(gmt_all, file = "gmt_WP_all.RData")
+save(gmt_all, file = "Objectsgmt_WP_all.RData")
 
 
 sapply(c("Homo_sapiens","Bos_taurus"), function(x) {

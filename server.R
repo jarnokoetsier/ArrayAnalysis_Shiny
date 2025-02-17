@@ -24,9 +24,6 @@ server <- function(input, output, session){
   # Set options for data upload
   options(shiny.maxRequestSize=125*1024^10)
   
-  # Make list for reactive values
-  rv <- reactiveValues()
-  
   # Hide the RNA-seq (raw) tabs
   hideTab("navbar", target = "panel_upload_rnaseq_raw")
   hideTab("navbar", target = "panel_preprocessing_rnaseq_raw")
@@ -87,6 +84,9 @@ server <- function(input, output, session){
         # Raw RNA-seq data
         #************************************************************************#
         if (raw_or_norm() == "Raw data"){
+          
+          # Make list for reactive values
+          rv <- reactiveValues()
           
           #======================================================================#
           # TAB2: Data Upload
@@ -3048,6 +3048,9 @@ server <- function(input, output, session){
         #************************************************************************#
         if (raw_or_norm() == "Processed data"){
           
+          # Make list for reactive values
+          rv <- reactiveValues()
+          
           #======================================================================#
           # Data Upload
           #======================================================================#
@@ -5986,6 +5989,9 @@ server <- function(input, output, session){
         # Raw microarray data
         #************************************************************************#
         if (raw_or_norm() == "Raw data"){
+          
+          # Make list for reactive values
+          rv <- reactiveValues()
           
           #======================================================================#
           # TAB 1: Data Upload
@@ -9106,6 +9112,8 @@ server <- function(input, output, session){
         #************************************************************************#
         if (raw_or_norm() == "Processed data"){
           
+          # Make list for reactive values
+          rv <- reactiveValues()
           
           #======================================================================#
           # Data Upload
