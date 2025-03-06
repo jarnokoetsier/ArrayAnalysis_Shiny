@@ -2991,7 +2991,7 @@ getStatistics_RNASeq <- function(rawMatrix,
   sampleInfo <- cbind.data.frame(experimentFactor, metaData[,covariates])
   colnames(sampleInfo) <- c("experimentFactor", covariates)
   rownames(sampleInfo) <- rownames(metaData)
-  dds <- DESeq2::DESeqDataSetFromMatrix(countData = rawMatrix,
+  dds <- DESeq2::DESeqDataSetFromMatrix(countData = round(rawMatrix),
                                         colData = sampleInfo,
                                         design = as.formula(formula))
   # Filtering
