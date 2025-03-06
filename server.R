@@ -5692,9 +5692,6 @@ server <- function(input, output, session){
           observeEvent(input$calculate_ORA_rnaseq_norm,{
             show_modal_spinner(text = "Overrepresentation analysis...",
                                color="#0dc5c1")
-            print(input$rawp_ORA_rnaseq_norm)
-            print(input$p_thres_ORA_rnaseq_norm)
-            print(input$logFC_thres_ORA_rnaseq_norm)
             
             # Perform ORA
             if (input$topNorThres_rnaseq_norm == "Threshold"){
