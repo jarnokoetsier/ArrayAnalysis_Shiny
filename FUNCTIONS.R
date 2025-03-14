@@ -138,7 +138,7 @@ getMetaData <- function(path, celfiles, filetype){
     # remove columns with same information for each sample
     remove_col <- NULL
     for (j in 1:ncol(metaData)){
-      if ((length(unique(metaData[,j])) == 1)|(min(nchar(metaData[,j])) > 50)){
+      if ((length(unique(metaData[,j])) == 1)|(min(nchar(metaData[,j]), na.rm = TRUE) > 50)){
         remove_col <- c(remove_col,j)
       }
       
