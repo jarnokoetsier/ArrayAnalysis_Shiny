@@ -3,6 +3,9 @@
 # Description: global environment of the ArrayAnalysis Shiny app
 #==============================================================================#
 
+# ArrayAnalysis version:
+ArrayAnalysis_version <- "ArrayAnalysis version 0.0.1"
+
 #******************************************************************************#
 # Load functions
 #******************************************************************************#
