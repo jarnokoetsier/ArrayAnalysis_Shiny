@@ -103,6 +103,7 @@ readCELs <- function(celfiles, zippath, rm = FALSE){
   })
 }
 
+
 #==============================================================================#
 # getMetaData()
 #==============================================================================#
@@ -231,7 +232,7 @@ autoGroup <- function(metaData){
         term_col <- c(term_col,i)
       }
       
-      if (((length(unique(metaData[,i])) > 1) & (length(unique(metaData[,i])) < ncol(metaData)))|(min(nchar(metaData[,i])) > 50)){
+      if (((length(unique(metaData[,i])) > 1) & (length(unique(metaData[,i])) < nrow(metaData)))|(min(nchar(metaData[,i])) > 50)){
         len_col <- c(len_col, i)
       }
     }
@@ -242,7 +243,7 @@ autoGroup <- function(metaData){
       exp_col <- len_col
     }
     
-    if (!is.null(exp_col)){
+    if (length(exp_col)>0){
       return(colnames(metaData)[exp_col[1]])
     } else {
       return(colnames(metaData)[1])
@@ -785,23 +786,24 @@ getBoxplots <- function(experimentFactor,
   Type <- "Norm"
   
   if (!isTRUE(RNASeq)){
-    tmain <- "Boxplot of normalized intensities"
+    tmain <- " "
     tmtext2 <- "Normalized log intensity\n\n\n"
-    description <- "Distributions should be comparable between arrays\n"
+    description <- NULL
     samples <- sampleNames(normData)
   }
   if (isTRUE(RNASeq)){
-    tmain <- "Boxplot of normalized counts"
+    tmain <- NULL
+    description <- NULL
     tmtext2 <- "Normalized log counts\n\n\n"
-    description <- "Distributions should be comparable between samples\n"
     samples <- colnames(normData)
   }
+  
   
   tryCatch({
     DataBoxplot<- tempfile(fileext='.png')
     png(file = DataBoxplot,width=WIDTH,height=HEIGHT, 
         pointsize=POINTSIZE)
-    par(mar=c(5.1,4.1,4.1,2.1))
+    par(mar=c(5.1,4.1,0,2.1))
     par(oma=c(17,0,0,0), cex.axis=1)
     if (class(normData)[[1]] != "GeneFeatureSet"){
       suppressWarnings(boxplot(normData, col=plotColors ,main=tmain,
@@ -809,7 +811,7 @@ getBoxplots <- function(experimentFactor,
     }
     if (class(normData)[[1]] == "GeneFeatureSet"){
       suppressWarnings(boxplot(normData, target = "core", col=plotColors,
-                               main=tmain, 
+                               main=" ", 
                                axes=FALSE, pch = 20, cex=0.7))
     }
     if(length(levels(experimentFactor))>1){
@@ -838,7 +840,7 @@ getBoxplots <- function(experimentFactor,
     DataBoxplot<- tempfile(fileext='.png')
     png(file = DataBoxplot,width=1000,height=1414, 
         pointsize=POINTSIZE)
-    par(mar=c(5.1,4.1,4.1,2.1))
+    par(mar=c(5.1,4.1,0,2.1))
     par(oma=c(17,0,0,0), cex.axis=1)
     if (class(normData)[[1]] != "GeneFeatureSet"){
       suppressWarnings(boxplot(normData, col=plotColors ,main=tmain,
@@ -1306,21 +1308,38 @@ plot_PCA <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2, zpc =
   
   # Make 2D plot
   if (!isTRUE(xyz)){
-    pca2d <- ggplot2::ggplot(data = PCA_df, 
-                             ggplot2::aes(x = x, y = y, colour = Group, shape = Group, 
-                                          text = paste("Sample:", sampleID))) +
-      ggplot2::geom_point(size = 2) +
-      ggplot2::scale_colour_manual(values = legendColors) +
-      ggplot2::xlab(paste0("PC",xpc, " (", perc_expl[xpc], "%)")) +
-      ggplot2::ylab(paste0("PC",ypc, " (", perc_expl[ypc], "%)")) +
-      ggplot2::theme_classic() +
-      ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
-                     plot.subtitle = ggplot2::element_text(hjust = 0.5),
-                     axis.title = ggplot2::element_text(face = "bold", size = 12),
-                     legend.title = ggplot2::element_blank())
-    
-    p <- plotly::ggplotly(pca2d, tooltip = c("x", "y", "colour", "text")) #%>% 
-      #plotly::layout(height = 500, width = 800)
+    if (length(unique(PCA_df$Group)) < 4){
+      pca2d <- ggplot2::ggplot(data = PCA_df, 
+                               ggplot2::aes(x = x, y = y, colour = Group, shape = Group, 
+                                            text = paste("Sample:", sampleID))) +
+        ggplot2::geom_point(size = 2) +
+        ggplot2::scale_colour_manual(values = legendColors) +
+        ggplot2::xlab(paste0("PC",xpc, " (", perc_expl[xpc], "%)")) +
+        ggplot2::ylab(paste0("PC",ypc, " (", perc_expl[ypc], "%)")) +
+        ggplot2::theme_classic() +
+        ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
+                       plot.subtitle = ggplot2::element_text(hjust = 0.5),
+                       axis.title = ggplot2::element_text(face = "bold", size = 12),
+                       legend.title = ggplot2::element_blank())
+      
+      p <- plotly::ggplotly(pca2d, tooltip = c("x", "y", "colour", "text"))
+    } else{
+      pca2d <- ggplot2::ggplot(data = PCA_df, 
+                               ggplot2::aes(x = x, y = y, colour = Group, 
+                                            text = paste("Sample:", sampleID))) +
+        ggplot2::geom_point(size = 2) +
+        ggplot2::scale_colour_manual(values = legendColors) +
+        ggplot2::xlab(paste0("PC",xpc, " (", perc_expl[xpc], "%)")) +
+        ggplot2::ylab(paste0("PC",ypc, " (", perc_expl[ypc], "%)")) +
+        ggplot2::theme_classic() +
+        ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
+                       plot.subtitle = ggplot2::element_text(hjust = 0.5),
+                       axis.title = ggplot2::element_text(face = "bold", size = 12),
+                       legend.title = ggplot2::element_blank())
+      
+      p <- plotly::ggplotly(pca2d, tooltip = c("x", "y", "colour", "text"))
+    }
+
     
     return(p)
   }
@@ -1730,14 +1749,25 @@ getStatistics <- function(normMatrix,
 # VARIABLES:
 # logFC: vector of log2FCs
 
-makelogFCHistogram <- function(logFC){
+makelogFCHistogram <- function(logFC, color = "#d3d3d3", bins = 100, static = FALSE){
+
+  if (is.null(color)){
+    color <- "#d3d3d3"
+  }
+  
+  if (is.null(bins)){
+    bins <- 100
+  }
+  
+  # Make edge color
+  color_edge <- colorspace::darken(color, amount = 0.5)
   
   # Collect logFCs into data frame
   plotDF <- data.frame(Value = logFC)
   
   # Make plot
   p <- ggplot2::ggplot(data = plotDF, ggplot2::aes(x = Value)) +
-    ggplot2::geom_histogram(bins = 100, colour = "#696969", fill = "#d3d3d3") +
+    ggplot2::geom_histogram(bins = bins, colour = color_edge, fill = color) +
     ggplot2::labs(title = "logFC histogram") +
     ggplot2::xlab("logFC") +
     ggplot2::ylab("Count") +
@@ -1745,7 +1775,11 @@ makelogFCHistogram <- function(logFC){
     ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5))
   
   # Return plot
-  return(plotly::ggplotly(p))
+  if (!static){
+    return(plotly::ggplotly(p))
+  } else{
+    return(p)
+  }
 }
 
 #==============================================================================#
@@ -1758,14 +1792,25 @@ makelogFCHistogram <- function(logFC){
 # VARIABLES:
 # P: vector of P values
 
-makePHistogram <- function(P){
+makePHistogram <- function(P, color = "#d3d3d3", bins = 100, static = FALSE){
+  
+  if (is.null(color)){
+    color <- "#d3d3d3"
+  }
+  
+  if (is.null(bins)){
+    bins <- 100
+  }
+  
+  # Make edge color
+  color_edge <- colorspace::darken(color, amount = 0.5)
   
   # Collect P values into data frame
   plotDF <- data.frame(Value = P)
   
   # Make plot
   p <- ggplot2::ggplot(data = plotDF, ggplot2::aes(x = Value)) +
-    ggplot2::geom_histogram(bins = 100, colour = "#696969", fill = "#d3d3d3") +
+    ggplot2::geom_histogram(bins = bins, colour = color_edge, fill = color) +
     ggplot2::labs(title = "P value histogram") +
     ggplot2::xlab("P value") +
     ggplot2::ylab("Count") +
@@ -1773,7 +1818,11 @@ makePHistogram <- function(P){
     ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5))
   
   # Return plot
-  return(plotly::ggplotly(p))
+  if (!static){
+    return(plotly::ggplotly(p))
+  } else{
+    return(p)
+  }
 }
 
 #==============================================================================#
@@ -1820,13 +1869,43 @@ hline <- function(y = 0, color = "grey") {
 makeVolcano <- function(top_table, 
                         p = "raw", 
                         p_threshold = 0.05, 
-                        logFC_threshold = 1){
+                        logFC_threshold = 1,
+                        unchanged_color = "darkgrey",
+                        down_color = "blue",
+                        up_color = "red"){
+  
+  if (is.null(unchanged_color)){
+    color <- "darkgrey"
+  }
+  if (is.null(down_color)){
+    color <- "blue"
+  }
+  if (is.null(up_color)){
+    color <- "red"
+  }
   
   plotDF <- data.frame(log2FC = top_table[,"log2FC"],
                        Pvalue = top_table[,"p-value"],
                        logP = -log10(top_table[,"p-value"]),
                        adjPvalue = top_table[,"adj. p-value"],
+                       logadjP = -log10(top_table[,"adj. p-value"]),
                        GeneID = top_table[,"GeneID"])
+  
+  # Format pop-up text
+  if (ncol(top_table) == 7){
+    genes7 <- apply(top_table, 1, function(x) ifelse(nchar(x[7])>15,paste0(substr(x[7],1,15),", ..."), x[7]))
+    plotDF$GeneID <- paste0("Gene ID: ", plotDF$GeneID, "\n", 
+                            colnames(top_table)[7], ": ", genes7)
+  }
+  
+  if (ncol(top_table) == 8){
+    genes7 <- apply(top_table, 1, function(x) ifelse(nchar(x[7])>15,paste0(substr(x[7],1,15),", ..."), x[7]))
+    genes8 <- apply(top_table, 1, function(x) ifelse(nchar(x[8])>15,paste0(substr(x[8],1,15),", ..."), x[8]))
+    plotDF$GeneID <- paste0("Gene ID: ", plotDF$GeneID, "\n", 
+                            colnames(top_table)[7], ": ", genes7, "\n", 
+                            colnames(top_table)[8], ": ", genes8)
+  }
+  
   
   if (p == "raw"){
     plotDF$Colour[(plotDF$log2FC < logFC_threshold & plotDF$log2FC > (-1*logFC_threshold)) | plotDF$Pvalue > p_threshold] <- "unchanged"
@@ -1842,7 +1921,7 @@ makeVolcano <- function(top_table,
         y = ~logP,
         type = "scatter",
         mode = "markers",
-        marker = list(color = "darkgrey"),
+        marker = list(color = unchanged_color),
         hoverinfo = "none",
         name = "Unchanged"
       ) %>%
@@ -1853,7 +1932,7 @@ makeVolcano <- function(top_table,
         y = ~logP,
         type = "scatter",
         mode = "markers",
-        marker = list(color = "blue"),
+        marker = list(color = down_color),
         hoverinfo = "text",
         text = ~GeneID,
         name = "Downregulated"
@@ -1865,7 +1944,7 @@ makeVolcano <- function(top_table,
         y = ~logP,
         type = "scatter",
         mode = "markers",
-        marker = list(color = "red"),
+        marker = list(color = up_color),
         hoverinfo = "text",
         text = ~GeneID,
         name = "Upregulated"
@@ -1893,10 +1972,10 @@ makeVolcano <- function(top_table,
       plotly::add_trace(
         data = plotDF[plotDF$Colour == "unchanged",],
         x = ~log2FC,
-        y = ~logP,
+        y = ~logadjP,
         type = "scatter",
         mode = "markers",
-        marker = list(color = "darkgrey"),
+        marker = list(color = unchanged_color),
         hoverinfo = "none",
         name = "Unchanged"
       ) %>%
@@ -1904,10 +1983,10 @@ makeVolcano <- function(top_table,
       plotly::add_trace(
         data = plotDF[plotDF$Colour == "downregulated",],
         x = ~log2FC,
-        y = ~logP,
+        y = ~logadjP,
         type = "scatter",
         mode = "markers",
-        marker = list(color = "blue"),
+        marker = list(color = down_color),
         hoverinfo = "text",
         text = ~GeneID,
         name = "Downregulated"
@@ -1916,16 +1995,16 @@ makeVolcano <- function(top_table,
       plotly::add_trace(
         data = plotDF[plotDF$Colour == "upregulated",],
         x = ~log2FC,
-        y = ~logP,
+        y = ~logadjP,
         type = "scatter",
         mode = "markers",
-        marker = list(color = "red"),
+        marker = list(color = up_color),
         hoverinfo = "text",
         text = ~GeneID,
         name = "Upregulated"
       )%>%
       layout(xaxis = list(title = 'log<sub>2</sub>FC'), 
-             yaxis = list(title = '-log<sub>10</sub> P value'),
+             yaxis = list(title = '-log<sub>10</sub> adj. P value'),
              shapes = list(vline(logFC_threshold), 
                            vline(-1*logFC_threshold),
                            hline(-log10(p_threshold))),
@@ -1956,13 +2035,27 @@ makeVolcano <- function(top_table,
 makeVolcano_static <- function(top_table, 
                         p = "raw", 
                         p_threshold = 0.05, 
-                        logFC_threshold = 1){
+                        logFC_threshold = 1,
+                        unchanged_color = "darkgrey",
+                        down_color = "blue",
+                        up_color = "red"){
+  
+  if (is.null(unchanged_color)){
+    color <- "darkgrey"
+  }
+  if (is.null(down_color)){
+    color <- "blue"
+  }
+  if (is.null(up_color)){
+    color <- "red"
+  }
   
   plotDF <- data.frame(log2FC = top_table[,"log2FC"],
                        Pvalue = top_table[,"p-value"],
                        logP = -log10(top_table[,"p-value"]),
                        adjPvalue = top_table[,"adj. p-value"],
                        GeneID = top_table[,"GeneID"])
+  
   
   if (p == "raw"){
     plotDF$Colour[(plotDF$log2FC < logFC_threshold & plotDF$log2FC > (-1*logFC_threshold)) | plotDF$Pvalue > p_threshold] <- "unchanged"
@@ -1980,7 +2073,7 @@ makeVolcano_static <- function(top_table,
       ggplot2::geom_hline(yintercept = -log10(p_threshold), linetype = "dashed", color = "lightgrey") +
       ggplot2::geom_vline(xintercept = -1*logFC_threshold, linetype = "dashed", color = "lightgrey") +
       ggplot2::geom_vline(xintercept = logFC_threshold, linetype = "dashed", color = "lightgrey") +
-      ggplot2::scale_color_manual(values = setNames(c("darkgrey", "blue", "red"),
+      ggplot2::scale_color_manual(values = setNames(c(unchanged_color, down_color, up_color),
                                            c("Unchanged", "Downregulated", "Upregulated"))) +
       ggplot2::xlab(expression(log[2]~"FC")) +
       ggplot2::ylab(expression(-log[10]~"P value")) +
@@ -2006,7 +2099,7 @@ makeVolcano_static <- function(top_table,
       ggplot2::geom_hline(yintercept = -log10(p_threshold), linetype = "dashed", color = "lightgrey") +
       ggplot2::geom_vline(xintercept = -1*logFC_threshold, linetype = "dashed", color = "lightgrey") +
       ggplot2::geom_vline(xintercept = logFC_threshold, linetype = "dashed", color = "lightgrey") +
-      ggplot2::scale_color_manual(values = setNames(c("darkgrey", "blue", "red"),
+      ggplot2::scale_color_manual(values = setNames(c(unchanged_color, down_color, up_color),
                                                     c("Unchanged", "Downregulated", "Upregulated"))) +
       ggplot2::xlab(expression(log[2]~"FC")) +
       ggplot2::ylab(expression(-log[10]~"P value")) +
@@ -2034,9 +2127,23 @@ makeVolcano_static <- function(top_table,
 # logFC_threshold: log2FC threshold
 
 makeMAplot <- function(top_table, 
-                        p = "raw", 
-                        p_threshold = 0.05, 
-                        logFC_threshold = 1){
+                       p = "raw", 
+                       p_threshold = 0.05, 
+                       logFC_threshold = 1,
+                       unchanged_color = "darkgrey",
+                       down_color = "blue",
+                       up_color = "red",
+                       RNAseq = TRUE){
+  
+  if (is.null(unchanged_color)){
+    color <- "darkgrey"
+  }
+  if (is.null(down_color)){
+    color <- "blue"
+  }
+  if (is.null(up_color)){
+    color <- "red"
+  }
   
   plotDF <- data.frame(log2FC = top_table[,"log2FC"],
                        Pvalue = top_table[,"p-value"],
@@ -2045,7 +2152,24 @@ makeMAplot <- function(top_table,
                        meanExpr = top_table[,"meanExpr"],
                        GeneID = top_table[,"GeneID"])
   
-  plotDF$meanExpr <- log2(plotDF$meanExpr +1)
+  if (isTRUE(RNAseq)){
+    plotDF$meanExpr <- log2(plotDF$meanExpr +1)
+  }
+  
+  # Format pop-up text
+  if (ncol(top_table) == 7){
+    genes7 <- apply(top_table, 1, function(x) ifelse(nchar(x[7])>15,paste0(substr(x[7],1,15),", ..."), x[7]))
+    plotDF$GeneID <- paste0("Gene ID: ", plotDF$GeneID, "\n", 
+                            colnames(top_table)[7], ": ", genes7)
+  }
+  
+  if (ncol(top_table) == 8){
+    genes7 <- apply(top_table, 1, function(x) ifelse(nchar(x[7])>15,paste0(substr(x[7],1,15),", ..."), x[7]))
+    genes8 <- apply(top_table, 1, function(x) ifelse(nchar(x[8])>15,paste0(substr(x[8],1,15),", ..."), x[8]))
+    plotDF$GeneID <- paste0("Gene ID: ", plotDF$GeneID, "\n", 
+                            colnames(top_table)[7], ": ", genes7, "\n", 
+                            colnames(top_table)[8], ": ", genes8)
+  }
   
   if (p == "raw"){
     plotDF$Colour[(plotDF$log2FC < logFC_threshold & plotDF$log2FC > (-1*logFC_threshold)) | plotDF$Pvalue > p_threshold] <- "unchanged"
@@ -2061,7 +2185,7 @@ makeMAplot <- function(top_table,
         y = ~log2FC,
         type = "scatter",
         mode = "markers",
-        marker = list(color = "darkgrey"),
+        marker = list(color = unchanged_color),
         hoverinfo = "none",
         name = "Unchanged"
       ) %>%
@@ -2072,7 +2196,7 @@ makeMAplot <- function(top_table,
         y = ~log2FC,
         type = "scatter",
         mode = "markers",
-        marker = list(color = "blue"),
+        marker = list(color = down_color),
         hoverinfo = "text",
         text = ~GeneID,
         name = "Downregulated"
@@ -2084,7 +2208,7 @@ makeMAplot <- function(top_table,
         y = ~log2FC,
         type = "scatter",
         mode = "markers",
-        marker = list(color = "red"),
+        marker = list(color = up_color),
         hoverinfo = "text",
         text = ~GeneID,
         name = "Upregulated"
@@ -2113,7 +2237,7 @@ makeMAplot <- function(top_table,
         y = ~log2FC,
         type = "scatter",
         mode = "markers",
-        marker = list(color = "darkgrey"),
+        marker = list(color = unchanged_color),
         hoverinfo = "none",
         name = "Unchanged"
       ) %>%
@@ -2124,7 +2248,7 @@ makeMAplot <- function(top_table,
         y = ~log2FC,
         type = "scatter",
         mode = "markers",
-        marker = list(color = "blue"),
+        marker = list(color = down_color),
         hoverinfo = "text",
         text = ~GeneID,
         name = "Downregulated"
@@ -2136,7 +2260,7 @@ makeMAplot <- function(top_table,
         y = ~log2FC,
         type = "scatter",
         mode = "markers",
-        marker = list(color = "red"),
+        marker = list(color = up_color),
         hoverinfo = "text",
         text = ~GeneID,
         name = "Upregulated"
@@ -2169,7 +2293,21 @@ makeMAplot <- function(top_table,
 makeMAplot_static <- function(top_table, 
                        p = "raw", 
                        p_threshold = 0.05, 
-                       logFC_threshold = 1){
+                       logFC_threshold = 1,
+                       unchanged_color = "darkgrey",
+                       down_color = "blue",
+                       up_color = "red",
+                       RNAseq = TRUE){
+  
+  if (is.null(unchanged_color)){
+    color <- "darkgrey"
+  }
+  if (is.null(down_color)){
+    color <- "blue"
+  }
+  if (is.null(up_color)){
+    color <- "red"
+  }
   
   plotDF <- data.frame(log2FC = top_table[,"log2FC"],
                        Pvalue = top_table[,"p-value"],
@@ -2178,7 +2316,9 @@ makeMAplot_static <- function(top_table,
                        meanExpr = top_table[,"meanExpr"],
                        GeneID = top_table[,"GeneID"])
   
-  plotDF$meanExpr <- log2(plotDF$meanExpr +1)
+  if (isTRUE(RNAseq)){
+    plotDF$meanExpr <- log2(plotDF$meanExpr +1)
+  }
   
   if (p == "raw"){
     plotDF$Colour[(plotDF$log2FC < logFC_threshold & plotDF$log2FC > (-1*logFC_threshold)) | plotDF$Pvalue > p_threshold] <- "unchanged"
@@ -2195,7 +2335,7 @@ makeMAplot_static <- function(top_table,
                           ggplot2::aes(x = meanExpr, y = log2FC, color = "Upregulated")) +
       ggplot2::geom_hline(yintercept = -1*logFC_threshold, linetype = "dashed", color = "lightgrey") +
       ggplot2::geom_hline(yintercept = logFC_threshold, linetype = "dashed", color = "lightgrey") +
-      ggplot2::scale_color_manual(values = setNames(c("darkgrey", "blue", "red"),
+      ggplot2::scale_color_manual(values = setNames(c(unchanged_color, down_color, up_color),
                                                     c("Unchanged", "Downregulated", "Upregulated"))) +
       ggplot2::xlab(expression("Normalized"~log[2]~"expression")) +
       ggplot2::ylab(expression(log[2]~"FC")) +
@@ -2223,7 +2363,7 @@ makeMAplot_static <- function(top_table,
                           ggplot2::aes(x = meanExpr, y = log2FC, color = "Upregulated")) +
       ggplot2::geom_hline(yintercept = -1*logFC_threshold, linetype = "dashed", color = "lightgrey") +
       ggplot2::geom_hline(yintercept = logFC_threshold, linetype = "dashed", color = "lightgrey") +
-      ggplot2::scale_color_manual(values = setNames(c("darkgrey", "blue", "red"),
+      ggplot2::scale_color_manual(values = setNames(c(unchanged_color, down_color, up_color),
                                                     c("Unchanged", "Downregulated", "Upregulated"))) +
       ggplot2::xlab(expression("Normalized"~log[2]~"expression")) +
       ggplot2::ylab(expression(log[2]~"FC")) +
@@ -2573,6 +2713,244 @@ ORA <- function(top_table,
 }
 
 #==============================================================================#
+# performGSEA()
+#==============================================================================#
+
+# DESCRIPTION:
+# Perform geneset enrichment analysis (GSEA)
+
+# VARIABLES:
+# top_table: top table from the "getStatistics" function
+# geneset: which geneset to perform ORA on (GO-BP, GO-MF, GO-CC, or WikiPathways)
+# geneID_col: Column that contains the gene IDs
+# geneID_type: Which gene ID does the selected column contain 
+#              (ENTREZID, ENSEMBL, SYMBOL)
+# organism: organism (e.g., Homo sapiens, Mus musculus)
+# rawadj: raw ("raw") or adjusted ("adj) P value
+# updown: Use upregulated genes ("Upregulated genes only"), 
+#         downregulated genes ("Upregulated genes only"), or both ("Both) 
+#         for the ORA
+# p_thres: P value treshold
+# logFC_thres: logFC threshold
+
+performGSEA <- function(top_table,
+                geneset = "GO-BP",
+                geneID_col = colnames(top_table)[1],
+                geneID_type = "ENTREZID",
+                organism = "Homo sapiens",
+                rankingVar = "logFC"){
+  
+  tryCatch({
+    
+    
+    #Required Bioconductor annotation packages:
+    pkg <- switch(organism,
+                  "Homo sapiens" = "org.Hs.eg.db",
+                  "Bos taurus" = "org.Bt.eg.db",
+                  "Caenorhabditis elegans" = "org.Ce.eg.db",
+                  "Mus musculus" = "org.Mm.eg.db",
+                  "Rattus norvegicus" = "org.Rn.eg.db"
+    )
+    
+    
+    if (!requireNamespace(pkg, quietly = TRUE))
+      BiocManager::install(pkg, ask = FALSE)
+    require(as.character(pkg), character.only = TRUE)
+    
+    
+    # If the gene IDs are not saved in the first column, some genes might be 
+    # separated by a comma in the same row.
+    if (which(colnames(top_table) == geneID_col) != 1){
+      
+      # Split all genes by a comma
+      genes_all <- str_split(top_table[,geneID_col], "; ")
+      
+      # Combine all genes into a single vector
+      single_name <- NULL
+      combined_name <- NULL
+      for (i in 1:length(genes_all)){
+        single_name <- c(single_name, genes_all[[i]])
+        combined_name <- c(combined_name, rep(top_table[i,geneID_col], length(genes_all[[i]])))
+      }
+      gene_names <- data.frame(single_name,
+                               combined_name)
+      gene_names <- gene_names[!is.na(single_name),]
+      
+      # Make separate row names for single gene name
+      colnames(top_table)[colnames(top_table) == geneID_col] <- "ID"
+      top_table_name <- left_join(top_table, gene_names, by = c("ID" = "combined_name"))
+      colnames(top_table_name)[colnames(top_table_name) == "ID"] <- geneID_col
+      top_table <- top_table_name
+      top_table <- top_table[!is.na(top_table[,geneID_col]),]
+    }
+    
+    
+    #..........................................................................#
+    # Perform GSEA on filtered top table
+    #..........................................................................#
+    
+    # Make GSEA input vector
+    if (rankingVar == "logFC"){
+      temp <- arrange(top_table, by = `p-value`)
+      temp <- temp[!duplicated(temp[,geneID_col]),]
+      gsea_input <- sort(setNames(temp[,"log2FC"],
+                                  temp[,geneID_col]), 
+                         decreasing = TRUE)
+    }
+    if (rankingVar == "pvalue"){
+      temp <- arrange(top_table, by = `p-value`)
+      temp <- temp[!duplicated(temp[,geneID_col]),]
+      gsea_input <- sort(setNames(-log10(temp[,"p-value"]),
+                                  temp[,geneID_col]), 
+                         decreasing = TRUE)
+    }
+    if (rankingVar == "signed_pvalue"){
+      temp <- arrange(top_table, by = `p-value`)
+      temp <- temp[!duplicated(temp[,geneID_col]),]
+      gsea_input <- sort(setNames(sign(temp[,"log2FC"])*-log10(temp[,"p-value"]),
+                                  temp[,geneID_col]), 
+                         decreasing = TRUE)
+    }
+    
+    
+    # perform ORA
+    GSEA_data <- NULL
+    if (!is.null(gsea_input)){
+      
+      # GO-BP
+      if (geneset == "GO-BP"){
+        set.seed(123)
+        GSEA_data <- clusterProfiler::gseGO(
+          geneList = gsea_input,
+          OrgDb = pkg,
+          keyType = geneID_type,
+          ont = "BP",
+          pvalueCutoff = Inf,
+          pAdjustMethod = "fdr",
+          minGSSize = 10,
+          maxGSSize = 500
+        )
+      }
+      
+      # GO-MF
+      if (geneset == "GO-MF"){
+        set.seed(123)
+        GSEA_data <- clusterProfiler::gseGO(
+          geneList = gsea_input,
+          OrgDb = pkg,
+          keyType = geneID_type,
+          ont = "MF",
+          pvalueCutoff = Inf,
+          pAdjustMethod = "fdr",
+          minGSSize = 10,
+          maxGSSize = 500
+        )
+      }
+      
+      # GO-CC
+      if (geneset == "GO-CC"){
+        set.seed(123)
+        GSEA_data <- clusterProfiler::gseGO(
+          geneList = gsea_input,
+          OrgDb = pkg,
+          keyType = geneID_type,
+          ont = "CC",
+          pvalueCutoff = Inf,
+          pAdjustMethod = "fdr",
+          minGSSize = 10,
+          maxGSSize = 500
+        )
+      }
+      
+      # WikiPathways
+      if (geneset == "WikiPathways"){
+        
+        # load GMT file
+        load("Objects/gmt_WP_all.RData")
+        gmt_all <- gmt_all[[str_replace(organism," ","_")]]
+        
+        # Prepare GMT for analysis
+        gmt <- unique(gmt_all[,c("name", "version", "wpid",
+                                 "species", geneID_type)])
+        path2gene <- gmt[,c("wpid", geneID_type)]
+        path2name <- gmt[,c("wpid", "name")]
+        
+        # Perform GSEA
+        set.seed(123)
+        GSEA_data <- GSEA(
+          geneList = gsea_input,
+          minGSSize = 10,
+          maxGSSize = 500,
+          pvalueCutoff = Inf,
+          pAdjustMethod = "fdr",
+          TERM2GENE = path2gene,
+          TERM2NAME = path2name
+        )
+        
+        
+      }
+      
+      # KEGG
+      if (geneset == "KEGG"){
+        
+        # Get correct organism name
+        KEGG_org <- switch(organism,
+                           "Homo sapiens" = "hsa",
+                           "Bos taurus" = "bta",
+                           "Caenorhabditis elegans" = "cel",
+                           "Mus musculus" = "mmu",
+                           "Rattus norvegicus" = "rno"
+        )
+        
+        # Prepare GMT for analysis
+        gmt <- unique(gmt_KEGG[,c("PATH", geneID_type)])
+        path2gene <- gmt[,c("PATH", geneID_type)]
+        colnames(path2gene) <- c("path", "gene")
+        path2gene$path <- paste0(KEGG_org,path2gene$path)
+        path2name <- read.table(url(paste0("https://rest.kegg.jp/list/pathway/", KEGG_org)), sep = "\t")
+        colnames(path2name) <- c("path", "name")
+        
+        # Perform GSEA
+        set.seed(123)
+        GSEA_data <- GSEA(
+          geneList = gsea_input,
+          minGSSize = 10,
+          maxGSSize = 500,
+          pvalueCutoff = Inf,
+          pAdjustMethod = "fdr",
+          TERM2GENE = path2gene,
+          TERM2NAME = path2name
+        )
+      }
+    }
+    
+    # Prepare output
+    output <- GSEA_data@result[,c("ID", "Description", "NES", "pvalue", "p.adjust")]
+    
+    output$pvalue <- signif(output$pvalue,3)
+    output$p.adjust <- signif(output$p.adjust,3)
+    output$NES <- signif(output$NES,3)
+    
+    rownames(output) <- NULL
+    colnames(output) <- c("ID", "Description", "NES",
+                          "p-value", "adj. p-value")
+    output <- output[,c("ID", "Description", "NES",
+                        "p-value", "adj. p-value")]
+    
+    # make term names shorter
+    output$Description[nchar(output$Description)>50] <- paste0(substring(output$Description[nchar(output$Description)>50],1,47),"...")
+  
+    # Order results
+    GSEA_data@result <- arrange(output, by = `p-value`)
+    
+    # Return output
+    return(GSEA_data)
+  }, error = function(cond){
+    NULL
+  })
+}
+
+#==============================================================================#
 # make_ORAgene_table()
 #==============================================================================#
 
@@ -2640,7 +3018,7 @@ make_ORAgene_table <- function(ORA_data,
 
 
 #==============================================================================#
-# make_ORAplot()
+# makeORAplot()
 #==============================================================================#
 
 # DESCRIPTION:
@@ -2650,7 +3028,7 @@ make_ORAgene_table <- function(ORA_data,
 # ORA_data: ORA data object (clusterProfiler object)
 # nSets: number of gene sets (i.e., GO terms/WikiPathways) to include in the plot
 
-makeORAplot <- function(ORA_data, nSets){
+makeORAplot <- function(ORA_data, nSets, color = "Viridis", static = FALSE){
   
   # round the number of sets to an integer value
   nSets <- round(nSets)
@@ -2663,6 +3041,19 @@ makeORAplot <- function(ORA_data, nSets){
   # Set the maximum number to 20
   if(nSets > 20){
     nSets <- 20
+  }
+  
+  # Select color gradient
+  gradient = ggplot2::scale_fill_viridis_c()
+  
+  if (color == "Yellow-red"){
+    gradient = ggplot2::scale_fill_gradient(low = "yellow", high = "red")
+  }
+  if (color == "Blues"){
+    gradient = ggplot2::scale_fill_gradient(low = "#DEEBF7", high = "#08519C")
+  }
+  if (color == "Reds"){
+    gradient = ggplot2::scale_fill_gradient(low = "#FEE0D2", high = "#CB181D")
   }
   
   # Retrieve data from ORA object and make a data frame
@@ -2688,14 +3079,92 @@ makeORAplot <- function(ORA_data, nSets){
     ggplot2::xlab("-log10 p-value") +
     ggplot2::ylab(NULL) +
     ggplot2::theme_minimal() +
-    ggplot2::scale_fill_viridis_c() +
+    gradient +
     ggplot2::theme(legend.position = "none")
   
   
-  p1 <- plotly::ggplotly(p, tooltip = "text") %>% 
-    plotly::layout(height = 500, width = 1000)
+  if (static){
+    return(p)
+  }else{
+    p1 <- plotly::ggplotly(p, tooltip = "text") %>% 
+      plotly::layout(height = 500, width = 1000) %>%
+      layout(xaxis = list(title = '-log<sub>10</sub> p-value'))
+    return(p1)
+  }
   
   return(p1)
+}
+
+
+#==============================================================================#
+# makeGSEAplot()
+#==============================================================================#
+
+# DESCRIPTION:
+# Make bar graph of the results from the geneset enrichment analysis (GSEA)
+
+# VARIABLES:
+# GSEA_data: GSEA data object (clusterProfiler object)
+# nSets: number of gene sets (i.e., GO terms/WikiPathways) to include in the plot
+
+makeGSEAplot <- function(GSEA_data, nSets, color, static = FALSE){
+  
+  if (is.null(color)){
+    color <- c("#000072", "white", "red")
+  }
+  if (is.null(nSets)){
+    nSets <- 10
+  }
+  
+  # round the number of sets to an integer value
+  nSets <- round(nSets)
+  
+  # Set the minimum number to 5
+  if(nSets < 5){
+    nSets <- 5
+  }
+  
+  # Set the maximum number to 20
+  if(nSets > 20){
+    nSets <- 20
+  }
+  
+  # Retrieve data from ORA object and make a data frame
+  plotDF <- GSEA_data@result
+  plotDF$Name <- paste0(firstup(plotDF$Description), " (", plotDF$ID, ")")
+  plotDF$Name <- factor(plotDF$Name, levels = rev(plotDF$Name))
+  
+  # Make the plot
+  p <- ggplot2::ggplot(plotDF[1:nSets,], 
+                       ggplot2::aes(text = paste0("ID: ",ID, "\n",
+                                                  "Name: ", Description, "\n",
+                                                  "NES: ", NES, "\n",
+                                                  "p-value: ", `p-value`, "\n",
+                                                  "FDR-adj. p-value: ", `adj. p-value`, "\n"))) +
+    ggplot2::geom_bar(ggplot2::aes(x = -log10(`p-value`), 
+                                   y = Name, 
+                                   fill = NES),
+                      position = ggplot2::position_dodge(), 
+                      stat = "identity", 
+                      color = "black",
+                      size = 0.5) +
+    ggplot2::xlab("-log10 p-value") +
+    ggplot2::ylab(NULL) +
+    ggplot2::theme_minimal() +
+    scale_fill_gradient2(low = color[1], mid = color[2], high = color[3], 
+                         midpoint = 0) +
+    ggplot2::theme(legend.position = "right")
+  
+  
+  if (static){
+    return(p)
+  }else{
+    p1 <- plotly::ggplotly(p, tooltip = "text") %>% 
+      plotly::layout(height = 500, width = 1000) %>%
+      layout(xaxis = list(title = '-log<sub>10</sub> p-value'))
+    return(p1)
+  }
+
 }
 
 #==============================================================================#
@@ -2723,7 +3192,7 @@ JI <- function(x,y){length(intersect(x,y))/length(union(x,y))}
 # layout: graph layout
 # nSets: number of gene sets (i.e., GO terms/WikiPathways) to include in the plot
 
-makeORAnetwork <- function(ORA_data, layout, nSets){
+makeORAnetwork <- function(ORA_data, layout, nSets, color, size = 5){
   
   # round the number of sets to an integer value
   nSets <- round(nSets)
@@ -2736,6 +3205,19 @@ makeORAnetwork <- function(ORA_data, layout, nSets){
   # Set the maximum number to 20
   if(nSets > 20){
     nSets <- 20
+  }
+  
+  # Select color gradient
+  gradient = ggplot2::scale_color_viridis_c()
+  
+  if (color == "Yellow-red"){
+    gradient = ggplot2::scale_color_gradient(low = "yellow", high = "red")
+  }
+  if (color == "Blues"){
+    gradient = ggplot2::scale_color_gradient(low = "#DEEBF7", high = "#08519C")
+  }
+  if (color == "Reds"){
+    gradient = ggplot2::scale_color_gradient(low = "#FEE0D2", high = "#CB181D")
   }
   
   # Get results from ORA
@@ -2769,25 +3251,116 @@ makeORAnetwork <- function(ORA_data, layout, nSets){
     ggraph::geom_edge_link0(ggplot2::aes(width = `Jaccard Index`), edge_alpha = 0.1) + 
     ggraph::geom_node_point(ggplot2::aes(color = `-log10 p-value`), size = 7) + 
     ggraph::geom_node_text(ggplot2::aes(label = label), color = 'black', 
-                           size = 5, repel = TRUE) + 
+                           size = size, repel = TRUE) + 
     ggplot2::theme_void() +
-    ggplot2::scale_color_continuous() +
-    ggplot2::scale_color_gradient(low = "#6BAED6", high = "#FB6A4A")
+    ggplot2::labs(color = expression(-log[10] ~ "p-value")) +
+    gradient
+    #ggplot2::scale_color_manual(values = gradient) 
+    #ggplot2::scale_color_gradient(low = "#6BAED6", high = "#FB6A4A")
   
   return(p)
 }
 
 #==============================================================================#
-# readRNASeq()
+# makeGSEAnetwork()
 #==============================================================================#
 
 # DESCRIPTION:
-# Read RNA-seq data
+# Make network plot of the results from the geneset enrichment analysis (GSEA)
+
+# VARIABLES:
+# GSEA_data: GSEA data object (clusterProfiler object)
+# layout: graph layout
+# nSets: number of gene sets (i.e., GO terms/WikiPathways) to include in the plot
+
+makeGSEAnetwork <- function(GSEA_data, layout, nSets, color, size = 5){
+  
+  # round the number of sets to an integer value
+  nSets <- round(nSets)
+  
+  # Set the minimum number to 5
+  if(nSets < 5){
+    nSets <- 5
+  }
+  
+  # Set the maximum number to 20
+  if(nSets > 20){
+    nSets <- 20
+  }
+  
+  if (is.null(color)){
+    color <- c("#000072", "white", "red")
+  }
+  
+  # Get results from GSEA
+  GSEAresults <- GSEA_data@result
+  
+  # Filter genes for top 10 terms
+  GSEAgenes <- GSEA_data@geneSets
+  GSEAgenes_fil <- GSEAgenes[GSEAresults$ID[1:nSets]]
+  
+  # Make a matrix that shows pairwise Jaccard Index
+  graph_matrix <- matrix(NA, nrow = length(GSEAgenes_fil), ncol = length(GSEAgenes_fil))
+  for (i in 1:length(GSEAgenes_fil)){
+    graph_matrix[i,] <- unlist(lapply(GSEAgenes_fil,function(x){JI(x,GSEAgenes_fil[[i]])}))
+  }
+  rownames(graph_matrix) <- names(GSEAgenes_fil)
+  colnames(graph_matrix) <- names(GSEAgenes_fil)
+  
+  # make a graph from this matrix
+  g <- igraph::graph_from_adjacency_matrix(graph_matrix, 
+                                           mode = "lower", 
+                                           weighted = "Jaccard Index", 
+                                           diag = FALSE)
+  
+  # Add -log10 p-value and GO name as vertex attributes
+  rownames(GSEAresults) <- GSEAresults$ID
+  V(g)$`-log10 p-value` <- (-log10(GSEAresults[V(g),"p-value"]))
+  V(g)$`NES` <- GSEAresults[V(g),"NES"]
+  V(g)$label <- firstup(GSEAresults[V(g),"Description"])
+  
+  # make plot
+  p <- ggraph::ggraph(g, 'igraph', algorithm = layout) +
+    ggraph::geom_edge_link0(ggplot2::aes(width = `Jaccard Index`), edge_alpha = 0.1) + 
+    ggraph::geom_node_point(ggplot2::aes(color = NES), size = 7) + 
+    ggraph::geom_node_text(ggplot2::aes(label = label), color = 'black', 
+                           size = size, repel = TRUE) + 
+    ggplot2::theme_void() +
+    ggplot2::labs(color = expression(-log[10] ~ "p-value")) +
+    #ggplot2::scale_color_continuous() +
+    ggplot2::scale_color_gradient2(low = color[1], mid = color[2], high = color[3])
+  
+  return(p)
+}
+
+#==============================================================================#
+# make_unique_names()
+#==============================================================================#
+make_unique_names <- function(names_vector) {
+  table_counts <- table(names_vector)
+  name_counter <- setNames(rep(0, length(table_counts)), names(table_counts))
+  
+  sapply(names_vector, function(name) {
+    name_counter[name] <<- name_counter[name] + 1
+    if (table_counts[name] > 1) {
+      paste0(name, "_", name_counter[name])
+    } else {
+      name
+    }
+  })
+}
+
+#==============================================================================#
+# readExprMatrix()
+#==============================================================================#
+
+# DESCRIPTION:
+# Read expression matrix
 
 # VARIABLES:
 # path: path to expression matrix
 
-readRNASeq <- function(path){
+readExprMatrix <- function(path, checkDup = TRUE){
   
   # Read matrix
   exprMatrix <- as.matrix(data.table::fread(path))
@@ -2800,7 +3373,16 @@ readRNASeq <- function(path){
   exprMatrix_num <- matrix(as.numeric(exprMatrix), nrow = nrow(exprMatrix), ncol = ncol(exprMatrix))
   
   # Set rownames and column names of numeric matrix
-  rownames(exprMatrix_num) <- rownames(exprMatrix) 
+  
+  if (checkDup){
+    if (sum(duplicated(rownames(exprMatrix)))>0){
+      rownames(exprMatrix_num) <- make_unique_names(rownames(exprMatrix)) 
+    } else{
+      rownames(exprMatrix_num) <- rownames(exprMatrix)
+    }
+  } else{
+    rownames(exprMatrix_num) <- rownames(exprMatrix)
+  }
   colnames(exprMatrix_num) <- colnames(exprMatrix)
   
   # Return expression matrix

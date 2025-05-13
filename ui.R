@@ -108,20 +108,44 @@ ui <- tagList(
                                    choices = c("Microarray analysis" = "Microarray",
                                                "RNA-Seq analysis" = "RNA-Seq"),
                                    status = "info",
-                                   selected = "Microarray"
+                                   selected = "RNA-Seq"
                                  ),
+                                 
+                                 conditionalPanel(
+                                   condition = "input.microarray_or_rnaseq=='RNA-Seq'",
+                                   # Analyse raw or processed data?
+                                   shinyWidgets::prettyRadioButtons(
+                                     inputId = "raw_or_norm_rnaseq",
+                                     label = NULL,
+                                     choices = c("Raw counts" = "Raw data", 
+                                                 "Processed counts" = "Processed data"),
+                                     inline = TRUE,
+                                     status = "info",
+                                     fill = TRUE),
+                                   ),
+                                 
 
-                                 # Analyse raw or processed data?
-                                 shinyWidgets::prettyRadioButtons(
-                                   inputId = "raw_or_norm",
-                                   label = NULL,
-                                   choices = c("Raw data", "Processed data"),
-                                   inline = TRUE,
-                                   status = "info",
-                                   fill = TRUE),
+                                 conditionalPanel(
+                                   condition = "input.microarray_or_rnaseq=='Microarray'",
+                                   # Analyse raw or processed data?
+                                   shinyWidgets::prettyRadioButtons(
+                                     inputId = "raw_or_norm_microarray",
+                                     label = NULL,
+                                     choices = c("CEL files" = "Raw data", 
+                                                 "Processed intensities" = "Processed data"),
+                                     inline = TRUE,
+                                     status = "info",
+                                     fill = TRUE),
+                                 ),
                                  
                                  # Line break
                                  br(),
+                                 
+                                 shinyWidgets::actionBttn(inputId = "advancedSettings",
+                                                          label = NULL,
+                                                          style = "simple",
+                                                          color = "warning",
+                                                          icon = icon("gear")),
                                  
                                  # Action button: start analysis by clicking
                                  shinyWidgets::actionBttn(inputId = "startAnalysis",
@@ -555,17 +579,24 @@ ui <- tagList(
                ), # Tab panel
                
                #*****************************************************************#
-               # ORA microarray data
+               # Gene set analysis
                #*****************************************************************#
-               tabPanel("ORA", value = "panel_ORA_microarray_raw", 
+               tabPanel("Gene set analysis", value = "panel_ORA_microarray_raw", 
                         icon = icon("fas fa-list"),
                         
                         sidebarPanel(
-                          h2(strong("Overrepresentation analysis")),
+                          h2(strong("Gene set analysis")),
                           
-                          h5("In the gene overrepresentation analysis (ORA) step, 
-                        you can find processes that are enriched by the 
-                           differentially expressed genes."),
+                          h5("In the gene set analysis, you can find dysregulated 
+                          processes and pathways."),
+                          
+                          shinyWidgets::radioGroupButtons(
+                            inputId = "ORA_or_GSEA_microarray_raw",
+                            label = NULL,
+                            choices = c("GSEA", "ORA"),
+                            #status = "danger",
+                            selected = "GSEA"
+                          ),
                           
                           hr(),
                           
@@ -576,7 +607,7 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Choose from the comparisons for which 
+                              add_prompt(message = "Choose from the comparisons for which 
                                        the statistical analysis was performed in the previous step.", 
                                          position = "right",
                                          size = "large")
@@ -591,7 +622,7 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "A geneset is a collection of genes that are association 
+                              add_prompt(message = "A geneset is a collection of genes that are association 
                                        with a specific biological process (GO-BP), molecular function (GO-MF),
                                        cellular component (GO-CC), or biological pathway (WikiPathways).", 
                                          position = "right",
@@ -606,71 +637,105 @@ ui <- tagList(
                                                   "KEGG")),
                           
                           br(),
-                          h4(strong(tags$span(
-                            "3. Select differentially expressed genes",
-                            tags$span(
-                              icon(
-                                name = "question-circle",
-                              ) 
-                            ) |>
-                              prompter::add_prompt(message = "Tip: look at the volcano plot in the previous 
+                          
+                          # ORA options
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_microarray_raw=='ORA'",
+                            h4(strong(tags$span(
+                              "3. Select genes",
+                              tags$span(
+                                icon(
+                                  name = "question-circle",
+                                ) 
+                              ) |>
+                                add_prompt(message = "Tip: look at the volcano plot in the previous 
                                        step (statistical analysis) to find the optimal P value and 
                                        logFC thresholds.", 
-                                         position = "right",
-                                         size = "large")
-                          ))),
-                          # Up/down regulated genes only
-                          shinyWidgets::prettyRadioButtons(
-                            inputId = "updown_ORA_microarray_raw",
-                            label = "Perform ORA on ...", 
-                            choices = 
-                              c("Upregulated genes only", 
-                                "Downregulated genes only",
-                                "Both"),
-                            selected = "Both",
-                            status = "danger",
-                            fill = TRUE),
-                          
-                          # top N or logFC/P value threshold
-                          shinyWidgets::radioGroupButtons(inputId = "topNorThres_microarray_raw",
-                                            label = "Select DEGs based on ...", 
-                                            choices = c("Threshold", 
-                                                        "Top N"),
-                                            status = "danger"),
-                          
-                          # Select DEGs based on logFC/P value threshold
-                          conditionalPanel(
-                            condition = "input.topNorThres_microarray_raw=='Threshold'",
+                                           position = "right",
+                                           size = "large")
+                            ))),
+                            # Up/down regulated genes only
+                            prettyRadioButtons(
+                              inputId = "updown_ORA_microarray_raw",
+                              label = "Perform ORA on ...", 
+                              choices = 
+                                c("Upregulated genes only", 
+                                  "Downregulated genes only",
+                                  "Both"),
+                              selected = "Both",
+                              status = "danger",
+                              fill = TRUE),
                             
-                            #P value threshold
-                            numericInput(
-                              inputId = "p_thres_ORA_microarray_raw",
-                              label = "P threshold",
-                              value = 0.05),
+                            # top N or logFC/P value threshold
+                            radioGroupButtons(inputId = "topNorThres_microarray_raw",
+                                              label = "Select genes based on ...", 
+                                              choices = c("Threshold", 
+                                                          "Top N"),
+                                              status = "danger"),
                             
-                            # Raw or adjusted P value?
-                            shinyWidgets::prettyRadioButtons(inputId = "rawp_ORA_microarray_raw", 
-                                               label = NULL, 
-                                               choices = c("Raw P value" = "raw", 
-                                                           "Adjusted P value" = "adj"),
-                                               inline = TRUE, 
-                                               status = "danger",
-                                               fill = TRUE),
+                            # Select genes based on logFC/P value threshold
+                            conditionalPanel(
+                              condition = "input.topNorThres_microarray_raw=='Threshold'",
+                              
+                              #P value threshold
+                              numericInput(
+                                inputId = "p_thres_ORA_microarray_raw",
+                                label = "P threshold",
+                                value = 0.05),
+                              
+                              # Raw or adjusted P value?
+                              prettyRadioButtons(inputId = "rawp_ORA_microarray_raw", 
+                                                 label = NULL, 
+                                                 choices = c("Raw P value" = "raw", 
+                                                             "Adjusted P value" = "adj"),
+                                                 inline = TRUE, 
+                                                 status = "danger",
+                                                 fill = TRUE),
+                              
+                              #logFC threshold
+                              numericInput(
+                                inputId = "logFC_thres_ORA_microarray_raw",
+                                label = "logFC threshold",
+                                value = 0),
+                            ),
                             
-                            #logFC threshold
-                            numericInput(
-                              inputId = "logFC_thres_ORA_microarray_raw",
-                              label = "logFC threshold",
-                              value = 0),
+                            # Select top N most significant genes
+                            conditionalPanel(
+                              condition = "input.topNorThres_microarray_raw=='Top N'",
+                              numericInput(
+                                inputId = "topN_microarray_raw",
+                                label = "Top N most significant genes",
+                                value = 100),
+                            )
+                            
                           ),
                           
-                          # Select top N most significant genes
+                          # GSEA options
                           conditionalPanel(
-                            condition = "input.topNorThres_microarray_raw=='Top N'",
-                            numericInput(
-                              inputId = "topN_microarray_raw",
-                              label = "Top N most significant genes",
-                              value = 100),
+                            condition = "input.ORA_or_GSEA_microarray_raw=='GSEA'",
+                            h4(strong(tags$span(
+                              "3. Select ranking variable",
+                              tags$span(
+                                icon(
+                                  name = "question-circle",
+                                ) 
+                              ) |>
+                                add_prompt(message = "Select the variable on which the GSEA should be based.", 
+                                           position = "right",
+                                           size = "large")
+                            ))),
+                            # Ranking variable
+                            prettyRadioButtons(
+                              inputId = "ranking_GSEA_microarray_raw",
+                              label = NULL, 
+                              choices = 
+                                c(" logFC" = "logFC",
+                                  "-log p-value" = "pvalue",
+                                  "-log p-value x sign logFC" = "signed_pvalue"),
+                              selected = "logFC",
+                              status = "danger",
+                              fill = TRUE),
+                            
                           ),
                           
                           br(),
@@ -685,32 +750,45 @@ ui <- tagList(
                             ) |>
                               prompter::add_prompt(message = "We need to know which gene identifiers are 
                                        used, so we can link the genes to their correct genesets.", 
-                                         position = "right",
-                                         size = "large")
+                                                   position = "right",
+                                                   size = "large")
                           ))),
                           uiOutput("UI_geneID_ORA_microarray_raw"),
                           br(),
                           # Calculate!
                           h4(strong(tags$span(
-                            "5. Perform ORA",
+                            "5. Perform analysis",
                             tags$span(
                               icon(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Click to start the overrepresentation analysis!", 
-                                         position = "right",
-                                         size = "large")
+                              prompter::add_prompt(message = "Click to start the gene set analysis!", 
+                                                   position = "right",
+                                                   size = "large")
                           ))),
-                          shinyWidgets::actionBttn(inputId = "calculate_ORA_microarray_raw",
+                          actionBttn(inputId = "calculate_ORA_microarray_raw",
                                      label = "Calculate",
                                      style = "simple",
                                      color = "warning",
-                                     icon = icon("sync"))
+                                     icon = icon("sync")),
+                          br(),
+                          hr(),
+                          uiOutput("UI_ORAreport_microarray_raw"),
+                          uiOutput("UI_GSEAreport_microarray_raw")
                           
                         ),
                         mainPanel(
-                          uiOutput("UI_output_ORA_microarray_raw")
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_microarray_raw=='ORA'",
+                            uiOutput("UI_output_ORA_microarray_raw")
+                          ),
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_microarray_raw=='GSEA'",
+                            uiOutput("UI_output_GSEA_microarray_raw")
+                          )
+                          
+                          
                         )
                ), # Tab panel
                
@@ -738,17 +816,40 @@ ui <- tagList(
                           
                           # Description upload expression data
                           h4(strong("1. Upload expression data")),
-                          h5("The expression data should be supplied as a Series 
+                          h5("The expression data should be supplied as a .tsv/.csv file or as a Series 
                            Matrix File. A Series Matrix File can be downloaded from the ",
                              a("GEO website.", 
                                href = "https://www.ncbi.nlm.nih.gov/geo/",
                                target="_blank")),
                           
-                          # File input for Series Matrix File
-                          fileInput(inputId = "uploadExprData_microarray_norm_smf",
-                                    label = NULL,
-                                    accept = ".txt.gz",
-                                    placeholder = "Select .txt.gz Series Matrix File"),
+                          # .tsv/.csv or Series Matrix File
+                          shinyWidgets::prettyRadioButtons(inputId = "ExprDataFileType_microarray_norm", 
+                                                           label = NULL, 
+                                                           choices = c(".tsv/.csv file",
+                                                                       "Series Matrix File"),
+                                                           inline = TRUE,
+                                                           fill = TRUE),
+                          
+                          conditionalPanel(
+                            condition = "input.ExprDataFileType_microarray_norm=='.tsv/.csv file'",
+                            
+                            # File input for .tsv/.csv file
+                            fileInput(inputId = "uploadExprData_microarray_norm_tsv",
+                                      label = NULL,
+                                      accept = c(".tsv", ".csv"),
+                                      placeholder = "Select .tsv or .csv data file"),
+                            
+                            ),
+                          
+                          conditionalPanel(
+                            condition = "input.ExprDataFileType_microarray_norm=='Series Matrix File'",
+                            
+                            # File input for Series Matrix File
+                            fileInput(inputId = "uploadExprData_microarray_norm_smf",
+                                      label = NULL,
+                                      accept = ".txt.gz",
+                                      placeholder = "Select .txt.gz Series Matrix File"),
+                          ),
                           
                           # Description upload metadata
                           h4(strong("2. Upload metadata")),
@@ -1074,17 +1175,24 @@ ui <- tagList(
                ), # Tab panel
                
                #*****************************************************************#
-               # ORA microarray data
+               # Gene set analysis
                #*****************************************************************#
-               tabPanel("ORA", value = "panel_ORA_microarray_norm", 
+               tabPanel("Gene set analysis", value = "panel_ORA_microarray_norm", 
                         icon = icon("fas fa-list"),
                         
                         sidebarPanel(
-                          h2(strong("Overrepresentation analysis")),
+                          h2(strong("Gene set analysis")),
                           
-                          h5("In the gene overrepresentation analysis (ORA) step, 
-                        you can find processes that are enriched by the 
-                           differentially expressed genes."),
+                          h5("In the gene set analysis, you can find dysregulated 
+                          processes and pathways."),
+                          
+                          shinyWidgets::radioGroupButtons(
+                            inputId = "ORA_or_GSEA_microarray_norm",
+                            label = NULL,
+                            choices = c("GSEA", "ORA"),
+                            #status = "danger",
+                            selected = "GSEA"
+                          ),
                           
                           hr(),
                           
@@ -1126,71 +1234,104 @@ ui <- tagList(
                           
                           br(),
                           
-                          h4(strong(tags$span(
-                            "3. Select differentially expressed genes",
-                            tags$span(
-                              icon(
-                                name = "question-circle",
-                              ) 
-                            ) |>
-                              add_prompt(message = "Tip: look at the volcano plot in the previous 
+                          # ORA options
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_microarray_norm=='ORA'",
+                            h4(strong(tags$span(
+                              "3. Select genes",
+                              tags$span(
+                                icon(
+                                  name = "question-circle",
+                                ) 
+                              ) |>
+                                add_prompt(message = "Tip: look at the volcano plot in the previous 
                                        step (statistical analysis) to find the optimal P value and 
                                        logFC thresholds.", 
-                                         position = "right",
-                                         size = "large")
-                          ))),
-                          # Up/down regulated genes only
-                          prettyRadioButtons(
-                            inputId = "updown_ORA_microarray_norm",
-                            label = "Perform ORA on ...", 
-                            choices = 
-                              c("Upregulated genes only", 
-                                "Downregulated genes only",
-                                "Both"),
-                            selected = "Both",
-                            status = "danger",
-                            fill = TRUE),
-                          
-                          # top N or logFC/P value threshold
-                          radioGroupButtons(inputId = "topNorThres_microarray_norm",
-                                            label = "Select DEGs based on ...", 
-                                            choices = c("Threshold", 
-                                                        "Top N"),
-                                            status = "danger"),
-                          
-                          # Select DEGs based on logFC/P value threshold
-                          conditionalPanel(
-                            condition = "input.topNorThres_microarray_norm=='Threshold'",
+                                           position = "right",
+                                           size = "large")
+                            ))),
+                            # Up/down regulated genes only
+                            prettyRadioButtons(
+                              inputId = "updown_ORA_microarray_norm",
+                              label = "Perform ORA on ...", 
+                              choices = 
+                                c("Upregulated genes only", 
+                                  "Downregulated genes only",
+                                  "Both"),
+                              selected = "Both",
+                              status = "danger",
+                              fill = TRUE),
                             
-                            #P value threshold
-                            numericInput(
-                              inputId = "p_thres_ORA_microarray_norm",
-                              label = "P threshold",
-                              value = 0.05),
+                            # top N or logFC/P value threshold
+                            radioGroupButtons(inputId = "topNorThres_microarray_norm",
+                                              label = "Select genes based on ...", 
+                                              choices = c("Threshold", 
+                                                          "Top N"),
+                                              status = "danger"),
                             
-                            # Raw or adjusted P value?
-                            prettyRadioButtons(inputId = "rawp_ORA_microarray_norm", 
-                                               label = NULL, 
-                                               choices = c("Raw P value" = "raw", 
-                                                           "Adjusted P value" = "adj"),
-                                               inline = TRUE, 
-                                               status = "danger",
-                                               fill = TRUE),
+                            # Select genes based on logFC/P value threshold
+                            conditionalPanel(
+                              condition = "input.topNorThres_microarray_norm=='Threshold'",
+                              
+                              #P value threshold
+                              numericInput(
+                                inputId = "p_thres_ORA_microarray_norm",
+                                label = "P threshold",
+                                value = 0.05),
+                              
+                              # Raw or adjusted P value?
+                              prettyRadioButtons(inputId = "rawp_ORA_microarray_norm", 
+                                                 label = NULL, 
+                                                 choices = c("Raw P value" = "raw", 
+                                                             "Adjusted P value" = "adj"),
+                                                 inline = TRUE, 
+                                                 status = "danger",
+                                                 fill = TRUE),
+                              
+                              #logFC threshold
+                              numericInput(
+                                inputId = "logFC_thres_ORA_microarray_norm",
+                                label = "logFC threshold",
+                                value = 0),
+                            ),
                             
-                            #logFC threshold
-                            numericInput(
-                              inputId = "logFC_thres_ORA_microarray_morm",
-                              label = "logFC threshold",
-                              value = 0),
+                            # Select top N most significant genes
+                            conditionalPanel(
+                              condition = "input.topNorThres_microarray_norm=='Top N'",
+                              numericInput(
+                                inputId = "topN_microarray_norm",
+                                label = "Top N most significant genes",
+                                value = 100),
+                            )
+                            
                           ),
                           
-                          # Select top N most significant genes
+                          # GSEA options
                           conditionalPanel(
-                            condition = "input.topNorThres_microarray_norm=='Top N'",
-                            numericInput(
-                              inputId = "topN_microarray_norm",
-                              label = "Top N most significant genes",
-                              value = 100),
+                            condition = "input.ORA_or_GSEA_microarray_norm=='GSEA'",
+                            h4(strong(tags$span(
+                              "3. Select ranking variable",
+                              tags$span(
+                                icon(
+                                  name = "question-circle",
+                                ) 
+                              ) |>
+                                add_prompt(message = "Select the variable on which the GSEA should be based.", 
+                                           position = "right",
+                                           size = "large")
+                            ))),
+                            # Ranking variable
+                            prettyRadioButtons(
+                              inputId = "ranking_GSEA_microarray_norm",
+                              label = NULL, 
+                              choices = 
+                                c(" logFC" = "logFC",
+                                  "-log p-value" = "pvalue",
+                                  "-log p-value x sign logFC" = "signed_pvalue"),
+                              selected = "logFC",
+                              status = "danger",
+                              fill = TRUE),
+                            
                           ),
                           
                           br(),
@@ -1203,34 +1344,47 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "We need to know which gene identifiers are 
+                              prompter::add_prompt(message = "We need to know which gene identifiers are 
                                        used, so we can link the genes to their correct genesets.", 
-                                         position = "right",
-                                         size = "large")
+                                                   position = "right",
+                                                   size = "large")
                           ))),
                           uiOutput("UI_geneID_ORA_microarray_norm"),
                           br(),
                           # Calculate!
                           h4(strong(tags$span(
-                            "5. Perform ORA",
+                            "5. Perform analysis",
                             tags$span(
                               icon(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Click to start the overrepresentation analysis!", 
-                                         position = "right",
-                                         size = "large")
+                              prompter::add_prompt(message = "Click to start the gene set analysis!", 
+                                                   position = "right",
+                                                   size = "large")
                           ))),
                           actionBttn(inputId = "calculate_ORA_microarray_norm",
                                      label = "Calculate",
                                      style = "simple",
                                      color = "warning",
-                                     icon = icon("sync"))
+                                     icon = icon("sync")),
+                          br(),
+                          hr(),
+                          uiOutput("UI_ORAreport_microarray_norm"),
+                          uiOutput("UI_GSEAreport_microarray_norm")
                           
                         ),
                         mainPanel(
-                          uiOutput("UI_output_ORA_microarray_norm")
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_microarray_norm=='ORA'",
+                            uiOutput("UI_output_ORA_microarray_norm")
+                          ),
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_microarray_norm=='GSEA'",
+                            uiOutput("UI_output_GSEA_microarray_norm")
+                          )
+                          
+                          
                         )
                ), # Tab panel
                
@@ -1547,17 +1701,24 @@ ui <- tagList(
                ), # Tab panel
                
                #*****************************************************************#
-               # ORA RNA-seq data
+               # Gene set analysis RNA-seq data
                #*****************************************************************#
-               tabPanel("ORA", value = "panel_ORA_rnaseq_raw", 
+               tabPanel("Gene set analysis", value = "panel_ORA_rnaseq_raw", 
                         icon = icon("fas fa-list"),
                         
                         sidebarPanel(
-                          h2(strong("Overrepresentation analysis")),
+                          h2(strong("Gene set analysis")),
                           
-                          h5("In the gene overrepresentation analysis (ORA) step, 
-                        you can find processes that are enriched by the 
-                           differentially expressed genes."),
+                          h5("In the gene set analysis, you can find dysregulated 
+                          processes and pathways."),
+                          
+                          shinyWidgets::radioGroupButtons(
+                            inputId = "ORA_or_GSEA_rnaseq_raw",
+                            label = NULL,
+                            choices = c("GSEA", "ORA"),
+                            #status = "danger",
+                            selected = "GSEA"
+                          ),
                           
                           hr(),
                           
@@ -1598,71 +1759,125 @@ ui <- tagList(
                                                   "KEGG")),
                           
                           br(),
-                          h4(strong(tags$span(
-                            "3. Select differentially expressed genes",
-                            tags$span(
-                              icon(
-                                name = "question-circle",
-                              ) 
-                            ) |>
-                              add_prompt(message = "Tip: look at the volcano plot in the previous 
+                          # h4(strong(tags$span(
+                          #   "3. Analysis method",
+                          #   tags$span(
+                          #     icon(
+                          #       name = "question-circle",
+                          #     ) 
+                          #   ) |>
+                          #     add_prompt(message = "Do you want to perform overrepresentation analysis (ORA) 
+                          #                or gene set enrichment analysis (GSEA)?", 
+                          #                position = "right",
+                          #                size = "large")
+                          # ))),
+                          # shinyWidgets::radioGroupButtons(
+                          #   inputId = "ORA_or_GSEA_rnaseq_raw",
+                          #   label = NULL,
+                          #   choices = c("GSEA", "ORA"),
+                          #   status = "danger",
+                          #   selected = "GSEA"
+                          # ),
+                          # br(),
+                          
+                          # ORA options
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_rnaseq_raw=='ORA'",
+                            h4(strong(tags$span(
+                              "3. Select genes",
+                              tags$span(
+                                icon(
+                                  name = "question-circle",
+                                ) 
+                              ) |>
+                                add_prompt(message = "Tip: look at the volcano plot in the previous 
                                        step (statistical analysis) to find the optimal P value and 
                                        logFC thresholds.", 
-                                         position = "right",
-                                         size = "large")
-                          ))),
-                          # Up/down regulated genes only
-                          prettyRadioButtons(
-                            inputId = "updown_ORA_rnaseq_raw",
-                            label = "Perform ORA on ...", 
-                            choices = 
-                              c("Upregulated genes only", 
-                                "Downregulated genes only",
-                                "Both"),
-                            selected = "Both",
-                            status = "danger",
-                            fill = TRUE),
-                          
-                          # top N or logFC/P value threshold
-                          radioGroupButtons(inputId = "topNorThres_rnaseq_raw",
-                                            label = "Select DEGs based on ...", 
-                                            choices = c("Threshold", 
-                                                        "Top N"),
-                                            status = "danger"),
-                          
-                          # Select DEGs based on logFC/P value threshold
-                          conditionalPanel(
-                            condition = "input.topNorThres_rnaseq_raw=='Threshold'",
+                                           position = "right",
+                                           size = "large")
+                            ))),
+                            # Up/down regulated genes only
+                            prettyRadioButtons(
+                              inputId = "updown_ORA_rnaseq_raw",
+                              label = "Perform ORA on ...", 
+                              choices = 
+                                c("Upregulated genes only", 
+                                  "Downregulated genes only",
+                                  "Both"),
+                              selected = "Both",
+                              status = "danger",
+                              fill = TRUE),
                             
-                            #P value threshold
-                            numericInput(
-                              inputId = "p_thres_ORA_rnaseq_raw",
-                              label = "P threshold",
-                              value = 0.05),
+                            # top N or logFC/P value threshold
+                            radioGroupButtons(inputId = "topNorThres_rnaseq_raw",
+                                              label = "Select genes based on ...", 
+                                              choices = c("Threshold", 
+                                                          "Top N"),
+                                              status = "danger"),
                             
-                            # Raw or adjusted P value?
-                            prettyRadioButtons(inputId = "rawp_ORA_rnaseq_raw", 
-                                               label = NULL, 
-                                               choices = c("Raw P value" = "raw", 
-                                                           "Adjusted P value" = "adj"),
-                                               inline = TRUE, 
-                                               status = "danger",
-                                               fill = TRUE),
+                            # Select genes based on logFC/P value threshold
+                            conditionalPanel(
+                              condition = "input.topNorThres_rnaseq_raw=='Threshold'",
+                              
+                              #P value threshold
+                              numericInput(
+                                inputId = "p_thres_ORA_rnaseq_raw",
+                                label = "P threshold",
+                                value = 0.05),
+                              
+                              # Raw or adjusted P value?
+                              prettyRadioButtons(inputId = "rawp_ORA_rnaseq_raw", 
+                                                 label = NULL, 
+                                                 choices = c("Raw P value" = "raw", 
+                                                             "Adjusted P value" = "adj"),
+                                                 inline = TRUE, 
+                                                 status = "danger",
+                                                 fill = TRUE),
+                              
+                              #logFC threshold
+                              numericInput(
+                                inputId = "logFC_thres_ORA_rnaseq_raw",
+                                label = "logFC threshold",
+                                value = 0),
+                            ),
                             
-                            #logFC threshold
-                            numericInput(
-                              inputId = "logFC_thres_ORA_rnaseq_raw",
-                              label = "logFC threshold",
-                              value = 0),
+                            # Select top N most significant genes
+                            conditionalPanel(
+                              condition = "input.topNorThres_rnaseq_raw=='Top N'",
+                              numericInput(
+                                inputId = "topN_rnaseq_norm",
+                                label = "Top N most significant genes",
+                                value = 100),
+                            )
+                            
                           ),
                           
-                          # Select top N most significant genes
+                          # GSEA options
                           conditionalPanel(
-                            condition = "input.topNorThres_rnaseq_raw=='Top N'",
-                            numericInput(
-                              inputId = "topN_rnaseq_raw",
-                              label = "Top N most significant genes",
-                              value = 100),
+                            condition = "input.ORA_or_GSEA_rnaseq_raw=='GSEA'",
+                            h4(strong(tags$span(
+                              "3. Select ranking variable",
+                              tags$span(
+                                icon(
+                                  name = "question-circle",
+                                ) 
+                              ) |>
+                                add_prompt(message = "Select the variable on which the GSEA should be based.", 
+                                           position = "right",
+                                           size = "large")
+                            ))),
+                            # Ranking variable
+                            prettyRadioButtons(
+                              inputId = "ranking_GSEA_rnaseq_raw",
+                              label = NULL, 
+                              choices = 
+                                c(" logFC" = "logFC",
+                                  "-log p-value" = "pvalue",
+                                  "-log p-value x sign logFC" = "signed_pvalue"),
+                              selected = "logFC",
+                              status = "danger",
+                              fill = TRUE),
+                            
                           ),
                           
                           br(),
@@ -1684,13 +1899,13 @@ ui <- tagList(
                           br(),
                           # Calculate!
                           h4(strong(tags$span(
-                            "5. Perform ORA",
+                            "5. Perform analysis",
                             tags$span(
                               icon(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Click to start the overrepresentation analysis!", 
+                              prompter::add_prompt(message = "Click to start the gene set analysis!", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -1698,11 +1913,24 @@ ui <- tagList(
                                      label = "Calculate",
                                      style = "simple",
                                      color = "warning",
-                                     icon = icon("sync"))
+                                     icon = icon("sync")),
+                          br(),
+                          hr(),
+                          uiOutput("UI_ORAreport_rnaseq_raw"),
+                          uiOutput("UI_GSEAreport_rnaseq_raw")
                           
                         ),
                         mainPanel(
-                          uiOutput("UI_output_ORA_rnaseq_raw")
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_rnaseq_raw=='ORA'",
+                            uiOutput("UI_output_ORA_rnaseq_raw")
+                            ),
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_rnaseq_raw=='GSEA'",
+                            uiOutput("UI_output_GSEA_rnaseq_raw")
+                          )
+                          
+                          
                         )
                ), # Tab panel
                
@@ -2063,17 +2291,24 @@ ui <- tagList(
                ), # Tab panel
                
                #*****************************************************************#
-               # ORA RNA-seq data
+               # Gene set analysis
                #*****************************************************************#
-               tabPanel("ORA", value = "panel_ORA_rnaseq_norm", 
+               tabPanel("Gene set analysis", value = "panel_ORA_rnaseq_norm", 
                         icon = icon("fas fa-list"),
                         
                         sidebarPanel(
-                          h2(strong("Overrepresentation analysis")),
+                          h2(strong("Gene set analysis")),
                           
-                          h5("In the gene overrepresentation analysis (ORA) step, 
-                        you can find processes that are enriched by the 
-                           differentially expressed genes."),
+                          h5("In the gene set analysis, you can find dysregulated 
+                          processes and pathways."),
+                          
+                          shinyWidgets::radioGroupButtons(
+                            inputId = "ORA_or_GSEA_rnaseq_norm",
+                            label = NULL,
+                            choices = c("GSEA", "ORA"),
+                            #status = "danger",
+                            selected = "GSEA"
+                          ),
                           
                           hr(),
                           
@@ -2114,71 +2349,105 @@ ui <- tagList(
                                                   "KEGG")),
                           
                           br(),
-                          h4(strong(tags$span(
-                            "3. Select differentially expressed genes",
-                            tags$span(
-                              icon(
-                                name = "question-circle",
-                              ) 
-                            ) |>
-                              add_prompt(message = "Tip: look at the volcano plot in the previous 
+                          
+                          # ORA options
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_rnaseq_norm=='ORA'",
+                            h4(strong(tags$span(
+                              "3. Select genes",
+                              tags$span(
+                                icon(
+                                  name = "question-circle",
+                                ) 
+                              ) |>
+                                add_prompt(message = "Tip: look at the volcano plot in the previous 
                                        step (statistical analysis) to find the optimal P value and 
                                        logFC thresholds.", 
-                                         position = "right",
-                                         size = "large")
-                          ))),
-                          # Up/down regulated genes only
-                          prettyRadioButtons(
-                            inputId = "updown_ORA_rnaseq_norm",
-                            label = "Perform ORA on ...", 
-                            choices = 
-                              c("Upregulated genes only", 
-                                "Downregulated genes only",
-                                "Both"),
-                            selected = "Both",
-                            status = "danger",
-                            fill = TRUE),
-                          
-                          # top N or logFC/P value threshold
-                          radioGroupButtons(inputId = "topNorThres_rnaseq_norm",
-                                            label = "Select DEGs based on ...", 
-                                            choices = c("Threshold", 
-                                                        "Top N"),
-                                            status = "danger"),
-                          
-                          # Select DEGs based on logFC/P value threshold
-                          conditionalPanel(
-                            condition = "input.topNorThres_rnaseq_norm=='Threshold'",
+                                           position = "right",
+                                           size = "large")
+                            ))),
+                            # Up/down regulated genes only
+                            prettyRadioButtons(
+                              inputId = "updown_ORA_rnaseq_norm",
+                              label = "Perform ORA on ...", 
+                              choices = 
+                                c("Upregulated genes only", 
+                                  "Downregulated genes only",
+                                  "Both"),
+                              selected = "Both",
+                              status = "danger",
+                              fill = TRUE),
                             
-                            #P value threshold
-                            numericInput(
-                              inputId = "p_thres_ORA_rnaseq_norm",
-                              label = "P threshold",
-                              value = 0.05),
+                            # top N or logFC/P value threshold
+                            radioGroupButtons(inputId = "topNorThres_rnaseq_norm",
+                                              label = "Select genes based on ...", 
+                                              choices = c("Threshold", 
+                                                          "Top N"),
+                                              status = "danger"),
                             
-                            # Raw or adjusted P value?
-                            prettyRadioButtons(inputId = "rawp_ORA_rnaseq_norm", 
-                                               label = NULL, 
-                                               choices = c("Raw P value" = "raw", 
-                                                           "Adjusted P value" = "adj"),
-                                               inline = TRUE, 
-                                               status = "danger",
-                                               fill = TRUE),
+                            # Select genes based on logFC/P value threshold
+                            conditionalPanel(
+                              condition = "input.topNorThres_rnaseq_norm=='Threshold'",
+                              
+                              #P value threshold
+                              numericInput(
+                                inputId = "p_thres_ORA_rnaseq_norm",
+                                label = "P threshold",
+                                value = 0.05),
+                              
+                              # Raw or adjusted P value?
+                              prettyRadioButtons(inputId = "rawp_ORA_rnaseq_norm", 
+                                                 label = NULL, 
+                                                 choices = c("Raw P value" = "raw", 
+                                                             "Adjusted P value" = "adj"),
+                                                 inline = TRUE, 
+                                                 status = "danger",
+                                                 fill = TRUE),
+                              
+                              #logFC threshold
+                              numericInput(
+                                inputId = "logFC_thres_ORA_rnaseq_norm",
+                                label = "logFC threshold",
+                                value = 0),
+                            ),
                             
-                            #logFC threshold
-                            numericInput(
-                              inputId = "logFC_thres_ORA_rnaseq_norm",
-                              label = "logFC threshold",
-                              value = 0),
+                            # Select top N most significant genes
+                            conditionalPanel(
+                              condition = "input.topNorThres_rnaseq_norm=='Top N'",
+                              numericInput(
+                                inputId = "topN_rnaseq_norm",
+                                label = "Top N most significant genes",
+                                value = 100),
+                            )
+                            
                           ),
                           
-                          # Select top N most significant genes
+                          # GSEA options
                           conditionalPanel(
-                            condition = "input.topNorThres_rnaseq_norm=='Top N'",
-                            numericInput(
-                              inputId = "topN_rnaseq_norm",
-                              label = "Top N most significant genes",
-                              value = 100),
+                            condition = "input.ORA_or_GSEA_rnaseq_norm=='GSEA'",
+                            h4(strong(tags$span(
+                              "3. Select ranking variable",
+                              tags$span(
+                                icon(
+                                  name = "question-circle",
+                                ) 
+                              ) |>
+                                add_prompt(message = "Select the variable on which the GSEA should be based.", 
+                                           position = "right",
+                                           size = "large")
+                            ))),
+                            # Ranking variable
+                            prettyRadioButtons(
+                              inputId = "ranking_GSEA_rnaseq_norm",
+                              label = NULL, 
+                              choices = 
+                                c(" logFC" = "logFC",
+                                  "-log p-value" = "pvalue",
+                                  "-log p-value x sign logFC" = "signed_pvalue"),
+                              selected = "logFC",
+                              status = "danger",
+                              fill = TRUE),
+                            
                           ),
                           
                           br(),
@@ -2200,13 +2469,13 @@ ui <- tagList(
                           br(),
                           # Calculate!
                           h4(strong(tags$span(
-                            "5. Perform ORA",
+                            "5. Perform analysis",
                             tags$span(
                               icon(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Click to start the overrepresentation analysis!", 
+                              prompter::add_prompt(message = "Click to start the gene set analysis!", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -2214,14 +2483,26 @@ ui <- tagList(
                                      label = "Calculate",
                                      style = "simple",
                                      color = "warning",
-                                     icon = icon("sync"))
+                                     icon = icon("sync")),
+                          br(),
+                          hr(),
+                          uiOutput("UI_ORAreport_rnaseq_norm"),
+                          uiOutput("UI_GSEAreport_rnaseq_norm")
                           
                         ),
                         mainPanel(
-                          uiOutput("UI_output_ORA_rnaseq_norm")
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_rnaseq_norm=='ORA'",
+                            uiOutput("UI_output_ORA_rnaseq_norm")
+                          ),
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_rnaseq_norm=='GSEA'",
+                            uiOutput("UI_output_GSEA_rnaseq_norm")
+                          )
+                          
+                          
                         )
                ), # Tab panel
-               
                ###################################################################
                
                #  Documentation

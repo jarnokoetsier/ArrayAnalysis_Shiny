@@ -1,0 +1,48 @@
+---
+title: Overrepresentation analysis report
+params:
+  ORASettings: NA
+  ORATable: NA
+---
+
+This report provides an overview of the results from the overrepresentation analysis (ORA). If you wish to have customized figures, please modify the figures in ArrayAnalysis and download them separately.
+
+<br>
+
+## Settings
+
+```{r, echo=FALSE, results = 'asis'}
+ORASettings <- params$ORASettings
+ORASettings[1,1] <- "Selected comparison*"
+knitr::kable(ORASettings)
+```
+<p>*You can generate the report for a different comparison by changing the selected comparison in 
+ArrayAnalysis and downloading the report again.</p>
+<br>
+
+## Results {.tabset}
+
+### Top hits
+<h3><b>Top overrepresented genesets</b></h3>
+```{r, echo=FALSE, results = 'asis', message = FALSE, warning = FALSE}
+ORATable <- params$ORATable@result
+knitr::kable(head(ORATable, 15), row.names = FALSE)
+```
+
+### Bar chart
+
+```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
+makeORAplot(params$ORATable,
+            nSets = 15,
+            color = "Viridis")
+```
+
+### Network
+
+```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
+makeORAnetwork(ORA_data = params$ORATable,
+               layout = "graphopt",
+               nSets = 15,
+               color = "Viridis",
+               size = 2)
+```
