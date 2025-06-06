@@ -2,6 +2,14 @@ observe({
   # Make list for reactive values
   rv <- reactiveValues()
   
+  # Download session info
+  output$downloadSessionInfo_microarray_raw <- downloadHandler(
+    filename = "sessionInfo.txt",
+    content = function(file){
+      writeLines(capture.output(sessionInfo()), file)
+    }
+  )
+  
   #======================================================================#
   # TAB 1: Data Upload
   #======================================================================#
@@ -893,9 +901,10 @@ observe({
       filename = function(){"QC_Boxplots.png"},
       content = function(file){
         png(file,
-            width=input$width_boxplots_microarray_raw,
-            height=input$height_boxplots_microarray_raw,
-            pointsize=24)
+            width=input$width_boxplots_microarray_raw*3,
+            height=input$height_boxplots_microarray_raw*3,
+            pointsize=24,
+            res = 300)
         
         if (length(levels(rv$experimentFactor)) > 5){
           legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
@@ -1834,8 +1843,11 @@ observe({
                    hr(),
                    DT::dataTableOutput(outputId = "processingSettings_microarray_raw") %>% 
                      withSpinner(color="#0dc5c1"),
+                   br(),
                    downloadButton("downloadProcessingSettings_microarray_raw", 
-                                  "Download"),
+                                  "Download table"),
+                   downloadButton("downloadSessionInfo_microarray_raw", 
+                                  "Session info")
                    
           ) # EO Settings tabPanel
         ) # EO tabsetPanel
@@ -1996,7 +2008,7 @@ observe({
                               paste(input$covGroups_num_microarray_raw, collapse = "; ")),
                        ifelse(is.null(input$covGroups_char_microarray_raw), " ",
                               paste(input$covGroups_char_microarray_raw, collapse = "; ")),
-                       input$biomart_dataset_microarray_raw,
+                       rv$top_table_list[[3]],
                        paste(input$biomart_attributes_microarray_raw, collapse = "; "),
                        input$biomart_filter_microarray_raw
           )
@@ -3260,7 +3272,9 @@ observe({
                          withSpinner(color="#0dc5c1"),
                        br(),
                        downloadButton("downloadStatSettings_microarray_raw", 
-                                      "Download")
+                                      "Download table"),
+                       downloadButton("downloadSessionInfo_microarray_raw", 
+                                      "Session info")
                        
               ) # EO Settings tabPanel
               
@@ -3978,7 +3992,9 @@ observe({
                            withSpinner(color="#0dc5c1"),
                          br(),
                          downloadButton("downloadORASettings_microarray_raw", 
-                                        "Download")
+                                        "Download table"),
+                         downloadButton("downloadSessionInfo_microarray_raw", 
+                                        "Session info")
                          
                 )
                 
@@ -4590,7 +4606,9 @@ observe({
                            withSpinner(color="#0dc5c1"),
                          br(),
                          downloadButton("downloadGSEASettings_microarray_raw", 
-                                        "Download")
+                                        "Download table"),
+                         downloadButton("downloadSessionInfo_microarray_raw", 
+                                        "Session info")
                          
                 )
                 

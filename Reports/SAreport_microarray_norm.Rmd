@@ -70,3 +70,9 @@ makeMAplot(top_table = params$topTable,
            p_threshold = 0.05, 
            logFC_threshold = 1)
 ```
+
+### Session Info
+
+```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
+sessionInfo()
+```

@@ -2,6 +2,14 @@ observe({
   # Make list for reactive values
   rv <- reactiveValues()
   
+  # Download session info
+  output$downloadSessionInfo_rnaseq_raw <- downloadHandler(
+    filename = "sessionInfo.txt",
+    content = function(file){
+      writeLines(capture.output(sessionInfo()), file)
+    }
+  )
+  
   #======================================================================#
   # TAB2: Data Upload
   #======================================================================#
@@ -746,9 +754,10 @@ observe({
       filename = function(){"QC_Boxplots.png"},
       content = function(file){
         png(file,
-            width=input$width_boxplots_rnaseq_raw,
-            height=input$height_boxplots_rnaseq_raw,
-            pointsize=24)
+            width=input$width_boxplots_rnaseq_raw*3,
+            height=input$height_boxplots_rnaseq_raw*3,
+            pointsize=24,
+            res = 300)
         
         if (length(levels(rv$experimentFactor)) > 5){
           legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
@@ -1693,8 +1702,12 @@ observe({
                    hr(),
                    DT::dataTableOutput(outputId = "processingSettings_rnaseq_raw") %>% 
                      withSpinner(color="#0dc5c1"),
+                   br(),
                    downloadButton("downloadProcessingSettings_rnaseq_raw", 
-                                  "Download")
+                                  "Download table"),
+                   downloadButton("downloadSessionInfo_rnaseq_raw", 
+                                  "Session info")
+                   
                    
           ) # EO Settings tabPanel
         ) # EO tabsetPanel
@@ -1857,7 +1870,7 @@ observe({
                               paste(input$covGroups_num_rnaseq_raw, collapse = "; ")),
                        ifelse(is.null(input$covGroups_char_rnaseq_raw), " ",
                               paste(input$covGroups_char_rnaseq_raw, collapse = "; ")),
-                       input$biomart_dataset_rnaseq_raw,
+                       rv$top_table_list[[3]],
                        paste(input$biomart_attributes_rnaseq_raw, collapse = "; "),
                        input$biomart_filter_rnaseq_raw
           )
@@ -3081,7 +3094,9 @@ observe({
                          withSpinner(color="#0dc5c1"),
                        br(),
                        downloadButton("downloadStatSettings_rnaseq_raw", 
-                                      "Download")
+                                      "Download table"),
+                       downloadButton("downloadSessionInfo_rnaseq_raw", 
+                                      "Session info")
                        
               ) # EO Settings tabPanel
               
@@ -3799,7 +3814,9 @@ observe({
                            withSpinner(color="#0dc5c1"),
                          br(),
                          downloadButton("downloadORASettings_rnaseq_raw", 
-                                        "Download")
+                                        "Download table"),
+                         downloadButton("downloadSessionInfo_rnaseq_raw", 
+                                        "Session info")
                          
                 )
                 
@@ -4411,7 +4428,9 @@ observe({
                            withSpinner(color="#0dc5c1"),
                          br(),
                          downloadButton("downloadGSEASettings_rnaseq_raw", 
-                                        "Download")
+                                        "Download table"),
+                         downloadButton("downloadSessionInfo_rnaseq_raw", 
+                                        "Session info")
                          
                 )
                 

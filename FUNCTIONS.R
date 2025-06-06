@@ -228,7 +228,7 @@ autoGroup <- function(metaData){
     term_col <- NULL
     len_col <- NULL
     for (i in 1:ncol(metaData)){
-      if (length(grep("control|non|healthy|treat", metaData[,i], ignore.case = TRUE)) > 0){
+      if (length(grep("control|non|healthy|treat|wt|wildtype|wild-type", metaData[,i], ignore.case = TRUE)) > 0){
         term_col <- c(term_col,i)
       }
       
@@ -1037,7 +1037,13 @@ getDensityplots <- function(experimentFactor,
     layout(xaxis = list(   
              title=xaxis_name),   
            yaxis = list(   
-             title='Density'))
+             title='Density')) %>%
+    config(
+      toImageButtonOptions = list(
+        format = "png",
+        filename = "DensityPlot"
+      )
+    )
 
   return(p)
   
@@ -1633,7 +1639,8 @@ getStatistics <- function(normMatrix,
           message <- "Statistical analysis has been performed. 
           Gene annotation was performed with biomaRt. You can download 
               the results as well as view them in interactive plots."
-          list(annotations, message)
+          dataset <- paste0(biomart_dataset, " (", searchDatasets(mart = ensembl, pattern = "hsapiens")$version, ")")
+          list(annotations, message, dataset)
         },
         error = function(cond){
           
@@ -1697,10 +1704,12 @@ getStatistics <- function(normMatrix,
           The Ensembl database was not available.
           So, the gene annotation was performed with the bioconductor annotation package. 
           You can download the results as well as view them in interactive plots."
-          list(annotations, message)
+          dataset <- paste0(pkg, " (", packageVersion(pkg),")")
+          list(annotations, message, dataset)
         })
         annotations <- annotation_list[[1]]
         message <- annotation_list[[2]]
+        dataset <- annotation_list[[3]]
         
         # Convert entrezgene id to character
         if("entrezgene_id" %in% biomart_attributes){
@@ -1732,7 +1741,7 @@ getStatistics <- function(normMatrix,
       }
       
     }
-    top_table_list <- list(top_table, message)
+    top_table_list <- list(top_table, message, dataset)
     return(top_table_list)
   }, error = function(cond){
     NULL
@@ -3653,7 +3662,8 @@ getStatistics_RNASeq <- function(rawMatrix,
         message <- "Statistical analysis has been performed. 
           Gene annotation was performed with biomaRt. You can download 
               the results as well as view them in interactive plots."
-        list(annotations, message)
+        dataset <- paste0(biomart_dataset, " (", searchDatasets(mart = ensembl, pattern = "hsapiens")$version, ")")
+        list(annotations, message, dataset)
       },
       error = function(cond){
         
@@ -3717,10 +3727,12 @@ getStatistics_RNASeq <- function(rawMatrix,
           The Ensembl database was not available.
           So, the gene annotation was performed with the bioconductor annotation package. 
           You can download the results as well as view them in interactive plots."
-        list(annotations, message)
+        dataset <- paste0(pkg, " (", packageVersion(pkg),")")
+        list(annotations, message, dataset)
       })
       annotations <- annotation_list[[1]]
       message <- annotation_list[[2]]
+      dataset <- annotation_list[[3]]
       
       # Convert entrezgene id to character
       if("entrezgene_id" %in% biomart_attributes){
@@ -3752,7 +3764,7 @@ getStatistics_RNASeq <- function(rawMatrix,
     }
     
   }
-  top_table_list <- list(top_table, message)
+  top_table_list <- list(top_table, message, dataset)
   return(top_table_list)
   }, error = function(cond){
     NULL
@@ -3925,7 +3937,8 @@ getStatistics_RNASeq_processed <- function(normMatrix,
           message <- "Statistical analysis has been performed. 
           Gene annotation was performed with biomaRt. You can download 
               the results as well as view them in interactive plots."
-          list(annotations, message)
+          dataset <- paste0(biomart_dataset, " (", searchDatasets(mart = ensembl, pattern = "hsapiens")$version, ")")
+          list(annotations, message, dataset)
         },
         error = function(cond){
           
@@ -3989,10 +4002,12 @@ getStatistics_RNASeq_processed <- function(normMatrix,
           The Ensembl database was not available.
           So, the gene annotation was performed with the bioconductor annotation package. 
           You can download the results as well as view them in interactive plots."
-          list(annotations, message)
+          dataset <- paste0(pkg, " (", packageVersion(pkg),")")
+          list(annotations, message, dataset)
         })
         annotations <- annotation_list[[1]]
         message <- annotation_list[[2]]
+        dataset <- annotation_list[[3]]
 
         # Convert entrezgene id to character
         if("entrezgene_id" %in% biomart_attributes){
@@ -4024,7 +4039,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
       }
       
     }
-    top_table_list <- list(top_table, message)
+    top_table_list <- list(top_table, message, dataset)
     return(top_table_list)
   }, error = function(cond){
       NULL

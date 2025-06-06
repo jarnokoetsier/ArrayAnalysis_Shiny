@@ -77,3 +77,9 @@ plot_PCA(PC_data = params$PCAData,
          zpc = NULL, 
          xyz = FALSE)
 ```
+
+### Session Info
+
+```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
+sessionInfo()
+```

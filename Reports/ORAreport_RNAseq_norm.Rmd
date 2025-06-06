@@ -46,3 +46,9 @@ makeORAnetwork(ORA_data = params$ORATable,
                color = "Viridis",
                size = 2)
 ```
+
+### Session Info
+
+```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
+sessionInfo()
+```
