@@ -1501,6 +1501,7 @@ getStatistics <- function(normMatrix,
                                                  "Gene Symbol/Name"),
                           biomart_filters = "Entrez Gene ID"){
   tryCatch({
+    dataset <- NULL
     if (!is.null(biomart_dataset)){
       # Replace name of biomaRt filter
       if (biomart_filters %in% c("Ensembl Gene ID",
@@ -3529,7 +3530,7 @@ getStatistics_RNASeq <- function(rawMatrix,
                                                         "Gene Symbol/Name"),
                                  biomart_filters = "Entrez Gene ID"){
   tryCatch({
-  #metaData <- metaData[,c(expFactor, covGroups_num, covGroups_char)]
+  dataset <- NULL
   
   # Replace name of biomaRt filter
   biomart_filters <- tryCatch({
@@ -3804,6 +3805,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
                                                                   "Gene Symbol/Name"),
                                            biomart_filters = "Entrez Gene ID"){
   tryCatch({
+    dataset <- NULL
     
     # Replace name of biomaRt filter
     biomart_filters <- tryCatch({
