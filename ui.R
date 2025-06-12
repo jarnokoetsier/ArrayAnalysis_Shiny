@@ -1845,7 +1845,7 @@ ui <- tagList(
                             conditionalPanel(
                               condition = "input.topNorThres_rnaseq_raw=='Top N'",
                               numericInput(
-                                inputId = "topN_rnaseq_norm",
+                                inputId = "topN_rnaseq_raw",
                                 label = "Top N most significant genes",
                                 value = 100),
                             )
