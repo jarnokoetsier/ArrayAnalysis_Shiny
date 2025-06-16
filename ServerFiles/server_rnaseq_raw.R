@@ -930,15 +930,98 @@ observe({
       
     })
     
+    
+    #***************************#
+    # Modal to download figure
+    #***************************#
+    
     # Download plot
-    output$download_densityplots_rnaseq_raw <- downloadHandler(
-      filename = "QC_Density.html",
+    output$realdownload_density_rnaseq_raw <- downloadHandler(
+      filename = function(){ifelse(input$static_density_rnaseq_raw, "QC_Density.png", "QC_Density.html")},
       content = function(file){
-        htmlwidgets::saveWidget(rv$density, 
-                                file)
+        
+        if (input$static_density_rnaseq_raw){
+          
+          if (length(levels(rv$experimentFactor)) > 5){
+            legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+          } else{
+            legendColors <- c(input$density_col1_rnaseq_raw,
+                              input$density_col2_rnaseq_raw,
+                              input$density_col3_rnaseq_raw,
+                              input$density_col4_rnaseq_raw,
+                              input$density_col5_rnaseq_raw)
+          }
+          if (length(legendColors) != length(levels(rv$experimentFactor))){
+            legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+          }
+          names(legendColors) <- levels(rv$experimentFactor)
+          
+          p <- getDensityplots_static(experimentFactor = rv$experimentFactor,
+                                        legendColors = legendColors,
+                                        normMatrix = rv$normData,
+                                        RNASeq = TRUE)
+          ggplot2::ggsave(plot = p, 
+                          filename = file,
+                          width = input$width_density_rnaseq_raw,
+                          height = input$height_density_rnaseq_raw,
+                          units = "px")
+        } else{
+          htmlwidgets::saveWidget(rv$density, 
+                                  file)
+        }
       }
     )
     
+    
+    # Make modal
+    observeEvent(input$download_density_rnaseq_raw, {
+      showModal(modalDialog(
+        title = NULL,
+        easyClose = TRUE,
+        size = "m",
+        footer = tagList(
+          fluidRow(
+            column(12, align = "left",
+                   shinyWidgets::materialSwitch(
+                     inputId = "static_density_rnaseq_raw",
+                     label = "Click to make static plot",
+                     value = FALSE, 
+                     status = "primary"))
+          ),
+          fluidRow(
+            column(6,
+                   conditionalPanel(
+                     condition = "input.static_density_rnaseq_raw==true",
+                     sliderInput("height_density_rnaseq_raw", 
+                                 "Height",
+                                 min = 800, max = 2000,
+                                 value = 1200, step = 10,
+                                 width = "100%")
+                   )
+            ),
+            column(6,
+                   conditionalPanel(
+                     condition = "input.static_density_rnaseq_raw==true",
+                     sliderInput("width_density_rnaseq_raw", 
+                                 "Width",
+                                 min = 800, max = 2000,
+                                 value = 1500, step = 10,
+                                 width = "100%")
+                   )
+            )
+          ),
+          
+          fluidRow(
+            column(12, align = "left",
+                   downloadButton('realdownload_density_rnaseq_raw', 
+                                  'Download')
+            )
+          )
+          
+        )
+        
+      ))
+    })
     
     #********************************************************************#
     # Output 4: Heatmap
@@ -1525,8 +1608,9 @@ observe({
           tabPanel("Density plot",
                    icon = icon("fas fa-mouse-pointer"),
                    br(),
-                   downloadButton('download_densityplots_rnaseq_raw', 
-                                  'Download figure'),
+                   actionButton("download_density_rnaseq_raw", 
+                                "Download figure",
+                                icon = shiny::icon("download")),
                    br(),
                    br(),
                    # customize heatmap
@@ -1848,7 +1932,7 @@ observe({
                                                 covGroups_char = input$covGroups_char_rnaseq_raw,
                                                 comparisons = input$comparisons_rnaseq_raw,
                                                 filterThres = rv$filterThreshold,
-                                                smallestGroupSize = length(unique(rv$experimentFactor)),
+                                                smallestGroupSize = min(table(rv$experimentFactor)),
                                                 addAnnotation = input$addAnnotation_rnaseq_raw,
                                                 biomart_dataset = input$biomart_dataset_rnaseq_raw,
                                                 biomart_attributes = unique(c(input$biomart_filter_rnaseq_raw,
@@ -1888,7 +1972,7 @@ observe({
                                                 covGroups_char = input$covGroups_char_rnaseq_raw,
                                                 comparisons = input$comparisons_rnaseq_raw,
                                                 filterThres = rv$filterThreshold,
-                                                smallestGroupSize = length(unique(rv$experimentFactor)),
+                                                smallestGroupSize = min(table(rv$experimentFactor)),
                                                 addAnnotation = input$addAnnotation_rnaseq_raw,
                                                 biomart_dataset = NULL,
                                                 biomart_attributes = NULL,
@@ -2042,6 +2126,8 @@ observe({
         
         gene <- rv$top_table[[input$comparisons_view_rnaseq_raw]]$GeneID[input$top_table_rnaseq_raw_rows_selected]
         sel_row <- which(as.character(rownames(rv$normData)) %in% as.character(gene))
+        #print(gene)
+        #print(sel_row)
         
         # Make boxplot
         rv$temp <- geneBoxplot(experimentFactor = rv$newFactor, 

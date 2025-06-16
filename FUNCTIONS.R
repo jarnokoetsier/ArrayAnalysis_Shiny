@@ -1060,26 +1060,34 @@ getDensityplots <- function(experimentFactor,
 # experimentFactor: factor with experimental groups (will be used for colouring)
 # normMatrix: normalized expression matrix
 
-getDensityplots_static <- function(experimentFactor, normMatrix, RNASeq = FALSE){
+getDensityplots_static <- function(experimentFactor, legendColors,
+                                   normMatrix, RNASeq = FALSE){
   
   # Prepare dataframe
   plot_df <- tidyr::gather(as.data.frame(normMatrix))
   plot_df$GeneID <- rep(rownames(normMatrix),ncol(normMatrix))
   plot_df$Group <- rep(experimentFactor, each = nrow(normMatrix))
   
-  # Make colors
-  myPalette <- colorsByFactor(experimentFactor)
-  plotColors <- myPalette$plotColors
-  names(plotColors) <- colnames(normMatrix)
   
-  legendColors <- myPalette$legendColors
+  plotColors <- colorsByFactor(experimentFactor)$plotColors
   names(legendColors) <- levels(experimentFactor)
   
+  for (i in 1:length(legendColors)){
+    group_length <- sum(experimentFactor == levels(experimentFactor)[i])
+    colors <-  c(colorspace::lighten(legendColors[i], amount = rev(seq(0,0.5,length.out = round(group_length/2)))),
+                 colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)+1)[-1])
+    )
+    
+    plotColors[experimentFactor == levels(experimentFactor)[i]] <- colors
+  }
+  names(plotColors) <- colnames(normMatrix)
+  
+  
   if (!isTRUE(RNASeq)){
-    xaxis_name <- expression("Normalized"~log[2]~"intensity")
+    xaxis_name <- "Normalized log<sub>2</sub> intensity"
   }
   if (isTRUE(RNASeq)){
-    xaxis_name <- expression("Normalized"~log[2]~"counts")
+    xaxis_name <- "Normalized log<sub>2</sub> counts"
   }
   
   
