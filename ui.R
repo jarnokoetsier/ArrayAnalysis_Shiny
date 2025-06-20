@@ -5,7 +5,7 @@
 
 # Start UI
 ui <- tagList(
-  
+
   # Set the style of the UI
   tags$head(tags$style(HTML("
                            .navbar-nav {
@@ -145,7 +145,7 @@ ui <- tagList(
                                                           label = NULL,
                                                           style = "simple",
                                                           color = "warning",
-                                                          icon = icon("gear")),
+                                                          icon = icon("circle-question")),
                                  
                                  # Action button: start analysis by clicking
                                  shinyWidgets::actionBttn(inputId = "startAnalysis",
@@ -1449,7 +1449,7 @@ ui <- tagList(
                           #Title
                           h2(strong("Data upload")),
                           h5("Before you can run the analysis workflow, you first 
-                           need to upload the expression data and the meta data."),
+                           need to upload the expression data and the metadata."),
                           
                           hr(),
                           
@@ -1460,14 +1460,17 @@ ui <- tagList(
                                     accept = c(".tsv",".csv"),
                                     placeholder = "Select .tsv/.csv file"),
                           
-                          h4(strong("2. Upload meta data")),
+                          h4(strong("2. Upload metadata")),
                           h5("The metadata includes relevant information (e.g., diagnostic group)
-                           about the samples. You can upload the meta data as a 
+                           about the samples. You can upload the metadata as a 
                            .csv/.tsv file or upload a Series Matrix file.", 
                              "Click ", downloadLink('downloadmeta_example_rnaseq_raw', 
                                                     'here'),
                              "for an example .csv meta data file. A Series Matrix File
-                           can be downloaded from the GEO website."),
+                           can be downloaded from the",
+                             a("GEO website.", 
+                               href = "https://www.ncbi.nlm.nih.gov/geo/",
+                               target="_blank")),
                           
                           prettyRadioButtons(inputId = "MetaFileType_rnaseq_raw", 
                                              label = NULL, 
@@ -1592,7 +1595,7 @@ ui <- tagList(
                               add_prompt(message = "Select the filtering threshold.
                               Genes with at least this number of (raw) counts 
                               in the smallest group size will be kept for the statistical analysis. 
-                                         A value of 10 is often recommended for bulk RNA-seq", 
+                                         A value of 10 is often recommended for bulk RNA-seq.", 
                                          position = "right",
                                          size = "large")
                           ))),
@@ -1611,7 +1614,7 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              add_prompt(message = "Click to perform the pre-processing!", 
+                              add_prompt(message = "Click to perform pre-processing!", 
                                          position = "right",
                                          size = "large")
                           ))),
@@ -1694,7 +1697,7 @@ ui <- tagList(
                               ) 
                             ) |>
                               prompter::add_prompt(message = "Add gene annotations 
-                              (e.g., ENSEMBL IDs, ENTREZGENE IDs, and/or HGNC symbols) to 
+                              (e.g., Ensembl gene IDs, Entrez gene IDs, and/or HGNC symbols) to 
                                        the output.", 
                                                    position = "right",
                                                    size = "large")
@@ -2573,7 +2576,7 @@ ui <- tagList(
                
                ###################################################################
                tabPanel("Documentation", value = "documentation", 
-                        icon = icon("question-circle"),
+                        icon = icon("info"),
                         
                           tags$iframe(src="docs.html",
                                       width="100%",

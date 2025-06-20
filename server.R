@@ -58,20 +58,29 @@ server <- function(input, output, session){
       showModal(modalDialog(
         title = NULL,
         easyClose = TRUE,
-        size = "m",
+        size = "l",
         footer = tagList(
           fluidRow(
             column(12, align = "left",
-                   h1(strong("Advanced settings")),
-                   h4("There are no advanced settings to select now. This option 
-                      will become available in an upcoming update.")
-                   
-                   # # R-ODAF pipeline
-                   # br(),
-                   # awesomeCheckbox(inputId = "R_ODAF",
-                   #                 label = "Run pipeline with R-ODAF parameters", 
-                   #                 value = FALSE,
-                   #                 status = "warning")
+                   h1(strong("About"), "ArrayAnalysis"),
+                   h4(style="text-align: justify;",
+                   "ArrayAnalysis is designed to make transcriptomic data analysis 
+                      accessible to everyone. With its user-friendly interface, it empowers 
+                      scientists, regardless of their expertise in high-throughput data analysis, 
+                      to analyze and interpret transcriptomic experiments with ease."),
+                   br(),
+                   h4("You can run four analysis workflows in ArrayAnalysis: "),
+                   h4(
+                   HTML('<ol>
+                   <li><b>Raw microarray data (<i>.CEL</i>):</b> 
+                   Select <code>Microarray analysis</code> and <code>CEL files</code>.</li>
+                        <li><b>Microarray intensity tables (<i>.csv/.tsv</i>):</b>
+                        Select <code>Microarray analysis</code> and <code>Processed intensities</code>.</li>
+                         <li><b>Raw RNA-seq count tables (<i>.csv/.tsv</i>):</b>
+                         Select <code>RNA-Seq analysis</code> and <code>Raw counts</code>.</li>
+                         <li><b>Processed RNA-seq count tables (<i>.csv/.tsv</i>):</b>
+                         Select <code>RNA-Seq analysis</code> and <code>Processed counts</code>.</li>
+                        </ol>'))
                    )
             
           ) # EO fluidRow

@@ -299,9 +299,9 @@ observe({
                      hr(),
                      DT::dataTableOutput(outputId = "exprTable_upload_rnaseq_raw") %>% 
                        shinycssloaders::withSpinner(color="#0dc5c1")),
-            tabPanel("Meta data",                  # Meta table
-                     h3(strong("Meta data")),
-                     h5("This is a preview of the meta data table. Please check if the data 
+            tabPanel("Metadata",                  # Meta table
+                     h3(strong("Metadata")),
+                     h5("This is a preview of the metadata table. Please check if the data 
                has been correctly imported."),
                      hr(),
                      DT::dataTableOutput(outputId = "metaTable_rnaseq_raw") %>% 
@@ -384,7 +384,7 @@ observe({
                                       name = "question-circle",
                                     ) 
                                   ) |>
-                                    prompter::add_prompt(message = "Select one or more samples to exclude from the analysis.", 
+                                    prompter::add_prompt(message = "Select one or more sample(s) to exclude from the analysis.", 
                                                          position = "right",
                                                          size = "large")
                                 ),
@@ -1564,7 +1564,7 @@ observe({
                    
                    # Title + description
                    h3(strong("Normalized counts")),
-                   h5("Here you can view the normalized and log-transformed counts. 
+                   h5("View and download the normalized and log-transformed counts. 
                               Click on the table explore the data!"),
                    hr(),
                    
@@ -1877,7 +1877,7 @@ observe({
           tabPanel("Settings overview",
                    icon = icon("fas fa-file"),
                    h3(strong("Pre-processing settings")),
-                   h5("To enhance reproducibility, view and download the overview of the chosen pre-processing settings."),
+                   h5("To enhance reproducibility, download the overview of chosen pre-processing settings."),
                    hr(),
                    DT::dataTableOutput(outputId = "processingSettings_rnaseq_raw") %>% 
                      withSpinner(color="#0dc5c1"),
@@ -1971,15 +1971,28 @@ observe({
   # Select comparisons
   output$UI_biomart_dataset_rnaseq_raw <- renderUI({
     req(input$addAnnotation_rnaseq_raw)
-    shinyWidgets::pickerInput(inputId = "biomart_dataset_rnaseq_raw",
-                              label = "Organism:",
-                              choices = c("Homo sapiens" = "hsapiens_gene_ensembl" ,
-                                          "Bos taurus" = "btaurus_gene_ensembl",
-                                          "Caenorhabditis elegans" = "celegans_gene_ensembl",
-                                          "Mus musculus" = "mmusculus_gene_ensembl",
-                                          "Rattus norvegicus" = "rnorvegicus_gene_ensembl"),
-                              selected = "hsapiens_gene_ensembl",
-                              multiple = FALSE)
+    tagList(
+      shinyWidgets::pickerInput(inputId = "biomart_dataset_rnaseq_raw",
+                                label = tags$span(
+                                  "Organism", 
+                                  tags$span(
+                                    icon(
+                                      name = "question-circle",
+                                    ) 
+                                  ) |>
+                                    add_prompt(message = "Select the organism. 
+                                               This information is needed to match the gene IDs.", 
+                                               position = "right",
+                                               size = "large")
+                                ),
+                                choices = c("Homo sapiens" = "hsapiens_gene_ensembl" ,
+                                            "Bos taurus" = "btaurus_gene_ensembl",
+                                            "Caenorhabditis elegans" = "celegans_gene_ensembl",
+                                            "Mus musculus" = "mmusculus_gene_ensembl",
+                                            "Rattus norvegicus" = "rnorvegicus_gene_ensembl"),
+                                selected = "hsapiens_gene_ensembl",
+                                multiple = FALSE)
+    )
   })
   
   output$UI_addAnnotations_rnaseq_raw <- renderUI({
@@ -1989,7 +2002,18 @@ observe({
     tagList(
       
       shinyWidgets::pickerInput(inputId = "biomart_filter_rnaseq_raw",
-                                label = "Gene ID",
+                                label = tags$span(
+                                  "Gene ID", 
+                                  tags$span(
+                                    icon(
+                                      name = "question-circle",
+                                    ) 
+                                  ) |>
+                                    add_prompt(message = "Select which gene ID is 
+                                               used in the expression matrix.", 
+                                               position = "right",
+                                               size = "large")
+                                ),
                                 choices = c("Ensembl Gene ID",
                                             "Entrez Gene ID",
                                             "Gene Symbol/Name"),
@@ -1997,7 +2021,18 @@ observe({
                                 multiple = FALSE),
       
       shinyWidgets::pickerInput(inputId = "biomart_attributes_rnaseq_raw",
-                                label = "Output",
+                                label = tags$span(
+                                  "Output", 
+                                  tags$span(
+                                    icon(
+                                      name = "question-circle",
+                                    ) 
+                                  ) |>
+                                    add_prompt(message = "Select which gene IDs should be added 
+                                               to the output.", 
+                                               position = "right",
+                                               size = "large")
+                                ),
                                 choices = c("Ensembl Gene ID",
                                             "Entrez Gene ID",
                                             "Gene Symbol/Name"),
@@ -3269,7 +3304,7 @@ observe({
               tabPanel("Settings overview",
                        icon = icon("fas fa-file"),
                        h3(strong("Statistical analysis settings")),
-                       h5("To enhance reproducibility, view and download the overview of the chosen statistical analysis settings."),
+                       h5("To enhance reproducibility, download the overview of chosen pre-processing settings."),
                        hr(),
                        DT::dataTableOutput(outputId = "statSettings_rnaseq_raw") %>% 
                          withSpinner(color="#0dc5c1"),
@@ -3975,7 +4010,7 @@ observe({
                 tabPanel("Settings overview",
                          icon = icon("fas fa-file"),
                          h3(strong("ORA settings")),
-                         h5("To enhance reproducibility, view and download the overview of the chosen ORA settings."),
+                         h5("To enhance reproducibility, download the overview of chosen ORA settings."),
                          hr(),
                          DT::dataTableOutput(outputId = "ORASettings_rnaseq_raw") %>% 
                            withSpinner(color="#0dc5c1"),
@@ -4594,7 +4629,7 @@ observe({
                 tabPanel("Settings overview",
                          icon = icon("fas fa-file"),
                          h3(strong("GSEA settings")),
-                         h5("To enhance reproducibility, view and download the overview of the chosen GSEA settings."),
+                         h5("To enhance reproducibility, download the overview of chosen GSEA settings."),
                          hr(),
                          DT::dataTableOutput(outputId = "GSEASettings_rnaseq_raw") %>% 
                            withSpinner(color="#0dc5c1"),

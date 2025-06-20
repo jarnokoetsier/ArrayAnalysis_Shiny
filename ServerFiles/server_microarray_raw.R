@@ -270,8 +270,8 @@ observe({
         shinyWidgets::sendSweetAlert(
           session = session,
           title = "Warning!",
-          text = "One or more samples in the expression data file do not have meta
-                  data available. These samples are excluded from the analysis.",
+          text = "One or more sample(s) in the expression data file do(es) not have 
+          metadata available. These samples are excluded from the analysis.",
           type = "warning")
       }
       
@@ -352,8 +352,7 @@ observe({
             session = session,
             title = "Info",
             text = "The data has been succesfully uploaded. Please check 
-                  the expression matrix and the meta data tables on this page 
-                  to see whether the data has been correctly uploaded.",
+                  the tables on this page to see whether the data has been correctly uploaded.",
             type = "info")
         }
         
@@ -418,7 +417,7 @@ observe({
                                       name = "question-circle",
                                     ) 
                                   ) |>
-                                    prompter::add_prompt(message = "Select one or more samples to exclude from the analysis.", 
+                                    prompter::add_prompt(message = "Select one or more sample(s) to exclude from the analysis.", 
                                                          position = "right",
                                                          size = "large")
                                 ),
@@ -2017,7 +2016,7 @@ observe({
           tabPanel("Settings overview",
                    icon = icon("fas fa-file"),
                    h3(strong("Pre-processing settings")),
-                   h5("Here you can see an overview of the chosen pre-processing settings."),
+                   h5("To enhance reproducibility, download the overview of chosen pre-processing settings."),
                    hr(),
                    DT::dataTableOutput(outputId = "processingSettings_microarray_raw") %>% 
                      withSpinner(color="#0dc5c1"),
@@ -2108,7 +2107,18 @@ observe({
   output$UI_biomart_dataset_microarray_raw <- renderUI({
     req(input$addAnnotation_microarray_raw)
     shinyWidgets::pickerInput(inputId = "biomart_dataset_microarray_raw",
-                              label = "Organism:",
+                              label = tags$span(
+                                "Organism", 
+                                tags$span(
+                                  icon(
+                                    name = "question-circle",
+                                  ) 
+                                ) |>
+                                  add_prompt(message = "Select the organism. 
+                                               This information is needed to match the probset IDs to the gene IDs.", 
+                                             position = "right",
+                                             size = "large")
+                              ),
                               choices = c("Homo sapiens" = "hsapiens_gene_ensembl" ,
                                           "Bos taurus" = "btaurus_gene_ensembl",
                                           "Caenorhabditis elegans" = "celegans_gene_ensembl",
@@ -2130,13 +2140,35 @@ observe({
     tagList(
       
       shinyWidgets::pickerInput(inputId = "biomart_filter_microarray_raw",
-                                label = "Probeset ID",
+                                label = tags$span(
+                                  "Probeset ID", 
+                                  tags$span(
+                                    icon(
+                                      name = "question-circle",
+                                    ) 
+                                  ) |>
+                                    add_prompt(message = "Select which probeset ID is 
+                                               used in the expression matrix.", 
+                                               position = "right",
+                                               size = "large")
+                                ),
                                 choices = filterList[[input$biomart_dataset_microarray_raw]],
                                 selected = selFilter(rv$ProbeAnnotation),
                                 multiple = FALSE),
       
       shinyWidgets::pickerInput(inputId = "biomart_attributes_microarray_raw",
-                                label = "Output",
+                                label = tags$span(
+                                  "Output", 
+                                  tags$span(
+                                    icon(
+                                      name = "question-circle",
+                                    ) 
+                                  ) |>
+                                    add_prompt(message = "Select which gene IDs should be added 
+                                               to the output.", 
+                                               position = "right",
+                                               size = "large")
+                                ),
                                 choices = c("Ensembl Gene ID",
                                             "Entrez Gene ID",
                                             "Gene Symbol/Name"),
@@ -3444,7 +3476,7 @@ observe({
               tabPanel("Settings overview",
                        icon = icon("fas fa-file"),
                        h3(strong("Statistical analysis settings")),
-                       h5("To enhance reproducibility, view and download the overview of the chosen statistical analysis settings."),
+                       h5("To enhance reproducibility, download the overview of chosen statistical analysis settings."),
                        hr(),
                        DT::dataTableOutput(outputId = "statSettings_microarray_raw") %>% 
                          withSpinner(color="#0dc5c1"),
@@ -4150,7 +4182,7 @@ observe({
                 tabPanel("Settings overview",
                          icon = icon("fas fa-file"),
                          h3(strong("ORA settings")),
-                         h5("To enhance reproducibility, view and download the overview of the chosen ORA settings."),
+                         h5("To enhance reproducibility, download the overview of chosen ORA settings."),
                          hr(),
                          DT::dataTableOutput(outputId = "ORASettings_microarray_raw") %>% 
                            withSpinner(color="#0dc5c1"),
@@ -4769,7 +4801,7 @@ observe({
                 tabPanel("Settings overview",
                          icon = icon("fas fa-file"),
                          h3(strong("GSEA settings")),
-                         h5("To enhance reproducibility, view and download the overview of the chosen GSEA settings."),
+                         h5("To enhance reproducibility, download the overview of chosen GSEA settings."),
                          hr(),
                          DT::dataTableOutput(outputId = "GSEASettings_microarray_raw") %>% 
                            withSpinner(color="#0dc5c1"),

@@ -4,7 +4,7 @@
 #==============================================================================#
 
 # ArrayAnalysis version:
-ArrayAnalysis_version <- "ArrayAnalysis version 0.0.1"
+ArrayAnalysis_version <- "ArrayAnalysis version 0.1.0"
 
 #******************************************************************************#
 # Load functions
