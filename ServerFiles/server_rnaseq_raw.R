@@ -1152,14 +1152,108 @@ observe({
       
     })
     
+    #***************************#
+    # Modal to download figure
+    #***************************#
+    
     # Download plot
-    output$download_heatmap_rnaseq_raw <- downloadHandler(
-      filename = "QC_Heatmap.html",
+    output$realdownload_heatmap_rnaseq_raw <- downloadHandler(
+      filename = function(){ifelse(input$static_heatmap_rnaseq_raw, "QC_Heatmap.png", "QC_Heatmap.html")},
       content = function(file){
-        htmlwidgets::saveWidget(rv$heatmap, 
-                                file)
+        
+        if (input$static_heatmap_rnaseq_raw){
+          
+          # Make color factor
+          if(length(input$colorFactor_heatmap_rnaseq_raw) > 1){
+            colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_raw], 1, paste, collapse = "_" ))
+          } else{
+            colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_raw])
+          }
+          
+          # Set colors
+          if (length(levels(colorFactor)) > 5){
+            legendColors <- colorsByFactor(colorFactor)$legendColors
+          } else{
+            legendColors <- c(input$heatmap_col1_rnaseq_raw,
+                              input$heatmap_col2_rnaseq_raw,
+                              input$heatmap_col3_rnaseq_raw,
+                              input$heatmap_col4_rnaseq_raw,
+                              input$heatmap_col5_rnaseq_raw)
+          }
+          if (length(legendColors) != length(levels(colorFactor))){
+            legendColors <- colorsByFactor(colorFactor)$legendColors
+          }
+          names(legendColors) <- levels(colorFactor)
+          
+          # Make heatmap
+          
+          getHeatmap_static(experimentFactor = colorFactor,
+                          legendColors = legendColors,
+                          normMatrix = rv$normData_vst,
+                          clusterOption1 = input$clusteroption1_rnaseq_raw,
+                          clusterOption2 = input$clusteroption2_rnaseq_raw,
+                          theme = input$heatmaptheme_rnaseq_raw,
+                          width = input$width_heatmap_rnaseq_raw,
+                          height = input$height_heatmap_rnaseq_raw,
+                          file)
+        } else{
+          htmlwidgets::saveWidget(rv$heatmap, 
+                                  file)
+        }
       }
     )
+    
+    
+    # Make modal
+    observeEvent(input$download_heatmap_rnaseq_raw, {
+      showModal(modalDialog(
+        title = NULL,
+        easyClose = TRUE,
+        size = "m",
+        footer = tagList(
+          fluidRow(
+            column(12, align = "left",
+                   shinyWidgets::materialSwitch(
+                     inputId = "static_heatmap_rnaseq_raw",
+                     label = "Click to make static plot",
+                     value = FALSE, 
+                     status = "primary"))
+          ),
+          fluidRow(
+            column(6,
+                   conditionalPanel(
+                     condition = "input.static_heatmap_rnaseq_raw==true",
+                     sliderInput("height_heatmap_rnaseq_raw", 
+                                 "Height",
+                                 min = 800, max = 2000,
+                                 value = 1200, step = 10,
+                                 width = "100%")
+                   )
+            ),
+            column(6,
+                   conditionalPanel(
+                     condition = "input.static_heatmap_rnaseq_raw==true",
+                     sliderInput("width_heatmap_rnaseq_raw", 
+                                 "Width",
+                                 min = 800, max = 2000,
+                                 value = 1500, step = 10,
+                                 width = "100%")
+                   )
+            )
+          ),
+          
+          fluidRow(
+            column(12, align = "left",
+                   downloadButton('realdownload_heatmap_rnaseq_raw', 
+                                  'Download')
+            )
+          )
+          
+        )
+        
+      ))
+    })
+    
     
     
     #********************************************************************#
@@ -1665,8 +1759,9 @@ observe({
                      )
                    ),
                    hr(),
-                   downloadButton('download_heatmap_rnaseq_raw', 
-                                  'Download figure'),
+                   actionButton('download_heatmap_rnaseq_raw', 
+                                  'Download figure',
+                                icon = shiny::icon("download")),
                    br(),
                    br(),
                    
@@ -2643,17 +2738,17 @@ observe({
                               paste0("log2FC > ", input$logFC_thres_summary_rnaseq_raw))
           
           temp[1,1] <- sum((rv$top_table[[input$comparisons_view_rnaseq_raw]]$`p-value` < input$p_thres_summary_rnaseq_raw) &
-                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC < -1*input$logFC_thres_summary_rnaseq_raw))
+                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC < -1*input$logFC_thres_summary_rnaseq_raw), na.rm = TRUE)
           temp[1,2] <- sum((rv$top_table[[input$comparisons_view_rnaseq_raw]]$`p-value` < input$p_thres_summary_rnaseq_raw) &
-                             (abs(rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC) < input$logFC_thres_summary_rnaseq_raw))
+                             (abs(rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC) < input$logFC_thres_summary_rnaseq_raw), na.rm = TRUE)
           temp[1,3] <- sum((rv$top_table[[input$comparisons_view_rnaseq_raw]]$`p-value` < input$p_thres_summary_rnaseq_raw) &
-                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC > input$logFC_thres_summary_rnaseq_raw))
+                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC > input$logFC_thres_summary_rnaseq_raw), na.rm = TRUE)
           temp[2,1] <- sum((rv$top_table[[input$comparisons_view_rnaseq_raw]]$`p-value` > input$p_thres_summary_rnaseq_raw) &
-                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC < -1*input$logFC_thres_summary_rnaseq_raw))
+                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC < -1*input$logFC_thres_summary_rnaseq_raw), na.rm = TRUE)
           temp[2,2] <- sum((rv$top_table[[input$comparisons_view_rnaseq_raw]]$`p-value` > input$p_thres_summary_rnaseq_raw) &
-                             (abs(rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC) < input$logFC_thres_summary_rnaseq_raw))
+                             (abs(rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC) < input$logFC_thres_summary_rnaseq_raw), na.rm = TRUE)
           temp[2,3] <- sum((rv$top_table[[input$comparisons_view_rnaseq_raw]]$`p-value` > input$p_thres_summary_rnaseq_raw) &
-                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC > input$logFC_thres_summary_rnaseq_raw))
+                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC > input$logFC_thres_summary_rnaseq_raw), na.rm = TRUE)
         } else{
           rownames(temp) <- c(paste0("adj. p-value < ", input$p_thres_summary_rnaseq_raw),
                               paste0("adj. p-value > ", input$p_thres_summary_rnaseq_raw))
@@ -2662,17 +2757,17 @@ observe({
                               paste0("log2FC > ", input$logFC_thres_summary_rnaseq_raw))
           
           temp[1,1] <- sum((rv$top_table[[input$comparisons_view_rnaseq_raw]]$`adj. p-value` < input$p_thres_summary_rnaseq_raw) &
-                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC < -1*input$logFC_thres_summary_rnaseq_raw))
+                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC < -1*input$logFC_thres_summary_rnaseq_raw), na.rm = TRUE)
           temp[1,2] <- sum((rv$top_table[[input$comparisons_view_rnaseq_raw]]$`adj. p-value` < input$p_thres_summary_rnaseq_raw) &
-                             (abs(rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC) < input$logFC_thres_summary_rnaseq_raw))
+                             (abs(rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC) < input$logFC_thres_summary_rnaseq_raw), na.rm = TRUE)
           temp[1,3] <- sum((rv$top_table[[input$comparisons_view_rnaseq_raw]]$`adj. p-value` < input$p_thres_summary_rnaseq_raw) &
-                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC > input$logFC_thres_summary_rnaseq_raw))
+                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC > input$logFC_thres_summary_rnaseq_raw), na.rm = TRUE)
           temp[2,1] <- sum((rv$top_table[[input$comparisons_view_rnaseq_raw]]$`adj. p-value` > input$p_thres_summary_rnaseq_raw) &
-                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC < -1*input$logFC_thres_summary_rnaseq_raw))
+                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC < -1*input$logFC_thres_summary_rnaseq_raw), na.rm = TRUE)
           temp[2,2] <- sum((rv$top_table[[input$comparisons_view_rnaseq_raw]]$`p-value` > input$p_thres_summary_rnaseq_raw) &
-                             (abs(rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC) < input$logFC_thres_summary_rnaseq_raw))
+                             (abs(rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC) < input$logFC_thres_summary_rnaseq_raw), na.rm = TRUE)
           temp[2,3] <- sum((rv$top_table[[input$comparisons_view_rnaseq_raw]]$`adj. p-value` > input$p_thres_summary_rnaseq_raw) &
-                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC > input$logFC_thres_summary_rnaseq_raw))
+                             (rv$top_table[[input$comparisons_view_rnaseq_raw]]$log2FC > input$logFC_thres_summary_rnaseq_raw), na.rm = TRUE)
         }
         rv$summaryTable <- temp
         rm(temp)
@@ -3246,41 +3341,22 @@ observe({
   observe({
     
     # Get all columns of the top table that can possibly contain the gene IDs
-    req(input$comparisons_view_ORA_rnaseq_raw)
+    #req(input$comparisons_view_ORA_rnaseq_raw)
     col_choice <- 1
-    if (length(colnames(rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]])) > 6){
-      col_choice <- c(1,7:ncol(rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]]))
+    if (length(colnames(rv$top_table[[1]])) > 6){
+      col_choice <- c(1,7:ncol(rv$top_table[[1]]))
     }
     
     # Several options need to be selected before ORA can be performed
     output$UI_geneID_ORA_rnaseq_raw <- renderUI({
       tagList(
         
-        # Select organism
-        selectInput(inputId = "organism_ORA_rnaseq_raw",
-                    label = "Organism",
-                    choices = c("Bos taurus",
-                                "Caenorhabditis elegans",
-                                "Homo sapiens",
-                                "Mus musculus", 
-                                "Rattus norvegicus"),
-                    selected = "Homo sapiens"),
-        
         # Which columns of the top table contains the gene ids?
         shinyWidgets::pickerInput(inputId = "geneID_ORA_rnaseq_raw",
                                   label = "Which column of the top table contains the gene IDs?",
-                                  choices = colnames(rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]])[col_choice],
-                                  selected = colnames(rv$top_table[[input$comparisons_view_ORA_rnaseq_raw]])[1],
-                                  multiple = FALSE),
-        
-        # Which gene IDs do they column contain?
-        shinyWidgets::pickerInput(inputId = "selID_ORA_rnaseq_raw",
-                                  label = "Which gene ID to use?",
-                                  choices = c("Ensembl Gene ID" = "ENSEMBL", 
-                                              "Entrez Gene ID" = "ENTREZID", 
-                                              "Gene Symbol/Name" = "SYMBOL"),
-                                  selected = "ENTREZID",
-                                  multiple = FALSE),
+                                  choices = colnames(rv$top_table[[1]])[col_choice],
+                                  selected = colnames(rv$top_table[[1]])[1],
+                                  multiple = FALSE)
       )
     })
   })
@@ -3402,6 +3478,7 @@ observe({
           
           output$ORA_table_rnaseq_raw <- DT::renderDataTable({
             req(input$geneset_ORA_rnaseq_raw)
+            req(rv$ORA_data)
             output <- rv$ORA_data@result
             
             # Link to wikipathways website if geneset ID is from WikiPathways
@@ -3467,6 +3544,7 @@ observe({
           
           # Print statistics of genes in selected Term
           output$ORAgene_table_rnaseq_raw <- DT::renderDataTable({
+            req(rv$ORA_data)
             req(input$ORA_table_rnaseq_raw_rows_selected)
             
             # Make ORA gene table
@@ -3486,6 +3564,7 @@ observe({
           
           # Text for gene table
           output$text_ORAgene_table_rnaseq_raw <- renderText({
+            req(rv$ORA_data)
             text <- paste0("<h3><b>Gene table: ",rv$ORA_data@result[input$ORA_table_rnaseq_raw_rows_selected,"ID"],
                            "</b></h3>")
             return(text)
@@ -3497,6 +3576,7 @@ observe({
           
           observe({
             req(input$nSets_ORAplot_rnaseq_raw)
+            req(rv$ORA_data)
             rv$ORAplot <- makeORAplot(rv$ORA_data,
                              nSets = input$nSets_ORAplot_rnaseq_raw,
                              color = input$color_ORAplot_rnaseq_raw)
@@ -3591,6 +3671,7 @@ observe({
           #--------------------------------------------------------------#
           
           observe({
+            req(rv$ORA_data)
             req(input$layout_ORAnetwork_rnaseq_raw)
             req(input$nSets_ORAnetwork_rnaseq_raw)
             rv$ORAnetwork <- makeORAnetwork(ORA_data = rv$ORA_data,
@@ -4010,6 +4091,7 @@ observe({
           #--------------------------------------------------------------#
           
           output$GSEA_table_rnaseq_raw <- DT::renderDataTable({
+            req(rv$GSEA_data)
             req(input$geneset_ORA_rnaseq_raw)
             output <- rv$GSEA_data@result
             
@@ -4076,6 +4158,7 @@ observe({
           
           # Print statistics of genes in selected Term
           output$GSEAgene_table_rnaseq_raw <- DT::renderDataTable({
+            req(rv$GSEA_data)
             req(input$GSEA_table_rnaseq_raw_rows_selected)
             
             # Make GSEA gene table
@@ -4095,6 +4178,7 @@ observe({
           
           # Text for gene table
           output$text_GSEAgene_table_rnaseq_raw <- renderText({
+            req(rv$GSEA_data)
             text <- paste0("<h3><b>Gene table: ",rv$GSEA_data@result[input$GSEA_table_rnaseq_raw_rows_selected,"ID"],
                            "</b></h3>")
             return(text)
@@ -4105,6 +4189,7 @@ observe({
           #--------------------------------------------------------------#
           
           observe({
+            req(rv$GSEA_data)
             req(input$nSets_GSEAplot_rnaseq_raw)
             rv$GSEAplot <- makeGSEAplot(rv$GSEA_data,
                                         nSets = input$nSets_GSEAplot_rnaseq_raw,
@@ -4206,6 +4291,7 @@ observe({
           observe({
             req(input$layout_GSEAnetwork_rnaseq_raw)
             req(input$nSets_GSEAnetwork_rnaseq_raw)
+            req(rv$GSEA_data)
             rv$GSEAnetwork <- makeGSEAnetwork(GSEA_data = rv$GSEA_data,
                                 layout = input$layout_GSEAnetwork_rnaseq_raw,
                                 nSets = input$nSets_GSEAnetwork_rnaseq_raw,

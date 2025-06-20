@@ -1084,10 +1084,10 @@ getDensityplots_static <- function(experimentFactor, legendColors,
   
   
   if (!isTRUE(RNASeq)){
-    xaxis_name <- "Normalized log<sub>2</sub> intensity"
+    xaxis_name <- expression("Normalized"~ log[2] ~ "intensity")
   }
   if (isTRUE(RNASeq)){
-    xaxis_name <- "Normalized log<sub>2</sub> counts"
+    xaxis_name <- expression("Normalized"~ log[2] ~ "counts")
   }
   
   
@@ -1215,14 +1215,31 @@ getHeatmap_static <- function(experimentFactor,
                        normMatrix,
                        clusterOption1,
                        clusterOption2,
-                       theme){
+                       theme,
+                       width,
+                       height,
+                       file){
   
-  # Make color palette
-  #myPalette <- colorsByFactor(experimentFactor)
-  
-  # Legend colors
-  #legendColors <- myPalette$legendColors
-  #names(legendColors) <- levels(experimentFactor)
+  reate_dend <- function(x, seriate, distfun, hclustfun, na.rm) {
+    switch(seriate,
+           "mean" = rowMeans(x, na.rm = na.rm),
+           "none" = 1:nrow(x),
+           "OLO" = {
+             dist <- distfun(x)
+             hc <- hclustfun(dist)
+             dend <- as.dendrogram(hc)
+             dend <- seriate_dendrogram(dend, dist, method = "OLO")
+             dend
+           },
+           "GW" = {
+             dist <- distfun(x)
+             hc <- hclustfun(dist)
+             dend <- as.dendrogram(hc)
+             dend <- seriate_dendrogram(dend, dist, method = "GW")
+             dend
+           }
+    )
+  }
   
   #note: for computing array correlation, euclidean would not make sense
   #only use euclidean distance to compute the similarity of the correlation
@@ -1231,15 +1248,18 @@ getHeatmap_static <- function(experimentFactor,
   if (tolower(clusterOption1) == "spearman") COpt1 <- "spearman"
   crp <- cor(normMatrix, use="complete.obs", method=COpt1)
   
+  minVal <- floor(min(crp)*100)/100
+  maxVal <- ceiling(max(crp)*100)/100
+  
   switch(tolower(clusterOption1),
          "pearson" = {
-           my.dist <- function(x) cor.dist(x, abs=FALSE)
+           my.dist <- function(x) bioDist::cor.dist(x, abs=FALSE)
          },
          "spearman" = {
-           my.dist <- function(x) spearman.dist(x, abs=FALSE)
+           my.dist <- function(x) bioDist::spearman.dist(x, abs=FALSE)
          },
          "euclidean" = {
-           my.dist <- function(x) euc(x)
+           my.dist <- function(x) bioDist::euc(x)
          }
   )
   
@@ -1250,39 +1270,109 @@ getHeatmap_static <- function(experimentFactor,
   
   # Select heatmap theme colour
   if (theme == "Default"){
-    gradient = viridis(n = 256, alpha = 1, begin = 0, end = 1,
-                       option = "viridis")
+    gradient <- circlize::colorRamp2(
+      c(minVal, mean(c(minVal, maxVal)), maxVal),
+      viridis::viridis(n = 3, alpha = 1, begin = 0, end = 1,
+                       option = "viridis") # 256
+    ) 
   }
-  
   if (theme == "Yellow-red"){
-    gradient = heat.colors(100)
+    gradient <- circlize::colorRamp2(
+      c(minVal, mean(c(minVal, maxVal)), maxVal),
+      heat.colors(3) # #100
+    )
   }
   
   if (theme == "Blues"){
-    gradient = RColorBrewer::brewer.pal(9, "Blues")
+    gradient <- circlize::colorRamp2(
+      c(minVal, mean(c(minVal, maxVal)), maxVal),
+      RColorBrewer::brewer.pal(9, "Blues")[c(1,5,9)] #9
+    )
   }
   if (theme == "Reds"){
-    gradient = RColorBrewer::brewer.pal(9, "Reds")
+    gradient <- circlize::colorRamp2(
+      c(minVal, mean(c(minVal, maxVal)), maxVal),
+      RColorBrewer::brewer.pal(9, "Reds")[c(1,5,9)] #9
+    )
+    
   }
   
-  # p <- heatmaply::ggheatmap(crp, distfun = my.dist,
-  #                           hclustfun = my.hclust, symm = TRUE, seriate = "mean",
-  #                           titleX = FALSE, titleY = FALSE, key.title = NULL,
-  #                           show_dendrogram = c(TRUE, FALSE), col_side_colors = sidecolors,
-  #                           col_side_palette = legendColors, column_text_angle = 90,
-  #                           colors = gradient)
-  # 
-  # return(p)
-  print(legendColors)
-  # Make heatmap
-  gplots::heatmap.2(crp, distfun = my.dist,
-                            hclustfun = my.hclust, symm = TRUE,
-                            key.title = NULL, trace = "none", key = FALSE,
-                            dendrogram = "row", ColSideColors = colorsByFactor(experimentFactor)$plotColors,
-                            #colCol = legendColors, #column_text_angle = 90,
-                            col = gradient)
+  # Make dendrogram
+  row_dend <- reorder(as.dendrogram(my.hclust(my.dist(crp))), rowMeans(crp, na.rm = TRUE))
+  #row_dend <- as.dendrogram(my.hclust(my.dist(crp)))
 
+  # Create annotation for columns (top)
+  ha <- ComplexHeatmap::HeatmapAnnotation(
+    `Experimental group` = experimentFactor,
+    col = list(`Experimental group` = legendColors),
+    show_annotation_name = FALSE,
+    show_legend = FALSE,
+    simple_anno_size = grid::unit(1, "cm")
+  )
   
+  # Custom legends
+  lgd2 <- ComplexHeatmap::Legend(title = "Correlation", 
+                                 at = c(minVal, mean(c(minVal, maxVal)), maxVal),
+                                 col_fun = gradient,
+                                 legend_height = grid::unit(0.2, "npc"),
+                                 legend_width = grid::unit(0.1, "npc"),
+                                 grid_height = grid::unit(0.04, "npc"), 
+                                 grid_width = grid::unit(0.16,"npc"),
+                                 labels_gp = grid::gpar(fontsize = 16),     
+                                 title_gp = grid::gpar(fontsize = 18, fontface = "bold"),
+                                 title_gap = grid::unit(5, "mm"))
+  lgd1 <- ComplexHeatmap::Legend(title = "Experimental group",
+                                 at = names(legendColors),
+                                 legend_gp = grid::gpar(fill = legendColors),
+                                 legend_height = grid::unit(0.4, "npc"),
+                                 legend_width = grid::unit(0.1, "npc"),
+                                 grid_height = grid::unit(0.04, "npc"),  
+                                 grid_width = grid::unit(0.16,"npc"),
+                                 labels_gp = grid::gpar(fontsize = 16),  
+                                 title_gp = grid::gpar(fontsize = 18, fontface = "bold"),
+                                 title_gap = grid::unit(5, "mm"))
+  packed_lgd <- ComplexHeatmap::packLegend(lgd1, lgd2, direction = "vertical",
+                                           gap = grid::unit(10, "mm"))
+  
+  png(file,
+      width = width * 3 + 3000,
+      height = height * 3,
+      pointsize = 24,
+      res = 300)
+  
+  # Create a layout with 2 columns: one for the heatmap, one for the legend
+  grid::grid.newpage()
+  grid::pushViewport(viewport(layout = grid::grid.layout(nrow = 1, ncol = 2, 
+                                                         widths = grid::unit.c(grid::unit(1, "npc") - unit(0.4, "npc"), 
+                                                                               grid::unit(0.2, "npc")))))
+  
+  # Plot the heatmap in the first column
+  grid::pushViewport(grid::viewport(layout.pos.col = 1))
+  ht <- ComplexHeatmap::Heatmap(
+    crp,
+    cluster_rows = rev(row_dend),
+    cluster_columns = row_dend,
+    show_column_dend = FALSE,
+    row_names_side = "left",
+    row_dend_side = "right",
+    top_annotation = ha,
+    col = gradient,
+    show_heatmap_legend = FALSE,
+    show_column_names = TRUE,
+    show_row_names = TRUE,
+    column_names_rot = 90,
+    row_dend_width = grid::unit(0.2, "npc"),
+    row_dend_gp = grid::gpar(lwd = 3)
+  )
+  ComplexHeatmap::draw(ht, newpage = FALSE)
+  grid::popViewport()
+  
+  # Plot the packed legend in the second column
+  grid::pushViewport(grid::viewport(layout.pos.col = 2))
+  ComplexHeatmap::draw(packed_lgd, just = "left")
+  grid::popViewport()
+  
+  dev.off()
 }
 
 #==============================================================================#

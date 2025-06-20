@@ -753,7 +753,28 @@ ui <- tagList(
                                                    position = "right",
                                                    size = "large")
                           ))),
+                          
+                          # Select organism
+                          selectInput(inputId = "organism_ORA_microarray_raw",
+                                      label = "Organism",
+                                      choices = c("Bos taurus",
+                                                  "Caenorhabditis elegans",
+                                                  "Homo sapiens",
+                                                  "Mus musculus", 
+                                                  "Rattus norvegicus"),
+                                      selected = "Homo sapiens"),
+                          
+                          # Which columns of the top table contains the gene ids?
                           uiOutput("UI_geneID_ORA_microarray_raw"),
+                          
+                          # Which gene IDs do they column contain?
+                          shinyWidgets::pickerInput(inputId = "selID_ORA_microarray_raw",
+                                                    label = "Which gene ID to use?",
+                                                    choices = c("Ensembl Gene ID" = "ENSEMBL", 
+                                                                "Entrez Gene ID" = "ENTREZID", 
+                                                                "Gene Symbol/Name" = "SYMBOL"),
+                                                    selected = "ENTREZID",
+                                                    multiple = FALSE),
                           br(),
                           # Calculate!
                           h4(strong(tags$span(
@@ -1349,7 +1370,28 @@ ui <- tagList(
                                                    position = "right",
                                                    size = "large")
                           ))),
+                          
+                          # Select organism
+                          selectInput(inputId = "organism_ORA_microarray_norm",
+                                      label = "Organism",
+                                      choices = c("Bos taurus",
+                                                  "Caenorhabditis elegans",
+                                                  "Homo sapiens",
+                                                  "Mus musculus", 
+                                                  "Rattus norvegicus"),
+                                      selected = "Homo sapiens"),
+                          
+                          # Which columns of the top table contains the gene ids?
                           uiOutput("UI_geneID_ORA_microarray_norm"),
+                          
+                          # Which gene IDs do they column contain?
+                          shinyWidgets::pickerInput(inputId = "selID_ORA_microarray_norm",
+                                                    label = "Which gene ID to use?",
+                                                    choices = c("Ensembl Gene ID" = "ENSEMBL", 
+                                                                "Entrez Gene ID" = "ENTREZID", 
+                                                                "Gene Symbol/Name" = "SYMBOL"),
+                                                    selected = "ENTREZID",
+                                                    multiple = FALSE),
                           br(),
                           # Calculate!
                           h4(strong(tags$span(
@@ -1759,26 +1801,6 @@ ui <- tagList(
                                                   "KEGG")),
                           
                           br(),
-                          # h4(strong(tags$span(
-                          #   "3. Analysis method",
-                          #   tags$span(
-                          #     icon(
-                          #       name = "question-circle",
-                          #     ) 
-                          #   ) |>
-                          #     add_prompt(message = "Do you want to perform overrepresentation analysis (ORA) 
-                          #                or gene set enrichment analysis (GSEA)?", 
-                          #                position = "right",
-                          #                size = "large")
-                          # ))),
-                          # shinyWidgets::radioGroupButtons(
-                          #   inputId = "ORA_or_GSEA_rnaseq_raw",
-                          #   label = NULL,
-                          #   choices = c("GSEA", "ORA"),
-                          #   status = "danger",
-                          #   selected = "GSEA"
-                          # ),
-                          # br(),
                           
                           # ORA options
                           conditionalPanel(
@@ -1895,7 +1917,29 @@ ui <- tagList(
                                                    position = "right",
                                                    size = "large")
                           ))),
+                          # Select organism
+                          selectInput(inputId = "organism_ORA_rnaseq_raw",
+                                      label = "Organism",
+                                      choices = c("Bos taurus",
+                                                  "Caenorhabditis elegans",
+                                                  "Homo sapiens",
+                                                  "Mus musculus", 
+                                                  "Rattus norvegicus"),
+                                      selected = "Homo sapiens"),
+                          
+                          # Which columns of the top table contains the gene ids?
                           uiOutput("UI_geneID_ORA_rnaseq_raw"),
+                          
+                          # Which gene IDs do they column contain?
+                          shinyWidgets::pickerInput(inputId = "selID_ORA_rnaseq_raw",
+                                                    label = "Which gene ID to use?",
+                                                    choices = c("Ensembl Gene ID" = "ENSEMBL", 
+                                                                "Entrez Gene ID" = "ENTREZID", 
+                                                                "Gene Symbol/Name" = "SYMBOL"),
+                                                    selected = "ENTREZID",
+                                                    multiple = FALSE),
+                          
+                          
                           br(),
                           # Calculate!
                           h4(strong(tags$span(
@@ -2465,7 +2509,27 @@ ui <- tagList(
                                                    position = "right",
                                                    size = "large")
                           ))),
+                          
+                          # Select organism
+                          selectInput(inputId = "organism_ORA_rnaseq_norm",
+                                      label = "Organism",
+                                      choices = c("Bos taurus",
+                                                  "Caenorhabditis elegans",
+                                                  "Homo sapiens",
+                                                  "Mus musculus", 
+                                                  "Rattus norvegicus"),
+                                      selected = "Homo sapiens"),
+                          
                           uiOutput("UI_geneID_ORA_rnaseq_norm"),
+                          
+                          # Which gene IDs do they column contain?
+                          shinyWidgets::pickerInput(inputId = "selID_ORA_rnaseq_norm",
+                                                    label = "Which gene ID to use?",
+                                                    choices = c("Ensembl Gene ID" = "ENSEMBL", 
+                                                                "Entrez Gene ID" = "ENTREZID", 
+                                                                "Gene Symbol/Name" = "SYMBOL"),
+                                                    selected = "ENTREZID",
+                                                    multiple = FALSE),
                           br(),
                           # Calculate!
                           h4(strong(tags$span(
