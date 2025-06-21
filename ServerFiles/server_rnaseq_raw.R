@@ -607,14 +607,14 @@ observe({
             column(6,
                    sliderInput("height_geneboxplot_rnaseq_raw", 
                                "Height",
-                               min = 800, max = 3000,
+                               min = 800, max = 5000,
                                value = 2100, step = 10,
                                width = "100%"),
             ),
             column(6,
                    sliderInput("width_geneboxplot_rnaseq_raw", 
                                "Width",
-                               min = 800, max = 3000,
+                               min = 800, max = 5000,
                                value = 2100, step = 10,
                                width = "100%"),
             )
@@ -2063,6 +2063,7 @@ observe({
                                                 comparisons = input$comparisons_rnaseq_raw,
                                                 filterThres = rv$filterThreshold,
                                                 smallestGroupSize = min(table(rv$experimentFactor)),
+                                                shrinkage = input$shrinkage_rnaseq_raw,
                                                 addAnnotation = input$addAnnotation_rnaseq_raw,
                                                 biomart_dataset = input$biomart_dataset_rnaseq_raw,
                                                 biomart_attributes = unique(c(input$biomart_filter_rnaseq_raw,
@@ -2076,6 +2077,7 @@ observe({
           Option = c("Selected comparison",
                      "Continuous covariate(s)",
                      "Discrete covariate(s)",
+                     "logFC shrinkage",
                      "Gene annotation dataset",
                      "Gene annotation attribute(s)",
                      "Gene annotation filter"),
@@ -2084,6 +2086,8 @@ observe({
                               paste(input$covGroups_num_rnaseq_raw, collapse = "; ")),
                        ifelse(is.null(input$covGroups_char_rnaseq_raw), " ",
                               paste(input$covGroups_char_rnaseq_raw, collapse = "; ")),
+                       ifelse(input$shrinkage_rnaseq_raw, "'apeglm' for logFC shrinkage",
+                              "No logFC shrinkage"),
                        rv$top_table_list[[3]],
                        paste(input$biomart_attributes_rnaseq_raw, collapse = "; "),
                        input$biomart_filter_rnaseq_raw
@@ -2103,6 +2107,7 @@ observe({
                                                 comparisons = input$comparisons_rnaseq_raw,
                                                 filterThres = rv$filterThreshold,
                                                 smallestGroupSize = min(table(rv$experimentFactor)),
+                                                shrinkage = input$shrinkage_rnaseq_raw,
                                                 addAnnotation = input$addAnnotation_rnaseq_raw,
                                                 biomart_dataset = NULL,
                                                 biomart_attributes = NULL,
@@ -2113,12 +2118,15 @@ observe({
         rv$statSettings[[c]] <- data.frame(
           Option = c("Comparison",
                      "Continuous covariate(s)",
-                     "Discrete covariate(s)"),
+                     "Discrete covariate(s)",
+                     "logFC shrinkage"),
           Selected = c(input$comparisons_rnaseq_raw[c],
                        ifelse(is.null(input$covGroups_num_rnaseq_raw), " ",
                               paste(input$covGroups_num_rnaseq_raw, collapse = "; ")),
                        ifelse(is.null(input$covGroups_char_rnaseq_raw), " ",
-                              paste(input$covGroups_char_rnaseq_raw, collapse = "; ")))
+                              paste(input$covGroups_char_rnaseq_raw, collapse = "; ")),
+                       ifelse(input$shrinkage_rnaseq_raw, "'apeglm' for logFC shrinkage",
+                              "No logFC shrinkage"))
         )
       }
       names(rv$statSettings) <- input$comparisons_rnaseq_raw
@@ -2308,14 +2316,14 @@ observe({
             column(6,
                    sliderInput("height_statboxplot_rnaseq_raw", 
                                "Height",
-                               min = 800, max = 3000,
+                               min = 800, max = 5000,
                                value = 2100, step = 10,
                                width = "100%"),
             ),
             column(6,
                    sliderInput("width_statboxplot_rnaseq_raw", 
                                "Width",
-                               min = 800, max = 3000,
+                               min = 800, max = 5000,
                                value = 2100, step = 10,
                                width = "100%"),
             )
@@ -3672,7 +3680,7 @@ observe({
                            condition = "input.static_ORAplot_rnaseq_raw==true",
                            sliderInput("height_ORAplot_rnaseq_raw", 
                                        "Height",
-                                       min = 800, max = 2000,
+                                       min = 800, max = 3000,
                                        value = 1200, step = 10,
                                        width = "100%")
                          )
@@ -3682,7 +3690,7 @@ observe({
                            condition = "input.static_ORAplot_rnaseq_raw==true",
                            sliderInput("width_ORAplot_rnaseq_raw", 
                                        "Width",
-                                       min = 800, max = 2000,
+                                       min = 800, max = 3000,
                                        value = 1500, step = 10,
                                        width = "100%")
                          )
@@ -4290,7 +4298,7 @@ observe({
                            condition = "input.static_GSEAplot_rnaseq_raw==true",
                            sliderInput("height_GSEAplot_rnaseq_raw", 
                                        "Height",
-                                       min = 800, max = 2000,
+                                       min = 800, max = 3000,
                                        value = 1200, step = 10,
                                        width = "100%")
                          )
@@ -4300,7 +4308,7 @@ observe({
                            condition = "input.static_GSEAplot_rnaseq_raw==true",
                            sliderInput("width_GSEAplot_rnaseq_raw", 
                                        "Width",
-                                       min = 800, max = 2000,
+                                       min = 800, max = 3000,
                                        value = 1500, step = 10,
                                        width = "100%")
                          )

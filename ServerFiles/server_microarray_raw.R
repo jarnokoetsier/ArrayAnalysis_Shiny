@@ -750,14 +750,14 @@ observe({
             column(6,
                    sliderInput("height_geneboxplot_microarray_raw", 
                                "Height",
-                               min = 800, max = 3000,
+                               min = 800, max = 5000,
                                value = 2100, step = 10,
                                width = "100%"),
             ),
             column(6,
                    sliderInput("width_geneboxplot_microarray_raw", 
                                "Width",
-                               min = 800, max = 3000,
+                               min = 800, max = 5000,
                                value = 2100, step = 10,
                                width = "100%"),
             )
@@ -2475,14 +2475,14 @@ observe({
             column(6,
                    sliderInput("height_statboxplot_microarray_raw", 
                                "Height",
-                               min = 800, max = 3000,
+                               min = 800, max = 5000,
                                value = 2100, step = 10,
                                width = "100%"),
             ),
             column(6,
                    sliderInput("width_statboxplot_microarray_raw", 
                                "Width",
-                               min = 800, max = 3000,
+                               min = 800, max = 5000,
                                value = 2100, step = 10,
                                width = "100%"),
             )
@@ -3844,7 +3844,7 @@ observe({
                            condition = "input.static_ORAplot_microarray_raw==true",
                            sliderInput("height_ORAplot_microarray_raw", 
                                        "Height",
-                                       min = 800, max = 2000,
+                                       min = 800, max = 3000,
                                        value = 1200, step = 10,
                                        width = "100%")
                          )
@@ -3854,7 +3854,7 @@ observe({
                            condition = "input.static_ORAplot_microarray_raw==true",
                            sliderInput("width_ORAplot_microarray_raw", 
                                        "Width",
-                                       min = 800, max = 2000,
+                                       min = 800, max = 3000,
                                        value = 1500, step = 10,
                                        width = "100%")
                          )
@@ -4462,7 +4462,7 @@ observe({
                            condition = "input.static_GSEAplot_microarray_raw==true",
                            sliderInput("height_GSEAplot_microarray_raw", 
                                        "Height",
-                                       min = 800, max = 2000,
+                                       min = 800, max = 3000,
                                        value = 1200, step = 10,
                                        width = "100%")
                          )
@@ -4472,7 +4472,7 @@ observe({
                            condition = "input.static_GSEAplot_microarray_raw==true",
                            sliderInput("width_GSEAplot_microarray_raw", 
                                        "Width",
-                                       min = 800, max = 2000,
+                                       min = 800, max = 3000,
                                        value = 1500, step = 10,
                                        width = "100%")
                          )

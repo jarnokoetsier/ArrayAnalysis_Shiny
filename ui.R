@@ -535,7 +535,7 @@ ui <- tagList(
                                          position = "right",
                                          size = "large")
                           ))),
-                          shinyWidgets::awesomeCheckbox(inputId = "addAnnotation_microarray_raw",
+                          shinyWidgets::materialSwitch(inputId = "addAnnotation_microarray_raw",
                                           label = "Add gene annotations", 
                                           value = FALSE,
                                           status = "danger"),
@@ -1152,7 +1152,7 @@ ui <- tagList(
                                          position = "right",
                                          size = "large")
                           ))),
-                          awesomeCheckbox(inputId = "addAnnotation_microarray_norm",
+                          shinyWidgets::materialSwitch(inputId = "addAnnotation_microarray_norm",
                                           label = "Add gene annotations", 
                                           value = FALSE,
                                           status = "danger"),
@@ -1688,9 +1688,25 @@ ui <- tagList(
                           uiOutput("UI_covGroups_num_rnaseq_raw"),
                           uiOutput("UI_covGroups_char_rnaseq_raw"),
                           br(),
+                          h4(strong(tags$span(
+                            "3. Perform logFC shrinkage",
+                            tags$span(
+                              icon(
+                                name = "question-circle",
+                              ) 
+                            ) |>
+                              prompter::add_prompt(message = "If selected, imprecise logFCs are shrunk to 0 with the apeglm method.", 
+                                                   position = "right",
+                                                   size = "large")
+                          ))),
+                          shinyWidgets::materialSwitch(inputId = "shrinkage_rnaseq_raw",
+                                                       label = NULL, 
+                                                       value = TRUE,
+                                                       status = "danger"),
+                          br(),
                           
                           h4(strong(tags$span(
-                            "3. Add gene annotation",
+                            "4. Add gene annotation",
                             tags$span(
                               icon(
                                 name = "question-circle",
@@ -1702,8 +1718,8 @@ ui <- tagList(
                                                    position = "right",
                                                    size = "large")
                           ))),
-                          awesomeCheckbox(inputId = "addAnnotation_rnaseq_raw",
-                                          label = "Add gene annotations", 
+                          shinyWidgets::materialSwitch(inputId = "addAnnotation_rnaseq_raw",
+                                          label = NULL, 
                                           value = FALSE,
                                           status = "danger"),
                           conditionalPanel(
@@ -1714,7 +1730,7 @@ ui <- tagList(
                           br(),
                           
                           h4(strong(tags$span(
-                            "4. Perform statistical analysis",
+                            "5. Perform statistical analysis",
                             tags$span(
                               icon(
                                 name = "question-circle",
@@ -2294,7 +2310,7 @@ ui <- tagList(
                                                    position = "right",
                                                    size = "large")
                           ))),
-                          awesomeCheckbox(inputId = "addAnnotation_rnaseq_norm",
+                          shinyWidgets::materialSwitch(inputId = "addAnnotation_rnaseq_norm",
                                           label = "Add gene annotations", 
                                           value = FALSE,
                                           status = "danger"),

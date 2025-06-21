@@ -1505,18 +1505,38 @@ plot_PCA_static <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2
   
   # Make 2D plot
   
-  p <- ggplot2::ggplot(data = PCA_df, 
-                       ggplot2::aes(x = x, y = y, colour = Group, shape = Group, 
-                                    text = paste("Sample:", sampleID))) +
-    ggplot2::geom_point(size = 2) +
-    ggplot2::scale_colour_manual(values = legendColors) +
-    ggplot2::xlab(paste0("PC",xpc, " (", perc_expl[xpc], "%)")) +
-    ggplot2::ylab(paste0("PC",ypc, " (", perc_expl[ypc], "%)")) +
-    ggplot2::theme_classic() +
-    ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
-                   plot.subtitle = ggplot2::element_text(hjust = 0.5),
-                   axis.title = ggplot2::element_text(face = "bold", size = 12),
-                   legend.title = ggplot2::element_blank())
+  if (length(unique(PCA_df$Group)) < 4){
+    pca2d <- ggplot2::ggplot(data = PCA_df, 
+                             ggplot2::aes(x = x, y = y, colour = Group, shape = Group, 
+                                          text = paste("Sample:", sampleID))) +
+      ggplot2::geom_point(size = 2) +
+      ggplot2::scale_colour_manual(values = legendColors) +
+      ggplot2::xlab(paste0("PC",xpc, " (", perc_expl[xpc], "%)")) +
+      ggplot2::ylab(paste0("PC",ypc, " (", perc_expl[ypc], "%)")) +
+      ggplot2::theme_classic() +
+      ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
+                     plot.subtitle = ggplot2::element_text(hjust = 0.5),
+                     axis.title = ggplot2::element_text(face = "bold", size = 12),
+                     legend.title = ggplot2::element_blank())
+    
+    p <- plotly::ggplotly(pca2d, tooltip = c("x", "y", "colour", "text"))
+  } else{
+    pca2d <- ggplot2::ggplot(data = PCA_df, 
+                             ggplot2::aes(x = x, y = y, colour = Group, 
+                                          text = paste("Sample:", sampleID))) +
+      ggplot2::geom_point(size = 2) +
+      ggplot2::scale_colour_manual(values = legendColors) +
+      ggplot2::xlab(paste0("PC",xpc, " (", perc_expl[xpc], "%)")) +
+      ggplot2::ylab(paste0("PC",ypc, " (", perc_expl[ypc], "%)")) +
+      ggplot2::theme_classic() +
+      ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5),
+                     plot.subtitle = ggplot2::element_text(hjust = 0.5),
+                     axis.title = ggplot2::element_text(face = "bold", size = 12),
+                     legend.title = ggplot2::element_blank())
+    
+    p <- plotly::ggplotly(pca2d, tooltip = c("x", "y", "colour", "text"))
+  }
+  
   
   return(p)
 }
@@ -3184,7 +3204,7 @@ makeORAplot <- function(ORA_data, nSets, color = "Viridis", static = FALSE){
                       stat = "identity", 
                       color = "black",
                       size = 0.5) +
-    ggplot2::xlab("-log10 p-value") +
+    ggplot2::xlab(expression(-log[10]~"p-value")) +
     ggplot2::ylab(NULL) +
     ggplot2::theme_minimal() +
     gradient +
@@ -3256,7 +3276,7 @@ makeGSEAplot <- function(GSEA_data, nSets, color, static = FALSE){
                       stat = "identity", 
                       color = "black",
                       size = 0.5) +
-    ggplot2::xlab("-log10 p-value") +
+    ggplot2::xlab(expression(-log[10]~"p-value")) +
     ggplot2::ylab(NULL) +
     ggplot2::theme_minimal() +
     scale_fill_gradient2(low = color[1], mid = color[2], high = color[3], 
@@ -3621,6 +3641,7 @@ getStatistics_RNASeq <- function(rawMatrix,
                                  comparisons,
                                  filterThres = 10,
                                  smallestGroupSize,
+                                 shrinkage = TRUE,
                                  addAnnotation = TRUE,
                                  biomart_dataset = "hsapiens_gene_ensembl",
                                  biomart_attributes = c("Ensembl Gene ID",
@@ -3702,9 +3723,14 @@ getStatistics_RNASeq <- function(rawMatrix,
                           make.names(stringr::str_split(i," - ")[[1]][1]),
                           "vs",
                           make.names(stringr::str_split(i," - ")[[1]][2]), sep = "_")
-    #res <- results(dds, name=contrastName)
-    resLFC <- as.data.frame(DESeq2::lfcShrink(dds, coef=contrastName, type="apeglm"))
-    resLFC <- dplyr::arrange(resLFC,by = pvalue)
+    
+    if (shrinkage){
+      resLFC <- as.data.frame(DESeq2::lfcShrink(dds, coef=contrastName, type="apeglm"))
+      resLFC <- dplyr::arrange(resLFC,by = pvalue)
+    } else{
+      resLFC <- as.data.frame(DESeq2::results(dds, name=contrastName))
+      resLFC <- dplyr::arrange(resLFC,by = pvalue)
+    }
     
     top_table[[i]] <- resLFC[,c("baseMean",
                                 "log2FoldChange",

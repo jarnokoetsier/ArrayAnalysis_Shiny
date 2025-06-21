@@ -683,14 +683,14 @@ observe({
             column(6,
                    sliderInput("height_geneboxplot_rnaseq_norm", 
                                "Height",
-                               min = 800, max = 3000,
+                               min = 800, max = 5000,
                                value = 2100, step = 10,
                                width = "100%"),
             ),
             column(6,
                    sliderInput("width_geneboxplot_rnaseq_norm", 
                                "Width",
-                               min = 800, max = 3000,
+                               min = 800, max = 5000,
                                value = 2100, step = 10,
                                width = "100%"),
             )
@@ -2364,14 +2364,14 @@ observe({
             column(6,
                    sliderInput("height_statboxplot_rnaseq_norm", 
                                "Height",
-                               min = 800, max = 3000,
+                               min = 800, max = 5000,
                                value = 2100, step = 10,
                                width = "100%"),
             ),
             column(6,
                    sliderInput("width_statboxplot_rnaseq_norm", 
                                "Width",
-                               min = 800, max = 3000,
+                               min = 800, max = 5000,
                                value = 2100, step = 10,
                                width = "100%"),
             )
@@ -3720,7 +3720,7 @@ observe({
                            condition = "input.static_ORAplot_rnaseq_norm==true",
                            sliderInput("height_ORAplot_rnaseq_norm", 
                                        "Height",
-                                       min = 800, max = 2000,
+                                       min = 800, max = 3000,
                                        value = 1200, step = 10,
                                        width = "100%")
                          )
@@ -3730,7 +3730,7 @@ observe({
                            condition = "input.static_ORAplot_rnaseq_norm==true",
                            sliderInput("width_ORAplot_rnaseq_norm", 
                                        "Width",
-                                       min = 800, max = 2000,
+                                       min = 800, max = 3000,
                                        value = 1500, step = 10,
                                        width = "100%")
                          )
@@ -4337,7 +4337,7 @@ observe({
                            condition = "input.static_GSEAplot_rnaseq_norm==true",
                            sliderInput("height_GSEAplot_rnaseq_norm", 
                                        "Height",
-                                       min = 800, max = 2000,
+                                       min = 800, max = 3000,
                                        value = 1200, step = 10,
                                        width = "100%")
                          )
@@ -4347,7 +4347,7 @@ observe({
                            condition = "input.static_GSEAplot_rnaseq_norm==true",
                            sliderInput("width_GSEAplot_rnaseq_norm", 
                                        "Width",
-                                       min = 800, max = 2000,
+                                       min = 800, max = 3000,
                                        value = 1500, step = 10,
                                        width = "100%")
                          )
