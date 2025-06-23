@@ -2415,16 +2415,21 @@ observe({
     #***************************#
     
     # Download plot
-    output$realdownload_statboxplot_microarray_norm <- downloadHandler(
-      filename = "GeneBoxplot.png",
-      content = function(file){
-        ggplot2::ggsave(plot = rv$temp, 
-                        filename = file,
-                        width = input$width_statboxplot_microarray_norm,
-                        height = input$height_statboxplot_microarray_norm,
-                        units = "px")
-      }
-    )
+    observe({
+      req(input$statboxplot_file_microarray_norm)
+      output$realdownload_statboxplot_microarray_norm <- downloadHandler(
+        filename = ifelse(input$statboxplot_file_microarray_norm == "PNG", "GeneBoxplot.png",
+                          ifelse(input$statboxplot_file_microarray_norm == "PDF", "GeneBoxplot.pdf",
+                                 "GeneBoxplot.tif")),
+        content = function(file){
+          ggplot2::ggsave(plot = rv$temp, 
+                          filename = file,
+                          width = input$width_statboxplot_microarray_norm,
+                          height = input$height_statboxplot_microarray_norm,
+                          units = "px")
+        }
+      )
+    })
     
     
     # Make modal
@@ -2433,6 +2438,16 @@ observe({
         title = NULL,
         easyClose = TRUE,
         footer = tagList(
+          fluidRow(
+            column(6,align = "left",
+                   shinyWidgets::radioGroupButtons(
+                     inputId = "statboxplot_file_microarray_norm",
+                     label = NULL,
+                     choices = c("PNG","PDF", "TIF"),
+                     selected = "PNG"
+                   )
+            )
+          ),
           fluidRow(
             column(6,
                    sliderInput("height_statboxplot_microarray_norm", 
@@ -2449,7 +2464,6 @@ observe({
                                width = "100%"),
             )
           ),
-          hr(),
           fluidRow(
             column(12, align = "left",
                    downloadButton('realdownload_statboxplot_microarray_norm', 
@@ -2487,29 +2501,35 @@ observe({
         #***************************#
         
         # Download plot
-        output$realdownload_Phistogram_microarray_norm <- downloadHandler(
-          filename = function(){ifelse(input$static_Phistogram_microarray_norm, "Phistogram.png", "Phistogram.html")},
-          content = function(file){
-            
-            if (input$static_Phistogram_microarray_norm){
+        observe({
+          req(input$Phistogram_file_microarray_norm)
+          output$realdownload_Phistogram_microarray_norm <- downloadHandler(
+            filename = ifelse(input$Phistogram_file_microarray_norm == "HTML", "Phistogram.html",
+                              ifelse(input$Phistogram_file_microarray_norm == "PNG", "Phistogram.png",
+                                     ifelse(input$Phistogram_file_microarray_norm == "PDF", "Phistogram.pdf",
+                                            "Phistogram.tif"))),
+            content = function(file){
               
-              # Make volcano plot
-              p <- makePHistogram(P = rv$top_table[[input$comparisons_view_microarray_norm]][,"p-value"],
-                                  color = input$histogram_color_microarray_norm,
-                                  bins = input$histogram_bins_microarray_norm,
-                                  static = TRUE)
-              
-              ggplot2::ggsave(plot = p, 
-                              filename = file,
-                              width = input$width_Phistogram_microarray_norm,
-                              height = input$height_Phistogram_microarray_norm,
-                              units = "px")
-            } else{
-              htmlwidgets::saveWidget(rv$Phistogram, 
-                                      file)
+              if (input$Phistogram_file_microarray_norm != "HTML"){
+                
+                # Make volcano plot
+                p <- makePHistogram(P = rv$top_table[[input$comparisons_view_microarray_norm]][,"p-value"],
+                                    color = input$histogram_color_microarray_norm,
+                                    bins = input$histogram_bins_microarray_norm,
+                                    static = TRUE)
+                
+                ggplot2::ggsave(plot = p, 
+                                filename = file,
+                                width = input$width_Phistogram_microarray_norm,
+                                height = input$height_Phistogram_microarray_norm,
+                                units = "px")
+              } else{
+                htmlwidgets::saveWidget(rv$Phistogram, 
+                                        file)
+              }
             }
-          }
-        )
+          )
+        })
         
         
         # Make modal
@@ -2520,17 +2540,19 @@ observe({
             size = "m",
             footer = tagList(
               fluidRow(
-                column(12, align = "left",
-                       shinyWidgets::materialSwitch(
-                         inputId = "static_Phistogram_microarray_norm",
-                         label = "Click to make static plot",
-                         value = FALSE, 
-                         status = "primary"))
+                column(6,align = "left",
+                       shinyWidgets::radioGroupButtons(
+                         inputId = "Phistogram_file_microarray_norm",
+                         label = NULL,
+                         choices = c("PNG","PDF", "TIF", "HTML"),
+                         selected = "PNG"
+                       )
+                )
               ),
               fluidRow(
                 column(6,
                        conditionalPanel(
-                         condition = "input.static_Phistogram_microarray_norm==true",
+                         condition = "input.Phistogram_file_microarray_norm!=`HTML`",
                          sliderInput("height_Phistogram_microarray_norm", 
                                      "Height",
                                      min = 800, max = 2000,
@@ -2540,7 +2562,7 @@ observe({
                 ),
                 column(6,
                        conditionalPanel(
-                         condition = "input.static_Phistogram_microarray_norm==true",
+                         condition = "input.Phistogram_file_microarray_norm!=`HTML`",
                          sliderInput("width_Phistogram_microarray_norm", 
                                      "Width",
                                      min = 800, max = 2000,
@@ -2578,29 +2600,35 @@ observe({
         #********************************#
         
         # Download plot
-        output$realdownload_logFChistogram_microarray_norm <- downloadHandler(
-          filename = function(){ifelse(input$static_logFChistogram_microarray_norm, "logFChistogram.png", "logFChistogram.html")},
-          content = function(file){
-            
-            if (input$static_logFChistogram_microarray_norm){
+        observe({
+          req(input$logFChistogram_file_microarray_norm)
+          output$realdownload_logFChistogram_microarray_norm <- downloadHandler(
+            filename = ifelse(input$logFChistogram_file_microarray_norm == "HTML", "logFChistogram.html",
+                              ifelse(input$logFChistogram_file_microarray_norm == "PNG", "logFChistogram.png",
+                                     ifelse(input$logFChistogram_file_microarray_norm == "PDF", "logFChistogram.pdf",
+                                            "logFChistogram.tif"))),
+            content = function(file){
               
-              # Make volcano plot
-              p <- makelogFCHistogram(logFC = rv$top_table[[input$comparisons_view_microarray_norm]][,"log2FC"],
-                                      color = input$histogram_color_microarray_norm,
-                                      bins = input$histogram_bins_microarray_norm,
-                                      static = TRUE)
-              
-              ggplot2::ggsave(plot = p, 
-                              filename = file,
-                              width = input$width_logFChistogram_microarray_norm,
-                              height = input$height_logFChistogram_microarray_norm,
-                              units = "px")
-            } else{
-              htmlwidgets::saveWidget(rv$logFChistogram, 
-                                      file)
+              if (input$logFChistogram_file_microarray_norm != "HTML"){
+                
+                # Make volcano plot
+                p <- makelogFCHistogram(logFC = rv$top_table[[input$comparisons_view_microarray_norm]][,"log2FC"],
+                                        color = input$histogram_color_microarray_norm,
+                                        bins = input$histogram_bins_microarray_norm,
+                                        static = TRUE)
+                
+                ggplot2::ggsave(plot = p, 
+                                filename = file,
+                                width = input$width_logFChistogram_microarray_norm,
+                                height = input$height_logFChistogram_microarray_norm,
+                                units = "px")
+              } else{
+                htmlwidgets::saveWidget(rv$logFChistogram, 
+                                        file)
+              }
             }
-          }
-        )
+          )
+        })
         
         
         # Make modal
@@ -2611,17 +2639,19 @@ observe({
             size = "m",
             footer = tagList(
               fluidRow(
-                column(12, align = "left",
-                       shinyWidgets::materialSwitch(
-                         inputId = "static_logFChistogram_microarray_norm",
-                         label = "Click to make static plot",
-                         value = FALSE, 
-                         status = "primary"))
+                column(6,align = "left",
+                       shinyWidgets::radioGroupButtons(
+                         inputId = "logFChistogram_file_microarray_norm",
+                         label = NULL,
+                         choices = c("PNG","PDF", "TIF", "HTML"),
+                         selected = "PNG"
+                       )
+                )
               ),
               fluidRow(
                 column(6,
                        conditionalPanel(
-                         condition = "input.static_logFChistogram_microarray_norm==true",
+                         condition = "input.logFChistogram_file_microarray_norm!=`HTML`",
                          sliderInput("height_logFChistogram_microarray_norm", 
                                      "Height",
                                      min = 800, max = 2000,
@@ -2631,7 +2661,7 @@ observe({
                 ),
                 column(6,
                        conditionalPanel(
-                         condition = "input.static_logFChistogram_microarray_norm==true",
+                         condition = "input.logFChistogram_file_microarray_norm!=`HTML`",
                          sliderInput("width_logFChistogram_microarray_norm", 
                                      "Width",
                                      min = 800, max = 2000,

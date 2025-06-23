@@ -2367,16 +2367,21 @@ observe({
     #***************************#
     
     # Download plot
-    output$realdownload_statboxplot_rnaseq_raw <- downloadHandler(
-      filename = "GeneBoxplot.png",
-      content = function(file){
-        ggplot2::ggsave(plot = rv$temp, 
-                        filename = file,
-                        width = input$width_statboxplot_rnaseq_raw,
-                        height = input$height_statboxplot_rnaseq_raw,
-                        units = "px")
-      }
-    )
+    observe({
+      req(input$statboxplot_file_rnaseq_raw)
+      output$realdownload_statboxplot_rnaseq_raw <- downloadHandler(
+        filename = ifelse(input$statboxplot_file_rnaseq_raw == "PNG", "GeneBoxplot.png",
+                          ifelse(input$statboxplot_file_rnaseq_raw == "PDF", "GeneBoxplot.pdf",
+                                 "GeneBoxplot.tif")),
+        content = function(file){
+          ggplot2::ggsave(plot = rv$temp, 
+                          filename = file,
+                          width = input$width_statboxplot_rnaseq_raw,
+                          height = input$height_statboxplot_rnaseq_raw,
+                          units = "px")
+        }
+      )
+    })
     
     
     # Make modal
@@ -2385,6 +2390,16 @@ observe({
         title = NULL,
         easyClose = TRUE,
         footer = tagList(
+          fluidRow(
+            column(6,align = "left",
+                   shinyWidgets::radioGroupButtons(
+                     inputId = "statboxplot_file_rnaseq_raw",
+                     label = NULL,
+                     choices = c("PNG","PDF", "TIF"),
+                     selected = "PNG"
+                   )
+            )
+          ),
           fluidRow(
             column(6,
                    sliderInput("height_statboxplot_rnaseq_raw", 
@@ -2433,35 +2448,40 @@ observe({
           return(rv$Phistogram)
         })
         
-        #***************************#
-        # Modal to P value histogram
-        #***************************#
+        #*******************************#
+        # Modal to download P histogram
+        #*******************************#
         
         # Download plot
-        output$realdownload_Phistogram_rnaseq_raw <- downloadHandler(
-          filename = function(){ifelse(input$static_Phistogram_rnaseq_raw, "Phistogram.png", "Phistogram.html")},
-          content = function(file){
-            
-            if (input$static_Phistogram_rnaseq_raw){
+        observe({
+          req(input$Phistogram_file_rnaseq_raw)
+          output$realdownload_Phistogram_rnaseq_raw <- downloadHandler(
+            filename = ifelse(input$Phistogram_file_rnaseq_raw == "HTML", "Phistogram.html",
+                              ifelse(input$Phistogram_file_rnaseq_raw == "PNG", "Phistogram.png",
+                                     ifelse(input$Phistogram_file_rnaseq_raw == "PDF", "Phistogram.pdf",
+                                            "Phistogram.tif"))),
+            content = function(file){
               
-              # Make volcano plot
-              p <- makePHistogram(P = rv$top_table[[input$comparisons_view_rnaseq_raw]][,"p-value"],
-                                  color = input$histogram_color_rnaseq_raw,
-                                  bins = input$histogram_bins_rnaseq_raw,
-                                  static = TRUE)
-              
-              ggplot2::ggsave(plot = p, 
-                              filename = file,
-                              width = input$width_Phistogram_rnaseq_raw,
-                              height = input$height_Phistogram_rnaseq_raw,
-                              units = "px")
-            } else{
-              htmlwidgets::saveWidget(rv$Phistogram, 
-                                      file)
+              if (input$Phistogram_file_rnaseq_raw != "HTML"){
+                
+                # Make volcano plot
+                p <- makePHistogram(P = rv$top_table[[input$comparisons_view_rnaseq_raw]][,"p-value"],
+                                    color = input$histogram_color_rnaseq_raw,
+                                    bins = input$histogram_bins_rnaseq_raw,
+                                    static = TRUE)
+                
+                ggplot2::ggsave(plot = p, 
+                                filename = file,
+                                width = input$width_Phistogram_rnaseq_raw,
+                                height = input$height_Phistogram_rnaseq_raw,
+                                units = "px")
+              } else{
+                htmlwidgets::saveWidget(rv$Phistogram, 
+                                        file)
+              }
             }
-          }
-        )
-        
+          )
+        })
         
         # Make modal
         observeEvent(input$download_Phistogram_rnaseq_raw, {
@@ -2471,17 +2491,19 @@ observe({
             size = "m",
             footer = tagList(
               fluidRow(
-                column(12, align = "left",
-                       shinyWidgets::materialSwitch(
-                         inputId = "static_Phistogram_rnaseq_raw",
-                         label = "Click to make static plot",
-                         value = FALSE, 
-                         status = "primary"))
+                column(6,align = "left",
+                       shinyWidgets::radioGroupButtons(
+                         inputId = "Phistogram_file_rnaseq_raw",
+                         label = NULL,
+                         choices = c("PNG","PDF", "TIF", "HTML"),
+                         selected = "PNG"
+                       )
+                )
               ),
               fluidRow(
                 column(6,
                        conditionalPanel(
-                         condition = "input.static_Phistogram_rnaseq_raw==true",
+                         condition = "input.Phistogram_file_rnaseq_raw!=`HTML`",
                          sliderInput("height_Phistogram_rnaseq_raw", 
                                      "Height",
                                      min = 800, max = 2000,
@@ -2491,7 +2513,7 @@ observe({
                 ),
                 column(6,
                        conditionalPanel(
-                         condition = "input.static_Phistogram_rnaseq_raw==true",
+                         condition = "input.Phistogram_file_rnaseq_raw!=`HTML`",
                          sliderInput("width_Phistogram_rnaseq_raw", 
                                      "Width",
                                      min = 800, max = 2000,
@@ -2524,35 +2546,40 @@ observe({
           return(rv$logFChistogram)
         })
         
-        #********************************#
-        # Modal to logFC value histogram
-        #********************************#
+        #**********************************#
+        # Modal download to logFC histogram
+        #**********************************#
         
         # Download plot
-        output$realdownload_logFChistogram_rnaseq_raw <- downloadHandler(
-          filename = function(){ifelse(input$static_logFChistogram_rnaseq_raw, "logFChistogram.png", "logFChistogram.html")},
-          content = function(file){
-            
-            if (input$static_logFChistogram_rnaseq_raw){
+        observe({
+          req(input$logFChistogram_file_rnaseq_raw)
+          output$realdownload_logFChistogram_rnaseq_raw <- downloadHandler(
+            filename = ifelse(input$logFChistogram_file_rnaseq_raw == "HTML", "logFChistogram.html",
+                              ifelse(input$logFChistogram_file_rnaseq_raw == "PNG", "logFChistogram.png",
+                                     ifelse(input$logFChistogram_file_rnaseq_raw == "PDF", "logFChistogram.pdf",
+                                            "logFChistogram.tif"))),
+            content = function(file){
               
-              # Make volcano plot
-              p <- makelogFCHistogram(logFC = rv$top_table[[input$comparisons_view_rnaseq_raw]][,"log2FC"],
-                                  color = input$histogram_color_rnaseq_raw,
-                                  bins = input$histogram_bins_rnaseq_raw,
-                                  static = TRUE)
-              
-              ggplot2::ggsave(plot = p, 
-                              filename = file,
-                              width = input$width_logFChistogram_rnaseq_raw,
-                              height = input$height_logFChistogram_rnaseq_raw,
-                              units = "px")
-            } else{
-              htmlwidgets::saveWidget(rv$logFChistogram, 
-                                      file)
+              if (input$logFChistogram_file_rnaseq_raw != "HTML"){
+                
+                # Make volcano plot
+                p <- makelogFCHistogram(logFC = rv$top_table[[input$comparisons_view_rnaseq_raw]][,"log2FC"],
+                                        color = input$histogram_color_rnaseq_raw,
+                                        bins = input$histogram_bins_rnaseq_raw,
+                                        static = TRUE)
+                
+                ggplot2::ggsave(plot = p, 
+                                filename = file,
+                                width = input$width_logFChistogram_rnaseq_raw,
+                                height = input$height_logFChistogram_rnaseq_raw,
+                                units = "px")
+              } else{
+                htmlwidgets::saveWidget(rv$logFChistogram, 
+                                        file)
+              }
             }
-          }
-        )
-        
+          )
+        })
         
         # Make modal
         observeEvent(input$download_logFChistogram_rnaseq_raw, {
@@ -2562,17 +2589,19 @@ observe({
             size = "m",
             footer = tagList(
               fluidRow(
-                column(12, align = "left",
-                       shinyWidgets::materialSwitch(
-                         inputId = "static_logFChistogram_rnaseq_raw",
-                         label = "Click to make static plot",
-                         value = FALSE, 
-                         status = "primary"))
+                column(6,align = "left",
+                       shinyWidgets::radioGroupButtons(
+                         inputId = "logFChistogram_file_rnaseq_raw",
+                         label = NULL,
+                         choices = c("PNG","PDF", "TIF", "HTML"),
+                         selected = "PNG"
+                       )
+                )
               ),
               fluidRow(
                 column(6,
                        conditionalPanel(
-                         condition = "input.static_logFChistogram_rnaseq_raw==true",
+                         condition = "input.logFChistogram_file_rnaseq_raw!=`HTML`",
                          sliderInput("height_logFChistogram_rnaseq_raw", 
                                      "Height",
                                      min = 800, max = 2000,
@@ -2582,7 +2611,7 @@ observe({
                 ),
                 column(6,
                        conditionalPanel(
-                         condition = "input.static_logFChistogram_rnaseq_raw==true",
+                         condition = "input.logFChistogram_file_rnaseq_raw!=`HTML`",
                          sliderInput("width_logFChistogram_rnaseq_raw", 
                                      "Width",
                                      min = 800, max = 2000,
