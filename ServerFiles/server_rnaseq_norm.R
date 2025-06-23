@@ -660,16 +660,21 @@ observe({
     #***************************#
     
     # Download plot
-    output$realdownload_geneboxplot_rnaseq_norm <- downloadHandler(
-      filename = "GeneBoxplot.png",
-      content = function(file){
-        ggplot2::ggsave(plot = rv$temp1, 
-                        filename = file,
-                        width = input$width_geneboxplot_rnaseq_norm,
-                        height = input$height_geneboxplot_rnaseq_norm,
-                        units = "px")
-      }
-    )
+    observe({
+      req(input$geneboxplot_file_rnaseq_norm)
+      output$realdownload_geneboxplot_rnaseq_norm <- downloadHandler(
+        filename = ifelse(input$geneboxplot_file_rnaseq_norm == "PNG", "GeneBoxplot.png",
+                          ifelse(input$geneboxplot_file_rnaseq_norm == "PDF", "GeneBoxplot.pdf",
+                                 "GeneBoxplot.tif")),
+        content = function(file){
+          ggplot2::ggsave(plot = rv$temp1, 
+                          filename = file,
+                          width = input$width_geneboxplot_rnaseq_norm,
+                          height = input$height_geneboxplot_rnaseq_norm,
+                          units = "px")
+        }
+      )
+    })
     
     
     # Make modal
@@ -679,6 +684,16 @@ observe({
         easyClose = TRUE,
         size = "m",
         footer = tagList(
+          fluidRow(
+            column(6,align = "left",
+                   shinyWidgets::radioGroupButtons(
+                     inputId = "geneboxplot_file_rnaseq_norm",
+                     label = NULL,
+                     choices = c("PNG","PDF", "TIF"),
+                     selected = "PNG"
+                   )
+            )
+          ),
           fluidRow(
             column(6,
                    sliderInput("height_geneboxplot_rnaseq_norm", 
@@ -829,36 +844,59 @@ observe({
     #***************************#
     
     # Download plot
-    output$realdownload_boxplots_rnaseq_norm <- downloadHandler(
-      filename = function(){"QC_Boxplots.png"},
-      content = function(file){
-        png(file,
-            width=input$width_boxplots_rnaseq_norm*3,
-            height=input$height_boxplots_rnaseq_norm*3,
-            pointsize=24,
-            res = 300)
-        
-        if (length(levels(rv$experimentFactor)) > 5){
-          legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
-        } else{
-          legendColors <- c(input$boxplots_col1_rnaseq_norm,
-                            input$boxplots_col2_rnaseq_norm,
-                            input$boxplots_col3_rnaseq_norm,
-                            input$boxplots_col4_rnaseq_norm,
-                            input$boxplots_col5_rnaseq_norm)
+    observe({
+      req(input$boxplots_file_rnaseq_norm)
+      output$realdownload_boxplots_rnaseq_norm <- downloadHandler(
+        filename = ifelse(input$boxplots_file_rnaseq_norm == "PNG", "QC_Boxplots.png",
+                          ifelse(input$boxplots_file_rnaseq_norm == "PDF", "QC_Boxplots.pdf",
+                                 "QC_Boxplots.tif")),
+        content = function(file){
+          
+          if (input$boxplots_file_rnaseq_norm == "PNG"){
+            png(file,
+                width=input$width_boxplots_rnaseq_norm*3,
+                height=input$height_boxplots_rnaseq_norm*3,
+                pointsize=24,
+                res = 300)
+          }
+          
+          if (input$boxplots_file_rnaseq_norm == "PDF"){
+            pdf(file,
+                width=input$width_boxplots_rnaseq_norm/32,
+                height=input$height_boxplots_rnaseq_norm/32,
+                pointsize=24*3)
+          }
+          if (input$boxplots_file_rnaseq_norm == "TIF"){
+            tiff(file,
+                 width=input$width_boxplots_rnaseq_norm*3,
+                 height=input$height_boxplots_rnaseq_norm*3,
+                 pointsize=24,
+                 res = 300)
+          }
+          
+          
+          if (length(levels(rv$experimentFactor)) > 5){
+            legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+          } else{
+            legendColors <- c(input$boxplots_col1_rnaseq_raw,
+                              input$boxplots_col2_rnaseq_raw,
+                              input$boxplots_col3_rnaseq_raw,
+                              input$boxplots_col4_rnaseq_raw,
+                              input$boxplots_col5_rnaseq_raw)
+          }
+          if (length(legendColors) != length(levels(rv$experimentFactor))){
+            legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+          }
+          names(legendColors) <- levels(rv$experimentFactor)
+          
+          getBoxplots_download(experimentFactor = rv$experimentFactor,
+                               legendColors = legendColors,
+                               normData = rv$normData,
+                               RNASeq = TRUE)
+          dev.off()
         }
-        if (length(legendColors) != length(levels(rv$experimentFactor))){
-          legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
-        }
-        names(legendColors) <- levels(rv$experimentFactor)
-        
-        getBoxplots_download(experimentFactor = rv$experimentFactor,
-                             legendColors = legendColors,
-                             normData = rv$normData,
-                             RNASeq = TRUE)
-        dev.off()
-      }
-    )
+      )
+    })
     
     
     # Make modal
@@ -868,6 +906,16 @@ observe({
         easyClose = TRUE,
         size = "m",
         footer = tagList(
+          fluidRow(
+            column(6,align = "left",
+                   shinyWidgets::radioGroupButtons(
+                     inputId = "boxplots_file_rnaseq_norm",
+                     label = NULL,
+                     choices = c("PNG","PDF", "TIF"),
+                     selected = "PNG"
+                   )
+            )
+          ),
           fluidRow(
             column(6,
                    sliderInput("height_boxplots_rnaseq_norm", 
@@ -1015,41 +1063,47 @@ observe({
     #***************************#
     
     # Download plot
-    output$realdownload_density_rnaseq_norm <- downloadHandler(
-      filename = function(){ifelse(input$static_density_rnaseq_norm, "QC_Density.png", "QC_Density.html")},
-      content = function(file){
-        
-        if (input$static_density_rnaseq_norm){
+    observe({
+      req(input$density_file_rnaseq_norm)
+      output$realdownload_density_rnaseq_norm <- downloadHandler(
+        filename = ifelse(input$density_file_rnaseq_norm == "HTML", "QC_Density.html",
+                          ifelse(input$density_file_rnaseq_norm == "PNG", "QC_Density.png",
+                                 ifelse(input$density_file_rnaseq_norm == "PDF", "QC_Density.pdf",
+                                        "QC_Density.tif"))),
+        content = function(file){
           
-          if (length(levels(rv$experimentFactor)) > 5){
-            legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+          if (input$density_file_rnaseq_norm != "HTML"){
+            
+            if (length(levels(rv$experimentFactor)) > 5){
+              legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+            } else{
+              legendColors <- c(input$density_col1_rnaseq_norm,
+                                input$density_col2_rnaseq_norm,
+                                input$density_col3_rnaseq_norm,
+                                input$density_col4_rnaseq_norm,
+                                input$density_col5_rnaseq_norm)
+            }
+            if (length(legendColors) != length(levels(rv$experimentFactor))){
+              legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+            }
+            names(legendColors) <- levels(rv$experimentFactor)
+            
+            p <- getDensityplots_static(experimentFactor = rv$experimentFactor,
+                                        legendColors = legendColors,
+                                        normMatrix = rv$normData,
+                                        RNASeq = TRUE)
+            ggplot2::ggsave(plot = p, 
+                            filename = file,
+                            width = input$width_density_rnaseq_norm,
+                            height = input$height_density_rnaseq_norm,
+                            units = "px")
           } else{
-            legendColors <- c(input$density_col1_rnaseq_norm,
-                              input$density_col2_rnaseq_norm,
-                              input$density_col3_rnaseq_norm,
-                              input$density_col4_rnaseq_norm,
-                              input$density_col5_rnaseq_norm)
+            htmlwidgets::saveWidget(rv$density, 
+                                    file)
           }
-          if (length(legendColors) != length(levels(rv$experimentFactor))){
-            legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
-          }
-          names(legendColors) <- levels(rv$experimentFactor)
-          
-          p <- getDensityplots_static(experimentFactor = rv$experimentFactor,
-                                      legendColors = legendColors,
-                                      normMatrix = rv$normData,
-                                      RNASeq = TRUE)
-          ggplot2::ggsave(plot = p, 
-                          filename = file,
-                          width = input$width_density_rnaseq_norm,
-                          height = input$height_density_rnaseq_norm,
-                          units = "px")
-        } else{
-          htmlwidgets::saveWidget(rv$density, 
-                                  file)
         }
-      }
-    )
+      )
+    })
     
     
     # Make modal
@@ -1060,17 +1114,19 @@ observe({
         size = "m",
         footer = tagList(
           fluidRow(
-            column(12, align = "left",
-                   shinyWidgets::materialSwitch(
-                     inputId = "static_density_rnaseq_norm",
-                     label = "Click to make static plot",
-                     value = FALSE, 
-                     status = "primary"))
+            column(6,align = "left",
+                   shinyWidgets::radioGroupButtons(
+                     inputId = "density_file_rnaseq_norm",
+                     label = NULL,
+                     choices = c("PNG","PDF", "TIF", "HTML"),
+                     selected = "PNG"
+                   )
+            )
           ),
           fluidRow(
             column(6,
                    conditionalPanel(
-                     condition = "input.static_density_rnaseq_norm==true",
+                     condition = "input.density_file_rnaseq_norm!=`HTML`",
                      sliderInput("height_density_rnaseq_norm", 
                                  "Height",
                                  min = 800, max = 2000,
@@ -1080,7 +1136,7 @@ observe({
             ),
             column(6,
                    conditionalPanel(
-                     condition = "input.static_density_rnaseq_norm==true",
+                     condition = "input.density_file_rnaseq_norm!=`HTML`",
                      sliderInput("width_density_rnaseq_norm", 
                                  "Width",
                                  min = 800, max = 2000,
@@ -1237,50 +1293,58 @@ observe({
     #***************************#
     
     # Download plot
-    output$realdownload_heatmap_rnaseq_norm <- downloadHandler(
-      filename = function(){ifelse(input$static_heatmap_rnaseq_norm, "QC_Heatmap.png", "QC_Heatmap.html")},
-      content = function(file){
-        
-        if (input$static_heatmap_rnaseq_norm){
+    observe({
+      req(input$heatmap_file_rnaseq_norm)
+      output$realdownload_heatmap_rnaseq_norm <- downloadHandler(
+        filename = ifelse(input$heatmap_file_rnaseq_norm == "HTML", "QC_Heatmap.html",
+                          ifelse(input$heatmap_file_rnaseq_norm == "PNG", "QC_Heatmap.png",
+                                 ifelse(input$heatmap_file_rnaseq_norm == "PDF", "QC_Heatmap.pdf",
+                                        "QC_Heatmap.tif"))),
+        content = function(file){
           
-          # Make color factor
-          if(length(input$colorFactor_heatmap_rnaseq_norm) > 1){
-            colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_norm], 1, paste, collapse = "_" ))
+          if (input$heatmap_file_rnaseq_norm != "HTML"){
+            
+            # Make color factor
+            if(length(input$colorFactor_heatmap_rnaseq_norm) > 1){
+              colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_norm], 1, paste, collapse = "_" ))
+            } else{
+              colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_norm])
+            }
+            
+            # Set colors
+            if (length(levels(colorFactor)) > 5){
+              legendColors <- colorsByFactor(colorFactor)$legendColors
+            } else{
+              legendColors <- c(input$heatmap_col1_rnaseq_norm,
+                                input$heatmap_col2_rnaseq_norm,
+                                input$heatmap_col3_rnaseq_norm,
+                                input$heatmap_col4_rnaseq_norm,
+                                input$heatmap_col5_rnaseq_norm)
+            }
+            if (length(legendColors) != length(levels(colorFactor))){
+              legendColors <- colorsByFactor(colorFactor)$legendColors
+            }
+            names(legendColors) <- levels(colorFactor)
+            
+            # Make heatmap
+            
+            getHeatmap_static(experimentFactor = colorFactor,
+                              legendColors = legendColors,
+                              normMatrix = rv$normData,
+                              clusterOption1 = input$clusteroption1_rnaseq_norm,
+                              clusterOption2 = input$clusteroption2_rnaseq_norm,
+                              theme = input$heatmaptheme_rnaseq_norm,
+                              width = input$width_heatmap_rnaseq_norm,
+                              height = input$height_heatmap_rnaseq_norm,
+                              filetype = input$heatmap_file_rnaseq_norm,
+                              file)
           } else{
-            colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_norm])
+            htmlwidgets::saveWidget(rv$heatmap, 
+                                    file)
           }
-          
-          # Set colors
-          if (length(levels(colorFactor)) > 5){
-            legendColors <- colorsByFactor(colorFactor)$legendColors
-          } else{
-            legendColors <- c(input$heatmap_col1_rnaseq_norm,
-                              input$heatmap_col2_rnaseq_norm,
-                              input$heatmap_col3_rnaseq_norm,
-                              input$heatmap_col4_rnaseq_norm,
-                              input$heatmap_col5_rnaseq_norm)
-          }
-          if (length(legendColors) != length(levels(colorFactor))){
-            legendColors <- colorsByFactor(colorFactor)$legendColors
-          }
-          names(legendColors) <- levels(colorFactor)
-          
-          # Make heatmap
-          getHeatmap_static(experimentFactor = colorFactor,
-                            legendColors = legendColors,
-                            normMatrix = rv$normData,
-                            clusterOption1 = input$clusteroption1_rnaseq_norm,
-                            clusterOption2 = input$clusteroption2_rnaseq_norm,
-                            theme = input$heatmaptheme_rnaseq_norm,
-                            width = input$width_heatmap_rnaseq_norm,
-                            height = input$height_heatmap_rnaseq_norm,
-                            file)
-        } else{
-          htmlwidgets::saveWidget(rv$heatmap, 
-                                  file)
         }
-      }
-    )
+      )
+    })
     
     
     # Make modal
@@ -1291,17 +1355,19 @@ observe({
         size = "m",
         footer = tagList(
           fluidRow(
-            column(12, align = "left",
-                   shinyWidgets::materialSwitch(
-                     inputId = "static_heatmap_rnaseq_norm",
-                     label = "Click to make static plot",
-                     value = FALSE, 
-                     status = "primary"))
+            column(6,align = "left",
+                   shinyWidgets::radioGroupButtons(
+                     inputId = "heatmap_file_rnaseq_norm",
+                     label = NULL,
+                     choices = c("PNG","PDF", "TIF", "HTML"),
+                     selected = "PNG"
+                   )
+            )
           ),
           fluidRow(
             column(6,
                    conditionalPanel(
-                     condition = "input.static_heatmap_rnaseq_norm==true",
+                     condition = "input.heatmap_file_rnaseq_norm!=`HTML`",
                      sliderInput("height_heatmap_rnaseq_norm", 
                                  "Height",
                                  min = 800, max = 2000,
@@ -1311,7 +1377,7 @@ observe({
             ),
             column(6,
                    conditionalPanel(
-                     condition = "input.static_heatmap_rnaseq_norm==true",
+                     condition = "input.heatmap_file_rnaseq_norm!=`HTML`",
                      sliderInput("width_heatmap_rnaseq_norm", 
                                  "Width",
                                  min = 800, max = 2000,
@@ -1478,52 +1544,57 @@ observe({
     #***************************#
     
     # Download plot
-    output$realdownload_pca_rnaseq_norm <- downloadHandler(
-      filename = function(){ifelse(input$static_pca_rnaseq_norm, "QC_PCA.png", "QC_PCA.html")},
-      content = function(file){
-        
-        if (input$static_pca_rnaseq_norm){
+    observe({
+      req(input$pca_file_rnaseq_norm)
+      output$realdownload_pca_rnaseq_norm <- downloadHandler(
+        filename = ifelse(input$pca_file_rnaseq_norm == "HTML", "QC_PCA.html",
+                          ifelse(input$pca_file_rnaseq_norm == "PNG", "QC_PCA.png",
+                                 ifelse(input$pca_file_rnaseq_norm == "PDF", "QC_PCA.pdf",
+                                        "QC_PCA.tif"))),
+        content = function(file){
           
-          # Get factor to color by
-          if(length(input$colorFactor_PCA_rnaseq_norm) > 1){
-            colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm], 1, paste, collapse = "_" ))
+          if (input$pca_file_rnaseq_norm != "HTML"){
+            
+            # Get factor to color by
+            if(length(input$colorFactor_PCA_rnaseq_norm) > 1){
+              colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm], 1, paste, collapse = "_" ))
+            } else{
+              colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm])
+            }
+            
+            # Set colors
+            if (length(levels(colorFactor)) > 5){
+              legendColors <- colorsByFactor(colorFactor)$legendColors
+            } else{
+              legendColors <- c(input$PCA_col1_rnaseq_norm,
+                                input$PCA_col2_rnaseq_norm,
+                                input$PCA_col3_rnaseq_norm,
+                                input$PCA_col4_rnaseq_norm,
+                                input$PCA_col5_rnaseq_norm)
+            }
+            if (length(legendColors) != length(levels(colorFactor))){
+              legendColors <- colorsByFactor(colorFactor)$legendColors
+            }
+            
+            # Make PCA score plot
+            p <- plot_PCA_static(PC_data = rv$PCA_data, 
+                                 colorFactor = colorFactor,
+                                 legendColors = legendColors, 
+                                 xpc = as.numeric(stringr::str_remove(input$xpca_rnaseq_norm,"PC")), 
+                                 ypc = as.numeric(stringr::str_remove(input$ypca_rnaseq_norm,"PC")))
+            
+            ggplot2::ggsave(plot = p, 
+                            filename = file,
+                            width = input$width_pca_rnaseq_norm,
+                            height = input$height_pca_rnaseq_norm,
+                            units = "px")
           } else{
-            colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm])
+            htmlwidgets::saveWidget(rv$PCAplot, 
+                                    file)
           }
-          
-          # Set colors
-          if (length(levels(colorFactor)) > 5){
-            legendColors <- colorsByFactor(colorFactor)$legendColors
-          } else{
-            legendColors <- c(input$PCA_col1_rnaseq_norm,
-                              input$PCA_col2_rnaseq_norm,
-                              input$PCA_col3_rnaseq_norm,
-                              input$PCA_col4_rnaseq_norm,
-                              input$PCA_col5_rnaseq_norm)
-          }
-          if (length(legendColors) != length(levels(colorFactor))){
-            legendColors <- colorsByFactor(colorFactor)$legendColors
-          }
-          
-          # Make PCA score plot
-          p <- plot_PCA_static(PC_data = rv$PCA_data, 
-                               colorFactor = colorFactor,
-                               legendColors = legendColors, 
-                               xpc = as.numeric(stringr::str_remove(input$xpca_rnaseq_norm,"PC")), 
-                               ypc = as.numeric(stringr::str_remove(input$ypca_rnaseq_norm,"PC")))
-          
-          ggplot2::ggsave(plot = p, 
-                          filename = file,
-                          width = input$width_pca_rnaseq_norm,
-                          height = input$height_pca_rnaseq_norm,
-                          units = "px")
-        } else{
-          htmlwidgets::saveWidget(rv$PCAplot, 
-                                  file)
         }
-      }
-    )
-    
+      )
+    })
     
     # Make modal
     observeEvent(input$download_pca_rnaseq_norm, {
@@ -1533,17 +1604,19 @@ observe({
         size = "m",
         footer = tagList(
           fluidRow(
-            column(12, align = "left",
-                   shinyWidgets::materialSwitch(
-                     inputId = "static_pca_rnaseq_norm",
-                     label = "Click to make static plot",
-                     value = FALSE, 
-                     status = "primary"))
+            column(6,align = "left",
+                   shinyWidgets::radioGroupButtons(
+                     inputId = "pca_file_rnaseq_norm",
+                     label = NULL,
+                     choices = c("PNG","PDF", "TIF", "HTML"),
+                     selected = "PNG"
+                   )
+            )
           ),
           fluidRow(
             column(6,
                    conditionalPanel(
-                     condition = "input.static_pca_rnaseq_norm==true",
+                     condition = "input.pca_file_rnaseq_norm!=`HTML`",
                      sliderInput("height_pca_rnaseq_norm", 
                                  "Height",
                                  min = 800, max = 2000,
@@ -1553,7 +1626,7 @@ observe({
             ),
             column(6,
                    conditionalPanel(
-                     condition = "input.static_pca_rnaseq_norm==true",
+                     condition = "input.pca_file_rnaseq_norm!=`HTML`",
                      sliderInput("width_pca_rnaseq_norm", 
                                  "Width",
                                  min = 800, max = 2000,

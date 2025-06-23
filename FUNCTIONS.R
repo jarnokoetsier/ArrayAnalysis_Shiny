@@ -1218,6 +1218,7 @@ getHeatmap_static <- function(experimentFactor,
                        theme,
                        width,
                        height,
+                       filetype,
                        file){
   
   reate_dend <- function(x, seriate, distfun, hclustfun, na.rm) {
@@ -1334,11 +1335,25 @@ getHeatmap_static <- function(experimentFactor,
   packed_lgd <- ComplexHeatmap::packLegend(lgd1, lgd2, direction = "vertical",
                                            gap = grid::unit(10, "mm"))
   
-  png(file,
-      width = width * 3 + 3000,
-      height = height * 3,
-      pointsize = 24,
-      res = 300)
+  if (filetype == "PNG"){
+    png(file,
+        width = width * 3 + 3000,
+        height = height * 3,
+        pointsize = 24,
+        res = 300)
+  }
+  if (filetype == "PDF"){
+    pdf(file,
+        width = width/160 + 6.25,
+        height = height/160)
+  }
+  if (filetype == "TIF"){
+    tiff(file,
+        width = width * 3 + 3000,
+        height = height * 3,
+        pointsize = 24,
+        res = 300)
+  }
   
   # Create a layout with 2 columns: one for the heatmap, one for the legend
   grid::grid.newpage()
@@ -1506,7 +1521,7 @@ plot_PCA_static <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2
   # Make 2D plot
   
   if (length(unique(PCA_df$Group)) < 4){
-    pca2d <- ggplot2::ggplot(data = PCA_df, 
+    p <- ggplot2::ggplot(data = PCA_df, 
                              ggplot2::aes(x = x, y = y, colour = Group, shape = Group, 
                                           text = paste("Sample:", sampleID))) +
       ggplot2::geom_point(size = 2) +
@@ -1519,9 +1534,8 @@ plot_PCA_static <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2
                      axis.title = ggplot2::element_text(face = "bold", size = 12),
                      legend.title = ggplot2::element_blank())
     
-    p <- plotly::ggplotly(pca2d, tooltip = c("x", "y", "colour", "text"))
   } else{
-    pca2d <- ggplot2::ggplot(data = PCA_df, 
+    p <- ggplot2::ggplot(data = PCA_df, 
                              ggplot2::aes(x = x, y = y, colour = Group, 
                                           text = paste("Sample:", sampleID))) +
       ggplot2::geom_point(size = 2) +
@@ -1534,10 +1548,8 @@ plot_PCA_static <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2
                      axis.title = ggplot2::element_text(face = "bold", size = 12),
                      legend.title = ggplot2::element_blank())
     
-    p <- plotly::ggplotly(pca2d, tooltip = c("x", "y", "colour", "text"))
   }
-  
-  
+
   return(p)
 }
 
