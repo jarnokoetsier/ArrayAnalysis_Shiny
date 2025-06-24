@@ -3466,7 +3466,7 @@ makeGSEAnetwork <- function(GSEA_data, layout, nSets, color, size = 5){
     ggraph::geom_node_text(ggplot2::aes(label = label), color = 'black', 
                            size = size, repel = TRUE) + 
     ggplot2::theme_void() +
-    ggplot2::labs(color = expression(-log[10] ~ "p-value")) +
+    ggplot2::labs(color = "NES") +
     #ggplot2::scale_color_continuous() +
     ggplot2::scale_color_gradient2(low = color[1], mid = color[2], high = color[3])
   

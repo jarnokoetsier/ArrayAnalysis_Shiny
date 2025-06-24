@@ -2832,33 +2832,38 @@ observe({
     #***************************#
     
     # Download plot
-    output$realdownload_volcano_microarray_raw <- downloadHandler(
-      filename = function(){ifelse(input$static_volcano_microarray_raw, "Volcano.png", "Volcano.html")},
-      content = function(file){
-        
-        if (input$static_volcano_microarray_raw){
+    observe({
+      req(input$volcano_file_microarray_raw)
+      output$realdownload_volcano_microarray_raw <- downloadHandler(
+        filename = ifelse(input$volcano_file_microarray_raw == "HTML", "Volcano.html",
+                          ifelse(input$volcano_file_microarray_raw == "PNG", "Volcano.png",
+                                 ifelse(input$volcano_file_microarray_raw == "PDF", "Volcano.pdf",
+                                        "Volcano.tif"))),
+        content = function(file){
           
-          
-          # Make PCA score plot
-          p <- makeVolcano_static(top_table = rv$top_table[[input$comparisons_view_microarray_raw]], 
-                                  p = input$rawp_volcano_microarray_raw, 
-                                  p_threshold = input$p_thres_volcano_microarray_raw, 
-                                  logFC_threshold = input$logFC_thres_volcano_microarray_raw,
-                                  unchanged_color = input$volcano_unchanged_color_microarray_raw,
-                                  down_color = input$volcano_down_color_microarray_raw,
-                                  up_color = input$volcano_up_color_microarray_raw)
-          
-          ggplot2::ggsave(plot = p, 
-                          filename = file,
-                          width = input$width_volcano_microarray_raw,
-                          height = input$height_volcano_microarray_raw,
-                          units = "px")
-        } else{
-          htmlwidgets::saveWidget(rv$volcano, 
-                                  file)
+          if (input$volcano_file_microarray_raw != "HTML"){
+            
+            # Make volcano plot
+            p <- makeVolcano_static(top_table = rv$top_table[[input$comparisons_view_microarray_raw]], 
+                                    p = input$rawp_volcano_microarray_raw, 
+                                    p_threshold = input$p_thres_volcano_microarray_raw, 
+                                    logFC_threshold = input$logFC_thres_volcano_microarray_raw,
+                                    unchanged_color = input$volcano_unchanged_color_microarray_raw,
+                                    down_color = input$volcano_down_color_microarray_raw,
+                                    up_color = input$volcano_up_color_microarray_raw)
+            
+            ggplot2::ggsave(plot = p, 
+                            filename = file,
+                            width = input$width_volcano_microarray_raw,
+                            height = input$height_volcano_microarray_raw,
+                            units = "px")
+          } else{
+            htmlwidgets::saveWidget(rv$volcano, 
+                                    file)
+          }
         }
-      }
-    )
+      )
+    })
     
     
     # Make modal
@@ -2869,30 +2874,32 @@ observe({
         size = "m",
         footer = tagList(
           fluidRow(
-            column(12, align = "left",
-                   shinyWidgets::materialSwitch(
-                     inputId = "static_volcano_microarray_raw",
-                     label = "Click to make static plot",
-                     value = FALSE, 
-                     status = "primary"))
+            column(6,align = "left",
+                   shinyWidgets::radioGroupButtons(
+                     inputId = "volcano_file_microarray_raw",
+                     label = NULL,
+                     choices = c("PNG","PDF", "TIF", "HTML"),
+                     selected = "PNG"
+                   )
+            )
           ),
           fluidRow(
             column(6,
                    conditionalPanel(
-                     condition = "input.static_volcano_microarray_raw==true",
+                     condition = "input.volcano_file_microarray_raw!=`HTML`",
                      sliderInput("height_volcano_microarray_raw", 
                                  "Height",
-                                 min = 800, max = 2000,
+                                 min = 800, max = 3000,
                                  value = 1200, step = 10,
                                  width = "100%")
                    )
             ),
             column(6,
                    conditionalPanel(
-                     condition = "input.static_volcano_microarray_raw==true",
+                     condition = "input.volcano_file_microarray_raw!=`HTML`",
                      sliderInput("width_volcano_microarray_raw", 
                                  "Width",
-                                 min = 800, max = 2000,
+                                 min = 800, max = 4000,
                                  value = 1500, step = 10,
                                  width = "100%")
                    )
@@ -2942,34 +2949,39 @@ observe({
     #***************************#
     
     # Download plot
-    output$realdownload_MA_microarray_raw <- downloadHandler(
-      filename = function(){ifelse(input$static_MA_microarray_raw, "MA.png", "MA.html")},
-      content = function(file){
-        
-        if (input$static_MA_microarray_raw){
+    observe({
+      req(input$MA_file_microarray_raw)
+      output$realdownload_MA_microarray_raw <- downloadHandler(
+        filename = ifelse(input$MA_file_microarray_raw == "HTML", "MA.html",
+                          ifelse(input$MA_file_microarray_raw == "PNG", "MA.png",
+                                 ifelse(input$MA_file_microarray_raw == "PDF", "MA.pdf",
+                                        "MA.tif"))),
+        content = function(file){
           
-          
-          # Make PCA score plot
-          p <- makeMAplot_static(top_table = rv$top_table[[input$comparisons_view_microarray_raw]], 
-                                 p = input$rawp_MA_microarray_raw, 
-                                 p_threshold = input$p_thres_MA_microarray_raw, 
-                                 logFC_threshold = input$logFC_thres_MA_microarray_raw,
-                                 unchanged_color = input$MA_unchanged_color_microarray_raw,
-                                 down_color = input$MA_down_color_microarray_raw,
-                                 up_color = input$MA_up_color_microarray_raw,
-                                 RNAseq = FALSE)
-          
-          ggplot2::ggsave(plot = p, 
-                          filename = file,
-                          width = input$width_MA_microarray_raw,
-                          height = input$height_MA_microarray_raw,
-                          units = "px")
-        } else{
-          htmlwidgets::saveWidget(rv$MA, 
-                                  file)
+          if (input$MA_file_microarray_raw != "HTML"){
+            
+            # Make MA plot
+            p <- makeMAplot_static(top_table = rv$top_table[[input$comparisons_view_microarray_raw]], 
+                                   p = input$rawp_MA_microarray_raw, 
+                                   p_threshold = input$p_thres_MA_microarray_raw, 
+                                   logFC_threshold = input$logFC_thres_MA_microarray_raw,
+                                   unchanged_color = input$MA_unchanged_color_microarray_raw,
+                                   down_color = input$MA_down_color_microarray_raw,
+                                   up_color = input$MA_up_color_microarray_raw,
+                                   RNAseq =  FALSE)
+            
+            ggplot2::ggsave(plot = p, 
+                            filename = file,
+                            width = input$width_MA_microarray_raw,
+                            height = input$height_MA_microarray_raw,
+                            units = "px")
+          } else{
+            htmlwidgets::saveWidget(rv$MA, 
+                                    file)
+          }
         }
-      }
-    )
+      )
+    })
     
     
     # Make modal
@@ -2980,30 +2992,32 @@ observe({
         size = "m",
         footer = tagList(
           fluidRow(
-            column(12, align = "left",
-                   shinyWidgets::materialSwitch(
-                     inputId = "static_MA_microarray_raw",
-                     label = "Click to make static plot",
-                     value = FALSE, 
-                     status = "primary"))
+            column(6,align = "left",
+                   shinyWidgets::radioGroupButtons(
+                     inputId = "MA_file_microarray_raw",
+                     label = NULL,
+                     choices = c("PNG","PDF", "TIF", "HTML"),
+                     selected = "PNG"
+                   )
+            )
           ),
           fluidRow(
             column(6,
                    conditionalPanel(
-                     condition = "input.static_MA_microarray_raw==true",
+                     condition = "input.MA_file_microarray_raw!=`HTML`",
                      sliderInput("height_MA_microarray_raw", 
                                  "Height",
-                                 min = 800, max = 2000,
+                                 min = 800, max = 3000,
                                  value = 1200, step = 10,
                                  width = "100%")
                    )
             ),
             column(6,
                    conditionalPanel(
-                     condition = "input.static_MA_microarray_raw==true",
+                     condition = "input.MA_file_microarray_raw!=`HTML`",
                      sliderInput("width_MA_microarray_raw", 
                                  "Width",
-                                 min = 800, max = 2000,
+                                 min = 800, max = 4000,
                                  value = 1500, step = 10,
                                  width = "100%")
                    )
@@ -3902,30 +3916,36 @@ observe({
           #***************************#
           
           # Download plot
-          output$realdownload_ORAplot_microarray_raw <- downloadHandler(
-            filename = function(){ifelse(input$static_ORAplot_microarray_raw, "ORA barchart.png", "ORA barchart.html")},
-            content = function(file){
-              
-              if (input$static_ORAplot_microarray_raw){
+          observe({
+            req(input$ORAplot_file_microarray_raw)
+            output$realdownload_ORAplot_microarray_raw <- downloadHandler(
+              filename = ifelse(input$ORAplot_file_microarray_raw == "HTML", "ORA_barchart.html",
+                                ifelse(input$ORAplot_file_microarray_raw == "PNG", "ORA_barchart.png",
+                                       ifelse(input$ORAplot_file_microarray_raw == "PDF", "ORA_barchart.pdf",
+                                              "ORA_barchart.tif"))),
+              content = function(file){
                 
-                
-                # Make MA plot
-                p <- makeORAplot(rv$ORA_data,
-                                 nSets = input$nSets_ORAplot_microarray_raw,
-                                 color = input$color_ORAplot_microarray_raw,
-                                 static = TRUE)
-                
-                ggplot2::ggsave(plot = p, 
-                                filename = file,
-                                width = input$width_ORAplot_microarray_raw,
-                                height = input$height_ORAplot_microarray_raw,
-                                units = "px")
-              } else{
-                htmlwidgets::saveWidget(rv$ORAplot, 
-                                        file)
+                if (input$ORAplot_file_microarray_raw != "HTML"){
+                  
+                  
+                  # Make MA plot
+                  p <- makeORAplot(rv$ORA_data,
+                                   nSets = input$nSets_ORAplot_microarray_raw,
+                                   color = input$color_ORAplot_microarray_raw,
+                                   static = TRUE)
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_ORAplot_microarray_raw,
+                                  height = input$height_ORAplot_microarray_raw,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$ORAplot, 
+                                          file)
+                }
               }
-            }
-          )
+            )
+          })
           
           
           # Make modal
@@ -3936,17 +3956,19 @@ observe({
               size = "m",
               footer = tagList(
                 fluidRow(
-                  column(12, align = "left",
-                         shinyWidgets::materialSwitch(
-                           inputId = "static_ORAplot_microarray_raw",
-                           label = "Click to make static plot",
-                           value = FALSE, 
-                           status = "primary"))
+                  column(6,align = "left",
+                         shinyWidgets::radioGroupButtons(
+                           inputId = "ORAplot_file_microarray_raw",
+                           label = NULL,
+                           choices = c("PNG","PDF", "TIF", "HTML"),
+                           selected = "PNG"
+                         )
+                  )
                 ),
                 fluidRow(
                   column(6,
                          conditionalPanel(
-                           condition = "input.static_ORAplot_microarray_raw==true",
+                           condition = "input.ORAplot_file_microarray_raw!=`HTML`",
                            sliderInput("height_ORAplot_microarray_raw", 
                                        "Height",
                                        min = 800, max = 3000,
@@ -3956,10 +3978,10 @@ observe({
                   ),
                   column(6,
                          conditionalPanel(
-                           condition = "input.static_ORAplot_microarray_raw==true",
+                           condition = "input.ORAplot_file_microarray_raw!=`HTML`",
                            sliderInput("width_ORAplot_microarray_raw", 
                                        "Width",
-                                       min = 800, max = 3000,
+                                       min = 800, max = 4000,
                                        value = 1500, step = 10,
                                        width = "100%")
                          )
@@ -4003,17 +4025,22 @@ observe({
           #***************************#
           
           # Download plot
-          output$realdownload_ORAnetwork_microarray_raw <- downloadHandler(
-            filename = "ORA network.png",
-            content = function(file){
-              
-              ggplot2::ggsave(plot = rv$ORAnetwork, 
-                              filename = file,
-                              width = input$width_ORAnetwork_microarray_raw*2,
-                              height = input$height_ORAnetwork_microarray_raw*2,
-                              units = "px")
-            }
-          )
+          observe({
+            req(input$ORAnetwork_file_microarray_raw)
+            output$realdownload_ORAnetwork_microarray_raw <- downloadHandler(
+              filename = ifelse(input$ORAnetwork_file_microarray_raw == "PNG", "ORA_network.png",
+                                ifelse(input$ORAnetwork_file_microarray_raw == "PDF", "ORA_network.pdf",
+                                       "ORA_network.tif")),
+              content = function(file){
+                
+                ggplot2::ggsave(plot = rv$ORAnetwork, 
+                                filename = file,
+                                width = input$width_ORAnetwork_microarray_raw*2,
+                                height = input$height_ORAnetwork_microarray_raw*2,
+                                units = "px")
+              }
+            )
+          })
           
           
           # Make modal
@@ -4023,6 +4050,16 @@ observe({
               easyClose = TRUE,
               size = "m",
               footer = tagList(
+                fluidRow(
+                  column(6,align = "left",
+                         shinyWidgets::radioGroupButtons(
+                           inputId = "ORAnetwork_file_microarray_raw",
+                           label = NULL,
+                           choices = c("PNG","PDF", "TIF"),
+                           selected = "PNG"
+                         )
+                  )
+                ),
                 fluidRow(
                   column(6,
                          sliderInput("height_ORAnetwork_microarray_raw", 
@@ -4517,33 +4554,36 @@ observe({
           # Modal to download figure
           #***************************#
           
-          # Download plot
-          output$realdownload_GSEAplot_microarray_raw <- downloadHandler(
-            filename = function(){ifelse(input$static_GSEAplot_microarray_raw, "GSEA barchart.png", "GSEA barchart.html")},
-            content = function(file){
-              
-              if (input$static_GSEAplot_microarray_raw){
+          observe({
+            req(input$GSEAplot_file_microarray_raw)
+            output$realdownload_GSEAplot_microarray_raw <- downloadHandler(
+              filename = ifelse(input$GSEAplot_file_microarray_raw == "HTML", "GSEA_barchart.html",
+                                ifelse(input$GSEAplot_file_microarray_raw == "PNG", "GSEA_barchart.png",
+                                       ifelse(input$GSEAplot_file_microarray_raw == "PDF", "GSEA_barchart.pdf",
+                                              "GSEA_barchart.tif"))),
+              content = function(file){
                 
-                
-                # Make MA plot
-                p <- makeGSEAplot(rv$GSEA_data,
-                                  nSets = input$nSets_GSEAplot_microarray_raw,
-                                  color = c(input$lowcol_GSEAplot_microarray_raw,
-                                            input$midcol_GSEAplot_microarray_raw,
-                                            input$highcol_GSEAplot_microarray_raw),
-                                  static = TRUE)
-                
-                ggplot2::ggsave(plot = p, 
-                                filename = file,
-                                width = input$width_GSEAplot_microarray_raw,
-                                height = input$height_GSEAplot_microarray_raw,
-                                units = "px")
-              } else{
-                htmlwidgets::saveWidget(rv$GSEAplot, 
-                                        file)
+                if (input$GSEAplot_file_microarray_raw != "HTML"){
+                  
+                  
+                  # Make MA plot
+                  p <- makeGSEAplot(rv$GSEA_data,
+                                    nSets = input$nSets_GSEAplot_microarray_raw,
+                                    color = input$color_GSEAplot_microarray_raw,
+                                    static = TRUE)
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_GSEAplot_microarray_raw,
+                                  height = input$height_GSEAplot_microarray_raw,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$GSEAplot, 
+                                          file)
+                }
               }
-            }
-          )
+            )
+          })
           
           
           # Make modal
@@ -4554,17 +4594,19 @@ observe({
               size = "m",
               footer = tagList(
                 fluidRow(
-                  column(12, align = "left",
-                         shinyWidgets::materialSwitch(
-                           inputId = "static_GSEAplot_microarray_raw",
-                           label = "Click to make static plot",
-                           value = FALSE, 
-                           status = "primary"))
+                  column(6,align = "left",
+                         shinyWidgets::radioGroupButtons(
+                           inputId = "GSEAplot_file_microarray_raw",
+                           label = NULL,
+                           choices = c("PNG","PDF", "TIF", "HTML"),
+                           selected = "PNG"
+                         )
+                  )
                 ),
                 fluidRow(
                   column(6,
                          conditionalPanel(
-                           condition = "input.static_GSEAplot_microarray_raw==true",
+                           condition = "input.GSEAplot_file_microarray_raw!=`HTML`",
                            sliderInput("height_GSEAplot_microarray_raw", 
                                        "Height",
                                        min = 800, max = 3000,
@@ -4574,10 +4616,10 @@ observe({
                   ),
                   column(6,
                          conditionalPanel(
-                           condition = "input.static_GSEAplot_microarray_raw==true",
+                           condition = "input.GSEAplot_file_microarray_raw!=`HTML`",
                            sliderInput("width_GSEAplot_microarray_raw", 
                                        "Width",
-                                       min = 800, max = 3000,
+                                       min = 800, max = 4000,
                                        value = 1500, step = 10,
                                        width = "100%")
                          )
@@ -4622,17 +4664,22 @@ observe({
           #***************************#
           
           # Download plot
-          output$realdownload_GSEAnetwork_microarray_raw <- downloadHandler(
-            filename = "GSEA network.png",
-            content = function(file){
-              
-              ggplot2::ggsave(plot = rv$GSEAnetwork, 
-                              filename = file,
-                              width = input$width_GSEAnetwork_microarray_raw*2,
-                              height = input$height_GSEAnetwork_microarray_raw*2,
-                              units = "px")
-            }
-          )
+          observe({
+            req(input$GSEAnetwork_file_microarray_raw)
+            output$realdownload_GSEAnetwork_microarray_raw <- downloadHandler(
+              filename = ifelse(input$GSEAnetwork_file_microarray_raw == "PNG", "GSEA_network.png",
+                                ifelse(input$GSEAnetwork_file_microarray_raw == "PDF", "GSEA_network.pdf",
+                                       "GSEA_network.tif")),
+              content = function(file){
+                
+                ggplot2::ggsave(plot = rv$GSEAnetwork, 
+                                filename = file,
+                                width = input$width_GSEAnetwork_microarray_raw*2,
+                                height = input$height_GSEAnetwork_microarray_raw*2,
+                                units = "px")
+              }
+            )
+          })
           
           
           # Make modal
@@ -4642,6 +4689,16 @@ observe({
               easyClose = TRUE,
               size = "m",
               footer = tagList(
+                fluidRow(
+                  column(6,align = "left",
+                         shinyWidgets::radioGroupButtons(
+                           inputId = "GSEAnetwork_file_microarray_raw",
+                           label = NULL,
+                           choices = c("PNG","PDF", "TIF"),
+                           selected = "PNG"
+                         )
+                  )
+                ),
                 fluidRow(
                   column(6,
                          sliderInput("height_GSEAnetwork_microarray_raw", 

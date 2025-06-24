@@ -2718,33 +2718,38 @@ observe({
     #***************************#
     
     # Download plot
-    output$realdownload_volcano_rnaseq_norm <- downloadHandler(
-      filename = function(){ifelse(input$static_volcano_rnaseq_norm, "Volcano.png", "Volcano.html")},
-      content = function(file){
-        
-        if (input$static_volcano_rnaseq_norm){
+    observe({
+      req(input$volcano_file_rnaseq_norm)
+      output$realdownload_volcano_rnaseq_norm <- downloadHandler(
+        filename = ifelse(input$volcano_file_rnaseq_norm == "HTML", "Volcano.html",
+                          ifelse(input$volcano_file_rnaseq_norm == "PNG", "Volcano.png",
+                                 ifelse(input$volcano_file_rnaseq_norm == "PDF", "Volcano.pdf",
+                                        "Volcano.tif"))),
+        content = function(file){
           
-          
-          # Make PCA score plot
-          p <- makeVolcano_static(top_table = rv$top_table[[input$comparisons_view_rnaseq_norm]], 
-                                  p = input$rawp_volcano_rnaseq_norm, 
-                                  p_threshold = input$p_thres_volcano_rnaseq_norm, 
-                                  logFC_threshold = input$logFC_thres_volcano_rnaseq_norm,
-                                  unchanged_color = input$volcano_unchanged_color_rnaseq_norm,
-                                  down_color = input$volcano_down_color_rnaseq_norm,
-                                  up_color = input$volcano_up_color_rnaseq_norm)
-          
-          ggplot2::ggsave(plot = p, 
-                          filename = file,
-                          width = input$width_volcano_rnaseq_norm,
-                          height = input$height_volcano_rnaseq_norm,
-                          units = "px")
-        } else{
-          htmlwidgets::saveWidget(rv$volcano, 
-                                  file)
+          if (input$volcano_file_rnaseq_norm != "HTML"){
+            
+            # Make volcano plot
+            p <- makeVolcano_static(top_table = rv$top_table[[input$comparisons_view_rnaseq_norm]], 
+                                    p = input$rawp_volcano_rnaseq_norm, 
+                                    p_threshold = input$p_thres_volcano_rnaseq_norm, 
+                                    logFC_threshold = input$logFC_thres_volcano_rnaseq_norm,
+                                    unchanged_color = input$volcano_unchanged_color_rnaseq_norm,
+                                    down_color = input$volcano_down_color_rnaseq_norm,
+                                    up_color = input$volcano_up_color_rnaseq_norm)
+            
+            ggplot2::ggsave(plot = p, 
+                            filename = file,
+                            width = input$width_volcano_rnaseq_norm,
+                            height = input$height_volcano_rnaseq_norm,
+                            units = "px")
+          } else{
+            htmlwidgets::saveWidget(rv$volcano, 
+                                    file)
+          }
         }
-      }
-    )
+      )
+    })
     
     
     # Make modal
@@ -2755,30 +2760,32 @@ observe({
         size = "m",
         footer = tagList(
           fluidRow(
-            column(12, align = "left",
-                   shinyWidgets::materialSwitch(
-                     inputId = "static_volcano_rnaseq_norm",
-                     label = "Click to make static plot",
-                     value = FALSE, 
-                     status = "primary"))
+            column(6,align = "left",
+                   shinyWidgets::radioGroupButtons(
+                     inputId = "volcano_file_rnaseq_norm",
+                     label = NULL,
+                     choices = c("PNG","PDF", "TIF", "HTML"),
+                     selected = "PNG"
+                   )
+            )
           ),
           fluidRow(
             column(6,
                    conditionalPanel(
-                     condition = "input.static_volcano_rnaseq_norm==true",
+                     condition = "input.volcano_file_rnaseq_norm!=`HTML`",
                      sliderInput("height_volcano_rnaseq_norm", 
                                  "Height",
-                                 min = 800, max = 2000,
+                                 min = 800, max = 3000,
                                  value = 1200, step = 10,
                                  width = "100%")
                    )
             ),
             column(6,
                    conditionalPanel(
-                     condition = "input.static_volcano_rnaseq_norm==true",
+                     condition = "input.volcano_file_rnaseq_norm!=`HTML`",
                      sliderInput("width_volcano_rnaseq_norm", 
                                  "Width",
-                                 min = 800, max = 2000,
+                                 min = 800, max = 4000,
                                  value = 1500, step = 10,
                                  width = "100%")
                    )
@@ -2828,30 +2835,39 @@ observe({
     #***************************#
     
     # Download plot
-    output$realdownload_MA_rnaseq_norm <- downloadHandler(
-      filename = function(){ifelse(input$static_MA_rnaseq_norm, "MA.png", "MA.html")},
-      content = function(file){
-        
-        if (input$static_MA_rnaseq_norm){
+    observe({
+      req(input$MA_file_rnaseq_norm)
+      output$realdownload_MA_rnaseq_norm <- downloadHandler(
+        filename = ifelse(input$MA_file_rnaseq_norm == "HTML", "MA.html",
+                          ifelse(input$MA_file_rnaseq_norm == "PNG", "MA.png",
+                                 ifelse(input$MA_file_rnaseq_norm == "PDF", "MA.pdf",
+                                        "MA.tif"))),
+        content = function(file){
           
-          
-          # Make PCA score plot
-          p <- makeMAplot_static(top_table = rv$top_table[[input$comparisons_view_rnaseq_norm]], 
-                                 p = input$rawp_MA_rnaseq_norm, 
-                                 p_threshold = input$p_thres_MA_rnaseq_norm, 
-                                 logFC_threshold = input$logFC_thres_MA_rnaseq_norm)
-          
-          ggplot2::ggsave(plot = p, 
-                          filename = file,
-                          width = input$width_MA_rnaseq_norm,
-                          height = input$height_MA_rnaseq_norm,
-                          units = "px")
-        } else{
-          htmlwidgets::saveWidget(rv$MA, 
-                                  file)
+          if (input$MA_file_rnaseq_norm != "HTML"){
+            
+            # Make MA plot
+            p <- makeMAplot_static(top_table = rv$top_table[[input$comparisons_view_rnaseq_norm]], 
+                                   p = input$rawp_MA_rnaseq_norm, 
+                                   p_threshold = input$p_thres_MA_rnaseq_norm, 
+                                   logFC_threshold = input$logFC_thres_MA_rnaseq_norm,
+                                   unchanged_color = input$MA_unchanged_color_rnaseq_norm,
+                                   down_color = input$MA_down_color_rnaseq_norm,
+                                   up_color = input$MA_up_color_rnaseq_norm,
+                                   RNAseq = TRUE)
+            
+            ggplot2::ggsave(plot = p, 
+                            filename = file,
+                            width = input$width_MA_rnaseq_norm,
+                            height = input$height_MA_rnaseq_norm,
+                            units = "px")
+          } else{
+            htmlwidgets::saveWidget(rv$MA, 
+                                    file)
+          }
         }
-      }
-    )
+      )
+    })
     
     
     # Make modal
@@ -2862,30 +2878,32 @@ observe({
         size = "m",
         footer = tagList(
           fluidRow(
-            column(12, align = "left",
-                   shinyWidgets::materialSwitch(
-                     inputId = "static_MA_rnaseq_norm",
-                     label = "Click to make static plot",
-                     value = FALSE, 
-                     status = "primary"))
+            column(6,align = "left",
+                   shinyWidgets::radioGroupButtons(
+                     inputId = "MA_file_rnaseq_norm",
+                     label = NULL,
+                     choices = c("PNG","PDF", "TIF", "HTML"),
+                     selected = "PNG"
+                   )
+            )
           ),
           fluidRow(
             column(6,
                    conditionalPanel(
-                     condition = "input.static_MA_rnaseq_norm==true",
+                     condition = "input.MA_file_rnaseq_norm!=`HTML`",
                      sliderInput("height_MA_rnaseq_norm", 
                                  "Height",
-                                 min = 800, max = 2000,
+                                 min = 800, max = 3000,
                                  value = 1200, step = 10,
                                  width = "100%")
                    )
             ),
             column(6,
                    conditionalPanel(
-                     condition = "input.static_MA_rnaseq_norm==true",
+                     condition = "input.MA_file_rnaseq_norm!=`HTML`",
                      sliderInput("width_MA_rnaseq_norm", 
                                  "Width",
-                                 min = 800, max = 2000,
+                                 min = 800, max = 4000,
                                  value = 1500, step = 10,
                                  width = "100%")
                    )
@@ -3776,30 +3794,36 @@ observe({
           #***************************#
           
           # Download plot
-          output$realdownload_ORAplot_rnaseq_norm <- downloadHandler(
-            filename = function(){ifelse(input$static_ORAplot_rnaseq_norm, "ORA barchart.png", "ORA barchart.html")},
-            content = function(file){
-              
-              if (input$static_ORAplot_rnaseq_norm){
+          observe({
+            req(input$ORAplot_file_rnaseq_norm)
+            output$realdownload_ORAplot_rnaseq_norm <- downloadHandler(
+              filename = ifelse(input$ORAplot_file_rnaseq_norm == "HTML", "ORA_barchart.html",
+                                ifelse(input$ORAplot_file_rnaseq_norm == "PNG", "ORA_barchart.png",
+                                       ifelse(input$ORAplot_file_rnaseq_norm == "PDF", "ORA_barchart.pdf",
+                                              "ORA_barchart.tif"))),
+              content = function(file){
                 
-                
-                # Make MA plot
-                p <- makeORAplot(rv$ORA_data,
-                                 nSets = input$nSets_ORAplot_rnaseq_norm,
-                                 color = input$color_ORAplot_rnaseq_norm,
-                                 static = TRUE)
-                
-                ggplot2::ggsave(plot = p, 
-                                filename = file,
-                                width = input$width_ORAplot_rnaseq_norm,
-                                height = input$height_ORAplot_rnaseq_norm,
-                                units = "px")
-              } else{
-                htmlwidgets::saveWidget(rv$ORAplot, 
-                                        file)
+                if (input$ORAplot_file_rnaseq_norm != "HTML"){
+                  
+                  
+                  # Make MA plot
+                  p <- makeORAplot(rv$ORA_data,
+                                   nSets = input$nSets_ORAplot_rnaseq_norm,
+                                   color = input$color_ORAplot_rnaseq_norm,
+                                   static = TRUE)
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_ORAplot_rnaseq_norm,
+                                  height = input$height_ORAplot_rnaseq_norm,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$ORAplot, 
+                                          file)
+                }
               }
-            }
-          )
+            )
+          })
           
           
           # Make modal
@@ -3810,17 +3834,19 @@ observe({
               size = "m",
               footer = tagList(
                 fluidRow(
-                  column(12, align = "left",
-                         shinyWidgets::materialSwitch(
-                           inputId = "static_ORAplot_rnaseq_norm",
-                           label = "Click to make static plot",
-                           value = FALSE, 
-                           status = "primary"))
+                  column(6,align = "left",
+                         shinyWidgets::radioGroupButtons(
+                           inputId = "ORAplot_file_rnaseq_norm",
+                           label = NULL,
+                           choices = c("PNG","PDF", "TIF", "HTML"),
+                           selected = "PNG"
+                         )
+                  )
                 ),
                 fluidRow(
                   column(6,
                          conditionalPanel(
-                           condition = "input.static_ORAplot_rnaseq_norm==true",
+                           condition = "input.ORAplot_file_rnaseq_norm!=`HTML`",
                            sliderInput("height_ORAplot_rnaseq_norm", 
                                        "Height",
                                        min = 800, max = 3000,
@@ -3830,10 +3856,10 @@ observe({
                   ),
                   column(6,
                          conditionalPanel(
-                           condition = "input.static_ORAplot_rnaseq_norm==true",
+                           condition = "input.ORAplot_file_rnaseq_norm!=`HTML`",
                            sliderInput("width_ORAplot_rnaseq_norm", 
                                        "Width",
-                                       min = 800, max = 3000,
+                                       min = 800, max = 4000,
                                        value = 1500, step = 10,
                                        width = "100%")
                          )
@@ -3876,17 +3902,22 @@ observe({
           #***************************#
           
           # Download plot
-          output$realdownload_ORAnetwork_rnaseq_norm <- downloadHandler(
-            filename = "ORA network.png",
-            content = function(file){
-              
-              ggplot2::ggsave(plot = rv$ORAnetwork, 
-                              filename = file,
-                              width = input$width_ORAnetwork_rnaseq_norm*2,
-                              height = input$height_ORAnetwork_rnaseq_norm*2,
-                              units = "px")
-            }
-          )
+          observe({
+            req(input$ORAnetwork_file_rnaseq_norm)
+            output$realdownload_ORAnetwork_rnaseq_norm <- downloadHandler(
+              filename = ifelse(input$ORAnetwork_file_rnaseq_norm == "PNG", "ORA_network.png",
+                                ifelse(input$ORAnetwork_file_rnaseq_norm == "PDF", "ORA_network.pdf",
+                                       "ORA_network.tif")),
+              content = function(file){
+                
+                ggplot2::ggsave(plot = rv$ORAnetwork, 
+                                filename = file,
+                                width = input$width_ORAnetwork_rnaseq_norm*2,
+                                height = input$height_ORAnetwork_rnaseq_norm*2,
+                                units = "px")
+              }
+            )
+          })
           
           
           # Make modal
@@ -3896,6 +3927,16 @@ observe({
               easyClose = TRUE,
               size = "m",
               footer = tagList(
+                fluidRow(
+                  column(6,align = "left",
+                         shinyWidgets::radioGroupButtons(
+                           inputId = "ORAnetwork_file_rnaseq_norm",
+                           label = NULL,
+                           choices = c("PNG","PDF", "TIF"),
+                           selected = "PNG"
+                         )
+                  )
+                ),
                 fluidRow(
                   column(6,
                          sliderInput("height_ORAnetwork_rnaseq_norm", 
@@ -4390,33 +4431,36 @@ observe({
           # Modal to download figure
           #***************************#
           
-          # Download plot
-          output$realdownload_GSEAplot_rnaseq_norm <- downloadHandler(
-            filename = function(){ifelse(input$static_GSEAplot_rnaseq_norm, "GSEA barchart.png", "GSEA barchart.html")},
-            content = function(file){
-              
-              if (input$static_GSEAplot_rnaseq_norm){
+          observe({
+            req(input$GSEAplot_file_rnaseq_norm)
+            output$realdownload_GSEAplot_rnaseq_norm <- downloadHandler(
+              filename = ifelse(input$GSEAplot_file_rnaseq_norm == "HTML", "GSEA_barchart.html",
+                                ifelse(input$GSEAplot_file_rnaseq_norm == "PNG", "GSEA_barchart.png",
+                                       ifelse(input$GSEAplot_file_rnaseq_norm == "PDF", "GSEA_barchart.pdf",
+                                              "GSEA_barchart.tif"))),
+              content = function(file){
                 
-                
-                # Make MA plot
-                p <- makeGSEAplot(rv$GSEA_data,
-                                  nSets = input$nSets_GSEAplot_rnaseq_norm,
-                                  color = c(input$lowcol_GSEAplot_rnaseq_norm,
-                                            input$midcol_GSEAplot_rnaseq_norm,
-                                            input$highcol_GSEAplot_rnaseq_norm),
-                                  static = TRUE)
-                
-                ggplot2::ggsave(plot = p, 
-                                filename = file,
-                                width = input$width_GSEAplot_rnaseq_norm,
-                                height = input$height_GSEAplot_rnaseq_norm,
-                                units = "px")
-              } else{
-                htmlwidgets::saveWidget(rv$GSEAplot, 
-                                        file)
+                if (input$GSEAplot_file_rnaseq_norm != "HTML"){
+                  
+                  
+                  # Make MA plot
+                  p <- makeGSEAplot(rv$GSEA_data,
+                                    nSets = input$nSets_GSEAplot_rnaseq_norm,
+                                    color = input$color_GSEAplot_rnaseq_norm,
+                                    static = TRUE)
+                  
+                  ggplot2::ggsave(plot = p, 
+                                  filename = file,
+                                  width = input$width_GSEAplot_rnaseq_norm,
+                                  height = input$height_GSEAplot_rnaseq_norm,
+                                  units = "px")
+                } else{
+                  htmlwidgets::saveWidget(rv$GSEAplot, 
+                                          file)
+                }
               }
-            }
-          )
+            )
+          })
           
           
           # Make modal
@@ -4427,17 +4471,19 @@ observe({
               size = "m",
               footer = tagList(
                 fluidRow(
-                  column(12, align = "left",
-                         shinyWidgets::materialSwitch(
-                           inputId = "static_GSEAplot_rnaseq_norm",
-                           label = "Click to make static plot",
-                           value = FALSE, 
-                           status = "primary"))
+                  column(6,align = "left",
+                         shinyWidgets::radioGroupButtons(
+                           inputId = "GSEAplot_file_rnaseq_norm",
+                           label = NULL,
+                           choices = c("PNG","PDF", "TIF", "HTML"),
+                           selected = "PNG"
+                         )
+                  )
                 ),
                 fluidRow(
                   column(6,
                          conditionalPanel(
-                           condition = "input.static_GSEAplot_rnaseq_norm==true",
+                           condition = "input.GSEAplot_file_rnaseq_norm!=`HTML`",
                            sliderInput("height_GSEAplot_rnaseq_norm", 
                                        "Height",
                                        min = 800, max = 3000,
@@ -4447,10 +4493,10 @@ observe({
                   ),
                   column(6,
                          conditionalPanel(
-                           condition = "input.static_GSEAplot_rnaseq_norm==true",
+                           condition = "input.GSEAplot_file_rnaseq_norm!=`HTML`",
                            sliderInput("width_GSEAplot_rnaseq_norm", 
                                        "Width",
-                                       min = 800, max = 3000,
+                                       min = 800, max = 4000,
                                        value = 1500, step = 10,
                                        width = "100%")
                          )
@@ -4495,17 +4541,22 @@ observe({
           #***************************#
           
           # Download plot
-          output$realdownload_GSEAnetwork_rnaseq_norm <- downloadHandler(
-            filename = "GSEA network.png",
-            content = function(file){
-              
-              ggplot2::ggsave(plot = rv$GSEAnetwork, 
-                              filename = file,
-                              width = input$width_GSEAnetwork_rnaseq_norm*2,
-                              height = input$height_GSEAnetwork_rnaseq_norm*2,
-                              units = "px")
-            }
-          )
+          observe({
+            req(input$GSEAnetwork_file_rnaseq_norm)
+            output$realdownload_GSEAnetwork_rnaseq_norm <- downloadHandler(
+              filename = ifelse(input$GSEAnetwork_file_rnaseq_norm == "PNG", "GSEA_network.png",
+                                ifelse(input$GSEAnetwork_file_rnaseq_norm == "PDF", "GSEA_network.pdf",
+                                       "GSEA_network.tif")),
+              content = function(file){
+                
+                ggplot2::ggsave(plot = rv$GSEAnetwork, 
+                                filename = file,
+                                width = input$width_GSEAnetwork_rnaseq_norm*2,
+                                height = input$height_GSEAnetwork_rnaseq_norm*2,
+                                units = "px")
+              }
+            )
+          })
           
           
           # Make modal
@@ -4515,6 +4566,16 @@ observe({
               easyClose = TRUE,
               size = "m",
               footer = tagList(
+                fluidRow(
+                  column(6,align = "left",
+                         shinyWidgets::radioGroupButtons(
+                           inputId = "GSEAnetwork_file_rnaseq_norm",
+                           label = NULL,
+                           choices = c("PNG","PDF", "TIF"),
+                           selected = "PNG"
+                         )
+                  )
+                ),
                 fluidRow(
                   column(6,
                          sliderInput("height_GSEAnetwork_rnaseq_norm", 
