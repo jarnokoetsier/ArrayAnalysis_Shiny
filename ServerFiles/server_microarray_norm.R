@@ -111,7 +111,7 @@ observe({
         shinybusy::remove_modal_spinner()
       }
     }
-
+    
     
     # Get metadata
     if (input$MetaFileType_microarray_norm==".tsv/.csv file"){
@@ -422,7 +422,7 @@ observe({
     if(!input$outlier_norm){
       samples <- rownames(rv$metaData)
       
-      pickerInput(inputId = "select_outliers_microarray_norm",
+      selectInput(inputId = "select_outliers_microarray_norm",
                   label = tags$span(
                     "Select samples to be removed", 
                     tags$span(
@@ -430,12 +430,11 @@ observe({
                         name = "question-circle",
                       ) 
                     ) |>
-                      add_prompt(message = "Select one or more sample(s) to exclude from the analysis.", 
-                                 position = "right",
-                                 size = "large")
+                      prompter::add_prompt(message = "Select one or more sample(s) to exclude from the analysis.", 
+                                           position = "right",
+                                           size = "large")
                   ),
-                  choices = samples,
-                  multiple = TRUE)
+                  choices = samples)
     } else{
       NULL
     }
@@ -444,11 +443,11 @@ observe({
   
   # 2. Select experimental groups
   output$UI_groupselect_microarray_norm <- renderUI({
-    shinyWidgets::pickerInput(inputId = "groupselect_microarray_norm",
-                              label = NULL,
-                              choices = colnames(rv$metaData),
-                              selected = autoGroup(rv$metaData),
-                              multiple = TRUE)
+    selectInput(inputId = "groupselect_microarray_norm",
+                label = NULL,
+                choices = colnames(rv$metaData),
+                selected = autoGroup(rv$metaData),
+                multiple = TRUE)
   })
   
   # print the experimental levels
@@ -477,14 +476,15 @@ observe({
     
     if (checkTransformation(gxMatrix = exprs(rv$gxData)) == "Count matrix"){
       tagList(
-        prettyRadioButtons(inputId = "transformation_microarray_norm", 
-                           label = NULL, 
-                           choices = c("Log2-transformation",
-                                       "None"),
-                           inline = TRUE, 
-                           status = "danger",
-                           fill = TRUE,
-                           selected = "Log2-transformation"),
+        shinyWidgets::prettyRadioButtons(
+          inputId = "transformation_microarray_norm", 
+          label = NULL, 
+          choices = c("Log2-transformation",
+                      "None"),
+          inline = TRUE, 
+          status = "danger",
+          fill = TRUE,
+          selected = "Log2-transformation"),
         h5(strong("NOTE: "),"Data seems not to be log-transformed. So, 
                  log-transformation is needed.")
         
@@ -492,14 +492,15 @@ observe({
       
     }else{
       tagList(
-        prettyRadioButtons(inputId = "transformation_microarray_norm", 
-                           label = NULL, 
-                           choices = c("Log2-transformation",
-                                       "None"),
-                           inline = TRUE, 
-                           status = "danger",
-                           fill = TRUE,
-                           selected = "None"),
+        shinyWidgets::prettyRadioButtons(
+          inputId = "transformation_microarray_norm", 
+          label = NULL, 
+          choices = c("Log2-transformation",
+                      "None"),
+          inline = TRUE, 
+          status = "danger",
+          fill = TRUE,
+          selected = "None"),
         h5(strong("NOTE: "),"Data seems to be already log-transformed. So, 
                    no additional transformation is needed.")
       )
@@ -1871,18 +1872,16 @@ observe({
                    hr(),
                    fluidRow(
                      column(3,
-                            shinyWidgets::pickerInput(
+                            selectInput(
                               inputId = "colorFactor_heatmap_microarray_norm",
                               label = "Side color",
                               choices = colnames(rv$metaData_fil),
                               selected = rv$experimentName,
-                              multiple = TRUE,
-                              options = list(
-                                style = "btn-info"))
+                              multiple = TRUE)
                      ),
                      # Select distance method
                      column(3,
-                            shinyWidgets::pickerInput(
+                            selectInput(
                               inputId = "clusteroption1_microarray_norm",
                               label = "Distance",
                               choices = c("Pearson","Spearman",
@@ -1891,7 +1890,7 @@ observe({
                      
                      #Clustering method
                      column(3,
-                            shinyWidgets::pickerInput(
+                            selectInput(
                               inputId = "clusteroption2_microarray_norm",
                               label = "Clustering",
                               choices = c("ward.D2","single",
@@ -1950,39 +1949,37 @@ observe({
                    fluidRow(
                      column(3,
                             # Color by which factor?
-                            shinyWidgets::pickerInput(inputId = "colorFactor_PCA_microarray_norm",
-                                                      label = "Color by:",
-                                                      choices = colnames(rv$metaData_fil),
-                                                      selected = rv$experimentName,
-                                                      multiple = TRUE,
-                                                      options = list(
-                                                        style = "btn-info"))
+                            selectInput(inputId = "colorFactor_PCA_microarray_norm",
+                                        label = "Color by:",
+                                        choices = colnames(rv$metaData_fil),
+                                        selected = rv$experimentName,
+                                        multiple = TRUE)
                      ),
                      column(3,
                             #X-axis
-                            shinyWidgets::pickerInput(inputId = "xpca_microarray_norm", 
-                                                      label = "x-axis",
-                                                      choices = c("PC1","PC2","PC3", "PC4", "PC5",
-                                                                  "PC6", "PC7", "PC8"),
-                                                      selected = "PC1")
+                            selectInput(inputId = "xpca_microarray_norm", 
+                                        label = "x-axis",
+                                        choices = c("PC1","PC2","PC3", "PC4", "PC5",
+                                                    "PC6", "PC7", "PC8"),
+                                        selected = "PC1")
                      ),
                      column(3,
                             #Y-axis
-                            shinyWidgets::pickerInput(inputId = "ypca_microarray_norm", 
-                                                      label = "y-axis",
-                                                      choices = c("PC1","PC2","PC3", "PC4", "PC5", 
-                                                                  "PC6", "PC7", "PC8"),
-                                                      selected = "PC2")
+                            selectInput(inputId = "ypca_microarray_norm", 
+                                        label = "y-axis",
+                                        choices = c("PC1","PC2","PC3", "PC4", "PC5", 
+                                                    "PC6", "PC7", "PC8"),
+                                        selected = "PC2")
                      ),
                      column(3,
                             #Z-axis
                             conditionalPanel(
                               condition = "input.xyz_microarray_norm==true",
-                              shinyWidgets::pickerInput(inputId = "zpca_microarray_norm", 
-                                                        label = "z-axis",
-                                                        choices = c("PC1","PC2","PC3", "PC4", "PC5", 
-                                                                    "PC6", "PC7", "PC8"),
-                                                        selected = "PC3")
+                              selectInput(inputId = "zpca_microarray_norm", 
+                                          label = "z-axis",
+                                          choices = c("PC1","PC2","PC3", "PC4", "PC5", 
+                                                      "PC6", "PC7", "PC8"),
+                                          selected = "PC3")
                             )
                      )
                    ),
@@ -2074,7 +2071,7 @@ observe({
   # Select continuous covariates
   output$UI_covGroups_num_microarray_norm <- renderUI({
     tagList(
-      pickerInput(inputId = "covGroups_num_microarray_norm",
+      selectInput(inputId = "covGroups_num_microarray_norm",
                   label = "Continuous covariates (e.g., age):",
                   choices = setdiff(colnames(rv$metaData_fil),
                                     rv$experimentName),
@@ -2086,7 +2083,7 @@ observe({
   # Select discrete covariates
   output$UI_covGroups_char_microarray_norm <- renderUI({
     tagList(
-      pickerInput(inputId = "covGroups_char_microarray_norm",
+      selectInput(inputId = "covGroups_char_microarray_norm",
                   label = "Discrete covariates (e.g., sex):",
                   choices = setdiff(colnames(rv$metaData_fil),
                                     rv$experimentName),
@@ -2099,11 +2096,18 @@ observe({
   output$UI_comparisons_microarray_norm <- renderUI({
     
     tagList(
-      multiInput(
+      # multiInput(
+      #   inputId = "comparisons_microarray_norm",
+      #   label = "Comparisons:", 
+      #   choices = makeComparisons(make.names(unique(rv$experimentFactor))),
+      #   selected = makeComparisons(make.names(unique(rv$experimentFactor)))[1]
+      # )
+      selectInput(
         inputId = "comparisons_microarray_norm",
         label = "Comparisons:", 
         choices = makeComparisons(make.names(unique(rv$experimentFactor))),
-        selected = makeComparisons(make.names(unique(rv$experimentFactor)))[1]
+        selected = makeComparisons(make.names(unique(rv$experimentFactor)))[1],
+        multiple = TRUE
       )
     )
   })
@@ -2112,7 +2116,7 @@ observe({
   # Select comparisons
   output$UI_biomart_dataset_microarray_norm <- renderUI({
     req(input$addAnnotation_microarray_norm)
-    pickerInput(inputId = "biomart_dataset_microarray_norm",
+    selectInput(inputId = "biomart_dataset_microarray_norm",
                 label = tags$span(
                   "Organism", 
                   tags$span(
@@ -2120,10 +2124,10 @@ observe({
                       name = "question-circle",
                     ) 
                   ) |>
-                    add_prompt(message = "Select the organism. 
+                    prompter::add_prompt(message = "Select the organism. 
                                                This information is needed to match the probset IDs to the gene IDs.", 
-                               position = "right",
-                               size = "large")
+                                         position = "right",
+                                         size = "large")
                 ),
                 choices = c("Homo sapiens" = "hsapiens_gene_ensembl" ,
                             "Bos taurus" = "btaurus_gene_ensembl",
@@ -2145,7 +2149,7 @@ observe({
     
     tagList(
       
-      pickerInput(inputId = "biomart_filter_microarray_norm",
+      selectInput(inputId = "biomart_filter_microarray_norm",
                   label = tags$span(
                     "Probeset ID", 
                     tags$span(
@@ -2153,16 +2157,16 @@ observe({
                         name = "question-circle",
                       ) 
                     ) |>
-                      add_prompt(message = "Select which probeset ID is 
+                      prompter::add_prompt(message = "Select which probeset ID is 
                                                used in the expression matrix.", 
-                                 position = "right",
-                                 size = "large")
+                                           position = "right",
+                                           size = "large")
                   ),
                   choices = filterList[[input$biomart_dataset_microarray_norm]],
                   selected = selFilter(rv$ProbeAnnotation),
                   multiple = FALSE),
       
-      pickerInput(inputId = "biomart_attributes_microarray_norm",
+      selectInput(inputId = "biomart_attributes_microarray_norm",
                   label = tags$span(
                     "Output", 
                     tags$span(
@@ -2170,10 +2174,10 @@ observe({
                         name = "question-circle",
                       ) 
                     ) |>
-                      add_prompt(message = "Select which gene IDs should be added 
+                      prompter::add_prompt(message = "Select which gene IDs should be added 
                                                to the output.", 
-                                 position = "right",
-                                 size = "large")
+                                           position = "right",
+                                           size = "large")
                   ),
                   choices = c("Ensembl Gene ID",
                               "Entrez Gene ID",
@@ -2224,7 +2228,7 @@ observe({
                               paste(input$covGroups_num_microarray_norm, collapse = "; ")),
                        ifelse(is.null(input$covGroups_char_microarray_norm), " ",
                               paste(input$covGroups_char_microarray_norm, collapse = "; ")),
-                       rv$top_table_list[[3]],
+                       ifelse(is.null(rv$top_table_list[[3]]), "N/A", rv$top_table_list[[3]]),
                        paste(input$biomart_attributes_microarray_norm, collapse = "; "),
                        input$biomart_filter_microarray_norm
           )
@@ -2274,11 +2278,11 @@ observe({
         
         # Show comparisons
         output$UI_comparisons_view_microarray_norm <- renderUI({
-          shinyWidgets::pickerInput(inputId = "comparisons_view_microarray_norm",
-                                    label = "Select comparison:",
-                                    choices = names(rv$top_table),
-                                    selected = names(rv$top_table)[1],
-                                    multiple = FALSE)
+          selectInput(inputId = "comparisons_view_microarray_norm",
+                      label = "Select comparison:",
+                      choices = names(rv$top_table),
+                      selected = names(rv$top_table)[1],
+                      multiple = FALSE)
         })
         
         # Show message
@@ -2706,7 +2710,7 @@ observe({
                                   unchanged_color = input$volcano_unchanged_color_microarray_norm,
                                   down_color = input$volcano_down_color_microarray_norm,
                                   up_color = input$volcano_up_color_microarray_norm
-                                  )
+        )
         
         output$volcano_microarray_norm <- plotly::renderPlotly(rv$volcano)
       }
@@ -3282,7 +3286,7 @@ observe({
                        fluidRow(
                          column(2,
                                 # Raw or adjusted P value?
-                                prettyRadioButtons(
+                                shinyWidgets::prettyRadioButtons(
                                   inputId = "rawp_volcano_microarray_norm",
                                   label = "P value", 
                                   choices = 
@@ -3368,7 +3372,7 @@ observe({
                        fluidRow(
                          column(2,
                                 # Raw or adjusted P value?
-                                prettyRadioButtons(
+                                shinyWidgets::prettyRadioButtons(
                                   inputId = "rawp_MA_microarray_norm",
                                   label = "P value", 
                                   choices = 
@@ -3428,7 +3432,7 @@ observe({
                        fluidRow(
                          column(2,
                                 # Raw or adjusted P value?
-                                prettyRadioButtons(
+                                shinyWidgets::prettyRadioButtons(
                                   inputId = "rawp_summary_microarray_norm",
                                   label = "P value", 
                                   choices = 
@@ -3503,11 +3507,11 @@ observe({
                                    style = "jelly",
                                    color = "primary",
                                    icon = icon("download")),
-        actionBttn(inputId = "next_statistics_microarray_norm",
-                   label = "Next",
-                   style = "jelly",
-                   color = "danger",
-                   icon = icon("arrow-right"))
+        shinyWidgets::actionBttn(inputId = "next_statistics_microarray_norm",
+                                 label = "Next",
+                                 style = "jelly",
+                                 color = "danger",
+                                 icon = icon("arrow-right"))
       )
     })
     
@@ -3533,11 +3537,11 @@ observe({
   observe({
     req(rv$top_table)
     output$UI_comparisons_view_ORA_microarray_norm <- renderUI({
-      shinyWidgets::pickerInput(inputId = "comparisons_view_ORA_microarray_norm",
-                                label = NULL,
-                                choices = names(rv$top_table),
-                                selected = names(rv$top_table)[1],
-                                multiple = FALSE)
+      selectInput(inputId = "comparisons_view_ORA_microarray_norm",
+                  label = NULL,
+                  choices = names(rv$top_table),
+                  selected = names(rv$top_table)[1],
+                  multiple = FALSE)
     })
   })
   
@@ -3556,11 +3560,11 @@ observe({
       tagList(
         
         # Which columns of the top table contains the gene ids?
-        shinyWidgets::pickerInput(inputId = "geneID_ORA_microarray_norm",
-                                  label = "Which column of the top table contains the gene IDs?",
-                                  choices = colnames(rv$top_table[[1]])[col_choice],
-                                  selected = colnames(rv$top_table[[1]])[1],
-                                  multiple = FALSE)
+        selectInput(inputId = "geneID_ORA_microarray_norm",
+                    label = "Which column of the top table contains the gene IDs?",
+                    choices = colnames(rv$top_table[[1]])[col_choice],
+                    selected = colnames(rv$top_table[[1]])[1],
+                    multiple = FALSE)
       )
     })
   })
@@ -3833,39 +3837,39 @@ observe({
               easyClose = TRUE,
               size = "m",
               footer = tagList(
-                  fluidRow(
-                    column(6,align = "left",
-                           shinyWidgets::radioGroupButtons(
-                             inputId = "ORAplot_file_microarray_norm",
-                             label = NULL,
-                             choices = c("PNG","PDF", "TIF", "HTML"),
-                             selected = "PNG"
-                           )
-                    )
+                fluidRow(
+                  column(6,align = "left",
+                         shinyWidgets::radioGroupButtons(
+                           inputId = "ORAplot_file_microarray_norm",
+                           label = NULL,
+                           choices = c("PNG","PDF", "TIF", "HTML"),
+                           selected = "PNG"
+                         )
+                  )
+                ),
+                fluidRow(
+                  column(6,
+                         conditionalPanel(
+                           condition = "input.ORAplot_file_microarray_norm!=`HTML`",
+                           sliderInput("height_ORAplot_microarray_norm", 
+                                       "Height",
+                                       min = 800, max = 3000,
+                                       value = 1200, step = 10,
+                                       width = "100%")
+                         )
                   ),
-                  fluidRow(
-                    column(6,
-                           conditionalPanel(
-                             condition = "input.ORAplot_file_microarray_norm!=`HTML`",
-                             sliderInput("height_ORAplot_microarray_norm", 
-                                         "Height",
-                                         min = 800, max = 3000,
-                                         value = 1200, step = 10,
-                                         width = "100%")
-                           )
-                    ),
-                    column(6,
-                           conditionalPanel(
-                             condition = "input.ORAplot_file_microarray_norm!=`HTML`",
-                             sliderInput("width_ORAplot_microarray_norm", 
-                                         "Width",
-                                         min = 800, max = 4000,
-                                         value = 1500, step = 10,
-                                         width = "100%")
-                           )
-                    )
-                  ),
-                  
+                  column(6,
+                         conditionalPanel(
+                           condition = "input.ORAplot_file_microarray_norm!=`HTML`",
+                           sliderInput("width_ORAplot_microarray_norm", 
+                                       "Width",
+                                       min = 800, max = 4000,
+                                       value = 1500, step = 10,
+                                       width = "100%")
+                         )
+                  )
+                ),
+                
                 fluidRow(
                   column(12, align = "left",
                          downloadButton('realdownload_ORAplot_microarray_norm', 
@@ -4532,8 +4536,8 @@ observe({
                                                         input$highcol_GSEAnetwork_microarray_norm))
             
             output$GSEAnetwork_microarray_norm <- renderPlot(rv$GSEAnetwork,
-                                                            height = 500, 
-                                                            width = 800)
+                                                             height = 500, 
+                                                             width = 800)
             
           })
           

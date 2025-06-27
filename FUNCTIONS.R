@@ -750,9 +750,13 @@ getBoxplots <- function(experimentFactor,
   
   for (i in 1:length(legendColors)){
     group_length <- sum(experimentFactor == levels(experimentFactor)[i])
+    if (group_length > 1){
     colors <-  c(colorspace::lighten(legendColors[i], amount = rev(seq(0,0.5,length.out = round(group_length/2)))),
                  colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)+1)[-1])
     )
+    } else{
+      colors <- legendColors[i]
+    }
     
     plotColors[experimentFactor == levels(experimentFactor)[i]] <- colors
   }
