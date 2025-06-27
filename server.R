@@ -48,7 +48,6 @@ server <- function(input, output, session){
   hideTab("navbar", target = "panel_statistics_microarray_norm")
   hideTab("navbar", target = "panel_ORA_microarray_norm")
   
-  RODAF <- reactive({return(FALSE)})
   observe({
     
     # Advanced settings
@@ -86,9 +85,6 @@ server <- function(input, output, session){
           ) # EO fluidRow
         ) # EO tagList
       )) # EO showModal
-      
-      
-      # RODAF <- reactive({return(input$RODAF)})
       
     })
     

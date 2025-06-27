@@ -111,19 +111,20 @@ ui <- tagList(
                                    selected = "RNA-Seq"
                                  ),
                                  
+                                 uiOutput("ui_raw_or_norm"),
                                  conditionalPanel(
                                    condition = "input.microarray_or_rnaseq=='RNA-Seq'",
                                    # Analyse raw or processed data?
                                    shinyWidgets::prettyRadioButtons(
                                      inputId = "raw_or_norm_rnaseq",
                                      label = NULL,
-                                     choices = c("Raw counts" = "Raw data", 
+                                     choices = c("Raw counts" = "Raw data",
                                                  "Processed counts" = "Processed data"),
                                      inline = TRUE,
                                      status = "info",
                                      fill = TRUE),
                                    ),
-                                 
+
 
                                  conditionalPanel(
                                    condition = "input.microarray_or_rnaseq=='Microarray'",
@@ -131,7 +132,7 @@ ui <- tagList(
                                    shinyWidgets::prettyRadioButtons(
                                      inputId = "raw_or_norm_microarray",
                                      label = NULL,
-                                     choices = c("CEL files" = "Raw data", 
+                                     choices = c("CEL files" = "Raw data",
                                                  "Processed intensities" = "Processed data"),
                                      inline = TRUE,
                                      status = "info",
