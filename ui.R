@@ -618,20 +618,29 @@ ui <- tagList(
                         sidebarPanel(
                           h2(strong("Gene set analysis")),
                           
-                          h5("In the gene set analysis, you can find dysregulated 
-                          processes and pathways. You can perform gene set analysis using 
-                             two different methods: Gene Set Enrichment Analysis (GSEA) and 
-                             Overrepresentation analysis (ORA). Select below which method you 
-                             would like to use."),
-                          
                           shinyWidgets::prettyRadioButtons(
                             inputId = "ORA_or_GSEA_microarray_raw",
                             label = NULL, 
                             choices = c("ORA", "GSEA"),
                             selected = "ORA",
-                            #status = "warning",
+                            status = "success",
                             fill = TRUE,
                             inline = TRUE),
+                          
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_microarray_raw == 'ORA'",
+                            h5("With",strong("Overrepresentation Analysis (ORA),"),"dysregulated 
+                          processes and pathways can be idenified. These processes/pathways 
+                          are identified by testing whether their genes are overrepresented among the (most) significant genes.
+                              ."),
+                          ),
+                          
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_microarray_raw == 'GSEA'",
+                            h5("With", strong("Gene Set Enrichment Analysis (GSEA),"), "you can find dysregulated 
+                          processes and pathways. These processes/pathways are identified by testing whether 
+                               their genes show concordant changes in the data."),
+                          ),
                           
                           hr(),
                           
@@ -708,6 +717,7 @@ ui <- tagList(
                               choices = c("Threshold", 
                                           "Top N"),
                               status = "danger",
+                              selected = "Top N",
                               fill = TRUE,
                               inline = TRUE),
                             
@@ -1260,18 +1270,17 @@ ui <- tagList(
                           
                           conditionalPanel(
                             condition = "input.ORA_or_GSEA_microarray_norm == 'ORA'",
-                            h5("With Overrepresentation Analysis (ORA), you can find dysregulated 
-                          processes and pathways. In this method, 
-                               relevant processes/pathways are identified by testing whether 
-                               their genes show concordant changes in the data."),
+                            h5("With",strong("Overrepresentation Analysis (ORA),"),"dysregulated 
+                          processes and pathways can be idenified. These processes/pathways 
+                          are identified by testing whether their genes are overrepresented among the (most) significant genes.
+                              ."),
                           ),
                           
                           conditionalPanel(
                             condition = "input.ORA_or_GSEA_microarray_norm == 'GSEA'",
-                            h5("With Gene Set Enrichment Analysis (GSEA), you can find dysregulated 
-                          processes and pathways. In this method, 
-                               relevant processes/pathways are identified by testing whether 
-                               their genes are overrepresented among the (most) significant genes."),
+                            h5("With", strong("Gene Set Enrichment Analysis (GSEA),"), "you can find dysregulated 
+                          processes and pathways. These processes/pathways are identified by testing whether 
+                               their genes show concordant changes in the data."),
                           ),
                         
                           hr(),
@@ -1349,6 +1358,7 @@ ui <- tagList(
                               choices = c("Threshold", 
                                           "Top N"),
                               status = "danger",
+                              selected = "Top N",
                               fill = TRUE,
                               inline = TRUE),
                             
@@ -1832,20 +1842,29 @@ ui <- tagList(
                         sidebarPanel(
                           h2(strong("Gene set analysis")),
                           
-                          h5("In the gene set analysis, you can find dysregulated 
-                          processes and pathways. You can perform gene set analysis using 
-                             two different methods: Gene Set Enrichment Analysis (GSEA) and 
-                             Overrepresentation analysis (ORA). Select below which method you 
-                             would like to use."),
-                          
                           shinyWidgets::prettyRadioButtons(
                             inputId = "ORA_or_GSEA_rnaseq_raw",
                             label = NULL, 
                             choices = c("ORA", "GSEA"),
                             selected = "ORA",
-                            #status = "warning",
+                            status = "success",
                             fill = TRUE,
                             inline = TRUE),
+                          
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_rnaseq_raw == 'ORA'",
+                            h5("With",strong("Overrepresentation Analysis (ORA),"),"dysregulated 
+                          processes and pathways can be idenified. These processes/pathways 
+                          are identified by testing whether their genes are overrepresented among the (most) significant genes.
+                              ."),
+                          ),
+                          
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_rnaseq_raw == 'GSEA'",
+                            h5("With", strong("Gene Set Enrichment Analysis (GSEA),"), "you can find dysregulated 
+                          processes and pathways. These processes/pathways are identified by testing whether 
+                               their genes show concordant changes in the data."),
+                          ),
                           
                           hr(),
                           
@@ -1922,6 +1941,7 @@ ui <- tagList(
                               choices = c("Threshold", 
                                           "Top N"),
                               status = "danger",
+                              selected = "Top N",
                               fill = TRUE,
                               inline = TRUE),
                             
@@ -2436,20 +2456,29 @@ ui <- tagList(
                         sidebarPanel(
                           h2(strong("Gene set analysis")),
                           
-                          h5("In the gene set analysis, you can find dysregulated 
-                          processes and pathways. You can perform gene set analysis using 
-                             two different methods: Gene Set Enrichment Analysis (GSEA) and 
-                             Overrepresentation analysis (ORA). Select below which method you 
-                             would like to use."),
-                          
                           shinyWidgets::prettyRadioButtons(
                             inputId = "ORA_or_GSEA_rnaseq_norm",
                             label = NULL, 
                             choices = c("ORA", "GSEA"),
                             selected = "ORA",
-                            #status = "warning",
+                            status = "success",
                             fill = TRUE,
                             inline = TRUE),
+                          
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_rnaseq_norm == 'ORA'",
+                            h5("With",strong("Overrepresentation Analysis (ORA),"),"dysregulated 
+                          processes and pathways can be idenified. These processes/pathways 
+                          are identified by testing whether their genes are overrepresented among the (most) significant genes.
+                              ."),
+                          ),
+                          
+                          conditionalPanel(
+                            condition = "input.ORA_or_GSEA_rnaseq_norm == 'GSEA'",
+                            h5("With", strong("Gene Set Enrichment Analysis (GSEA),"), "you can find dysregulated 
+                          processes and pathways. These processes/pathways are identified by testing whether 
+                               their genes show concordant changes in the data."),
+                          ),
                           
                           hr(),
                           
@@ -2526,6 +2555,7 @@ ui <- tagList(
                               choices = c("Threshold", 
                                           "Top N"),
                               status = "danger",
+                              selected = "Top N",
                               fill = TRUE,
                               inline = TRUE),
                             

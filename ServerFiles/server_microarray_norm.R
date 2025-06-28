@@ -434,7 +434,8 @@ observe({
                                            position = "right",
                                            size = "large")
                   ),
-                  choices = samples)
+                  choices = samples,
+                  multiple = TRUE)
     } else{
       NULL
     }
