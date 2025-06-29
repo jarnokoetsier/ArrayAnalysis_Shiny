@@ -51,11 +51,21 @@ observe({
     updateNavbarPage(session, "navbar",
                      selected = "panel_upload_rnaseq_raw")
     
-    # Example meta data file
+    # Example metadata file
     output$downloadmeta_example_rnaseq_raw <- downloadHandler(
       filename = "MetaData_example.csv",
       content = function(file){
-        write.csv(exampleMeta, file, quote = FALSE, row.names = FALSE)
+        file.copy("Data/RNAseq/sampleInfo_GSE128380.csv", file)
+        #write.csv(exampleMeta, file, quote = FALSE, row.names = FALSE)
+      }
+    )
+    
+    # Example expression matrix file
+    output$downloadexpr_example_rnaseq_raw <- downloadHandler(
+      filename = "ExprData_example.csv",
+      content = function(file){
+        file.copy("Data/RNAseq/rawExpr_GSE128380.csv", file)
+        #write.csv(exampleMeta, file, quote = FALSE, row.names = FALSE)
       }
     )
   })
@@ -165,9 +175,9 @@ observe({
                      hr(),
                      DT::dataTableOutput(outputId = "exprTable_upload_rnaseq_raw") %>% 
                        shinycssloaders::withSpinner(color="#0dc5c1")),
-            tabPanel("Meta data",                  # Meta table
-                     h3(strong("Meta data")),
-                     h5("This is a preview of the meta data table. Please check if the data 
+            tabPanel("Metadata",                  # Meta table
+                     h3(strong("Metadata")),
+                     h5("This is a preview of the metadata table. Please check if the data 
                has been correctly imported."),
                      hr(),
                      DT::dataTableOutput(outputId = "metaTable_rnaseq_raw") %>% 
@@ -210,7 +220,7 @@ observe({
       })
       
     } else {
-      # No common samples between meta data and expression data
+      # No common samples between metadata and expression data
       shinyWidgets::sendSweetAlert(
         session = session,
         title = "Error!!",
@@ -345,7 +355,7 @@ observe({
       
     } else {
       
-      # No common samples between meta data and expression data
+      # No common samples between metadata and expression data
       shinyWidgets::sendSweetAlert(
         session = session,
         title = "Error!!",

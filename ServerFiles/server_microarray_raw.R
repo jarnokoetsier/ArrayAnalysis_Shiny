@@ -50,11 +50,19 @@ observe({
     updateNavbarPage(session, "navbar",
                      selected = "panel_upload_microarray_raw")
     
-    # Example meta data file
+    # Example metadata file
     output$downloadmeta_example_microarray_raw <- downloadHandler(
       filename = "MetaData_example.csv",
       content = function(file){
-        write.csv(exampleMeta, file, quote = FALSE, row.names = FALSE)
+        file.copy("Data/Microarray/metaData_GSE6955.csv", file)
+      }
+    )
+    
+    # Example expression matrix file
+    output$downloadexpr_example_microarray_raw <- downloadHandler(
+      filename = "ExprData_example.zip",
+      content = function(file){
+        file.copy("Data/Microarray/GSE6955_RAW.zip", file)
       }
     )
   })
@@ -112,7 +120,7 @@ observe({
                             zippath = rv$zippath, 
                             rm = FALSE)
       
-      # Check whether all expression samples have meta data available
+      # Check whether all expression samples have metadata available
       if (nrow(rv$metaData) < length(rv$celfiles)){
         shinyWidgets::sendSweetAlert(
           session = session,
@@ -146,7 +154,7 @@ observe({
         DT::datatable(rv$metaData, editable = TRUE)
       })
       
-      # Allow the user to adjust meta data
+      # Allow the user to adjust metadata
       observeEvent(input$metaTable_microarray_raw_cell_edit, {
         row  <- input$metaTable_microarray_raw_cell_edit$row
         clmn <- input$metaTable_microarray_raw_cell_edit$col
@@ -164,9 +172,9 @@ observe({
                      hr(),
                      DT::dataTableOutput(outputId = "exprTable_upload_microarray_raw") %>% 
                        withSpinner(color="#0dc5c1")),
-            tabPanel("Meta data",                  # Meta table
-                     h3(strong("Meta data")),
-                     h5("This is a preview of the meta data. Please check if the data 
+            tabPanel("Metadata",                  # Meta table
+                     h3(strong("Metadata")),
+                     h5("This is a preview of the metadata. Please check if the data 
                has been correctly imported."),
                      hr(),
                      DT::dataTableOutput(outputId = "metaTable_microarray_raw") %>% 
@@ -209,7 +217,7 @@ observe({
       })
       
     } else {
-      # No common samples between meta data and expression data
+      # No common samples between metadata and expression data
       shinyWidgets::sendSweetAlert(
         session = session,
         title = "Error!!",
@@ -265,7 +273,7 @@ observe({
                             zippath = rv$zippath,
                             rm = FALSE)
       
-      # Check whether all expression samples have meta data available
+      # Check whether all expression samples have metadata available
       if (nrow(rv$metaData) < length(rv$celfiles)){
         shinyWidgets::sendSweetAlert(
           session = session,
@@ -299,7 +307,7 @@ observe({
         DT::datatable(rv$metaData, editable = TRUE)
       })
       
-      # Allow the user to adjust the meta data
+      # Allow the user to adjust the metadata
       observeEvent(input$metaTable_microarray_raw_cell_edit, {
         row  <- input$metaTable_microarray_raw_cell_edit$row
         clmn <- input$metaTable_microarray_raw_cell_edit$col
@@ -320,7 +328,7 @@ observe({
                      DT::dataTableOutput(outputId = "exprTable_upload_microarray_raw") %>% 
                        withSpinner(color="#0dc5c1")),
             
-            # Tab with the meta data
+            # Tab with the metadata
             tabPanel("Metadata",                  
                      h3(strong("Metadata")),
                      h5("This is a preview of the metadata. Please check if the data 
@@ -343,7 +351,7 @@ observe({
         # Show RNA-seq upload tab
         showTab("navbar", target = "panel_preprocessing_microarray_raw")
         
-        # Show success message (only if the meta data is available for 
+        # Show success message (only if the metadata is available for 
         # each expression file)
         if (nrow(rv$metaData) >= length(rv$celfiles)){
           
@@ -370,7 +378,7 @@ observe({
       
     } else { # if nrow(rv$metaData) == 0
       
-      # No common samples between meta data and expression data
+      # No common samples between metadata and expression data
       shinyWidgets::sendSweetAlert(
         session = session,
         title = "Error!!",

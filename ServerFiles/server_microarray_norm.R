@@ -50,11 +50,19 @@ observe({
     updateNavbarPage(session, "navbar",
                      selected = "panel_upload_microarray_norm")
     
-    # Example meta data file
+    # Example metadata file
     output$downloadmeta_example_microarray_norm <- downloadHandler(
       filename = "MetaData_example.csv",
       content = function(file){
-        write.csv(exampleMeta, file, quote = FALSE, row.names = FALSE)
+        file.copy("Data/Microarray/metaData_GSE6955.csv", file)
+      }
+    )
+    
+    # Example expression matrix file
+    output$downloadexpr_example_microarray_norm <- downloadHandler(
+      filename = "ExprData_example.csv",
+      content = function(file){
+        file.copy("Data/Microarray/normExpr_GSE6955.csv", file)      
       }
     )
   })
@@ -208,9 +216,9 @@ observe({
                      hr(),
                      DT::dataTableOutput(outputId = "exprTable_upload_microarray_norm") %>% 
                        shinycssloaders::withSpinner(color="#0dc5c1")),
-            tabPanel("Meta data",                  # Meta table
-                     h3(strong("Meta data")),
-                     h5("This is a preview of the meta data. Please check if the data 
+            tabPanel("Metadata",                  # Meta table
+                     h3(strong("Metadata")),
+                     h5("This is a preview of the metadata. Please check if the data 
                has been correctly imported."),
                      hr(),
                      DT::dataTableOutput(outputId = "metaTable_microarray_norm") %>% 
@@ -253,7 +261,7 @@ observe({
       })
       
     } else {
-      # No common samples between meta data and expression data
+      # No common samples between metadata and expression data
       shinyWidgets::sendSweetAlert(
         session = session,
         title = "Error!!",
@@ -346,9 +354,9 @@ observe({
                      hr(),
                      DT::dataTableOutput(outputId = "exprTable_upload_microarray_norm") %>% 
                        shinycssloaders::withSpinner(color="#0dc5c1")),
-            tabPanel("Meta data",                  # Meta table
-                     h3(strong("Meta data")),
-                     h5("This is a preview of the meta data. Please check if the data 
+            tabPanel("Metadata",                  # Meta table
+                     h3(strong("Metadata")),
+                     h5("This is a preview of the metadata. Please check if the data 
                has been correctly imported."),
                      hr(),
                      DT::dataTableOutput(outputId = "metaTable_microarray_norm") %>% 
@@ -391,7 +399,7 @@ observe({
       })
       
     } else {
-      # No common samples between meta data and expression data
+      # No common samples between metadata and expression data
       shinyWidgets::sendSweetAlert(
         session = session,
         title = "Error!!",

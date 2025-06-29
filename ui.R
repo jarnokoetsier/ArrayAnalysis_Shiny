@@ -197,17 +197,19 @@ ui <- tagList(
                           
                           #Title
                           h2(strong("Data upload")),
-                          h5("Before you can run the analysis workflow, you first 
-                           need to upload the expression data and a metadata table."),
+                          h5("Before you can run the analysis, you first 
+                           need to upload the expression data and metadata."),
                           
                           hr(),
                           
-                          # Description upload expression data
                           h4(strong("1. Upload expression data")),
                           h5("The expression data should be supplied as an ", 
                              em(".zip"), " folder containing all ", em(".CEL / .CEL.gz"), 
                              " files. The file names should match with
-                           the sample IDs in the metadata table."),
+                           the sample IDs in the metadata table.",
+                             "Click ", downloadLink('downloadexpr_example_microarray_raw', 
+                                                    'here'),
+                             "for an example zip file."),
                           
                           # File input for upload expression data
                           fileInput(inputId = "uploadCEL_microarray_raw",
@@ -215,16 +217,15 @@ ui <- tagList(
                                     accept = ".zip",
                                     placeholder = "Select .zip data file"),
                           
-                          # Description upload metadata
                           h4(strong("2. Upload metadata")),
-                          h5("The metadata includes relevant information 
-                          (e.g., diagnostic group) about the samples. 
-                             You can upload the metadata as a ", em(".csv/.tsv"),
-                             " file or upload a Series Matrix file.", "Click ", 
-                             downloadLink('downloadmeta_example_microarray_raw', 
-                                          'here'),
-                             "for an example ",em(".csv"), " metadata table. 
-                             A Series Matrix File can be downloaded from the ",
+                          h5("The metadata includes relevant information
+                           about the samples (e.g., genotype or experimental group). 
+                           You can upload the metadata as a 
+                           .csv/.tsv file or upload a Series Matrix file.", 
+                             "Click ", downloadLink('downloadmeta_example_microarray_raw', 
+                                                    'here'),
+                             "for an example .csv metadata file. A Series Matrix File
+                           can be downloaded from the",
                              a("GEO website.", 
                                href = "https://www.ncbi.nlm.nih.gov/geo/",
                                target="_blank")),
@@ -279,7 +280,7 @@ ui <- tagList(
                         # Main panel
                         mainPanel(
                           
-                          # Expression matrix and meta data table
+                          # Expression matrix and metadata table
                           uiOutput("UI_upload_microarray_raw")
                         )
                         
@@ -517,9 +518,8 @@ ui <- tagList(
                               ) 
                             ) |>
                               prompter::add_prompt(message = "Select which experimental groups you want 
-                                       to compare to each other. Please be aware of the 
-                                                   direction of the comparison! This will 
-                                                   influence the logFC estimate.", 
+                                       to compare to each other. Comparisons are commonly defined 
+                                                   as `Disease - Control` or `Treatment - Control`.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -631,8 +631,7 @@ ui <- tagList(
                             condition = "input.ORA_or_GSEA_microarray_raw == 'ORA'",
                             h5("With",strong("Overrepresentation Analysis (ORA),"),"dysregulated 
                           processes and pathways can be idenified. These processes/pathways 
-                          are identified by testing whether their genes are overrepresented among the (most) significant genes.
-                              ."),
+                          are identified by testing whether their genes are overrepresented among the (most) significant genes."),
                           ),
                           
                           conditionalPanel(
@@ -666,9 +665,9 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "A geneset is a collection of genes that are association 
-                                       with a specific biological process (GO-BP), molecular function (GO-MF),
-                                       cellular component (GO-CC), or biological pathway (WikiPathways).", 
+                              prompter::add_prompt(message = "A geneset collection contains different sets of genes that are linked to 
+                                       biological processes (GO-BP), molecular functions (GO-MF),
+                                       cellular components (GO-CC), or biological pathways (WikiPathways and KEGG).", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -692,9 +691,7 @@ ui <- tagList(
                                   name = "question-circle",
                                 ) 
                               ) |>
-                                prompter::add_prompt(message = "Tip: look at the volcano plot in the previous 
-                                       step (statistical analysis) to find the optimal P value and 
-                                       logFC thresholds.", 
+                                prompter::add_prompt(message = "Select which genes are used in the analysis.", 
                                                      position = "right",
                                                      size = "large")
                             ))),
@@ -805,7 +802,18 @@ ui <- tagList(
                           
                           # Select organism
                           selectInput(inputId = "organism_ORA_microarray_raw",
-                                      label = "Organism",
+                                      label = tags$span(
+                                        "Organism", 
+                                        tags$span(
+                                          icon(
+                                            name = "question-circle",
+                                          ) 
+                                        ) |>
+                                          prompter::add_prompt(message = "Select the organism. 
+                                               This information is needed to match the gene IDs.", 
+                                                               position = "right",
+                                                               size = "large")
+                                      ),
                                       choices = c("Bos taurus",
                                                   "Caenorhabditis elegans",
                                                   "Homo sapiens",
@@ -818,7 +826,18 @@ ui <- tagList(
                           
                           # Which gene IDs do they column contain?
                           selectInput(inputId = "selID_ORA_microarray_raw",
-                                      label = "Which gene ID to use?",
+                                      label = tags$span(
+                                        "Which gene ID to use?", 
+                                        tags$span(
+                                          icon(
+                                            name = "question-circle",
+                                          ) 
+                                        ) |>
+                                          prompter::add_prompt(message = "Select which gene ID is 
+                                               used in the top table.", 
+                                                               position = "right",
+                                                               size = "large")
+                                      ),
                                       choices = c("Ensembl Gene ID" = "ENSEMBL", 
                                                   "Entrez Gene ID" = "ENTREZID", 
                                                   "Gene Symbol/Name" = "SYMBOL"),
@@ -879,14 +898,17 @@ ui <- tagList(
                           
                           #Title
                           h2(strong("Data upload")),
-                          h5("Before you can run the analysis workflow, you first 
-                           need to upload the expression data as well as the meta data."),
+                          h5("Before you can run the analysis, you first 
+                           need to upload the expression data and metadata."),
                           hr(),
                           
-                          # Description upload expression data
                           h4(strong("1. Upload expression data")),
                           h5("The expression data should be supplied as a .tsv/.csv file or as a Series 
-                           Matrix File. A Series Matrix File can be downloaded from the ",
+                           Matrix File.", "Click ", 
+                             downloadLink('downloadexpr_example_microarray_norm', 
+                                                    'here'),
+                             "for an example expression matrix in csv format.",
+                             "A Series Matrix File can be downloaded from the ",
                              a("GEO website.", 
                                href = "https://www.ncbi.nlm.nih.gov/geo/",
                                target="_blank")),
@@ -921,16 +943,16 @@ ui <- tagList(
                                       placeholder = "Select .txt.gz Series Matrix File"),
                           ),
                           
-                          # Description upload metadata
+                          
                           h4(strong("2. Upload metadata")),
-                          h5("The metadata includes relevant information 
-                          (e.g., diagnostic group) about the samples. 
-                             You can upload the metadata as a ", em(".csv/.tsv"),
-                             " file or upload a Series Matrix file.", "Click ", 
-                             downloadLink('downloadmeta_example_microarray_norm', 
-                                          'here'),
-                             "for an example ",em(".csv"), " metadata table. 
-                             A Series Matrix File can be downloaded from the ",
+                          h5("The metadata includes relevant information
+                           about the samples (e.g., genotype or experimental group). 
+                           You can upload the metadata as a 
+                           .csv/.tsv file or upload a Series Matrix file.", 
+                             "Click ", downloadLink('downloadmeta_example_microarray_norm', 
+                                                    'here'),
+                             "for an example .csv metadata file. A Series Matrix File
+                           can be downloaded from the",
                              a("GEO website.", 
                                href = "https://www.ncbi.nlm.nih.gov/geo/",
                                target="_blank")),
@@ -1170,7 +1192,8 @@ ui <- tagList(
                               ) 
                             ) |>
                               prompter::add_prompt(message = "Select which experimental groups you want 
-                                       to compare to each other.", 
+                                       to compare to each other. Comparisons are commonly defined 
+                                                   as `Disease - Control` or `Treatment - Control`.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -1272,8 +1295,7 @@ ui <- tagList(
                             condition = "input.ORA_or_GSEA_microarray_norm == 'ORA'",
                             h5("With",strong("Overrepresentation Analysis (ORA),"),"dysregulated 
                           processes and pathways can be idenified. These processes/pathways 
-                          are identified by testing whether their genes are overrepresented among the (most) significant genes.
-                              ."),
+                          are identified by testing whether their genes are overrepresented among the (most) significant genes."),
                           ),
                           
                           conditionalPanel(
@@ -1307,9 +1329,9 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "A geneset is a collection of genes that are association 
-                                       with a specific biological process (GO-BP), molecular function (GO-MF),
-                                       cellular component (GO-CC), or biological pathway (WikiPathways).", 
+                              prompter::add_prompt(message = "A geneset collection contains different sets of genes that are linked to 
+                                       biological processes (GO-BP), molecular functions (GO-MF),
+                                       cellular components (GO-CC), or biological pathways (WikiPathways and KEGG).", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -1333,9 +1355,7 @@ ui <- tagList(
                                   name = "question-circle",
                                 ) 
                               ) |>
-                                prompter::add_prompt(message = "Tip: look at the volcano plot in the previous 
-                                       step (statistical analysis) to find the optimal P value and 
-                                       logFC thresholds.", 
+                                prompter::add_prompt(message = "Select which genes are used in the analysis.", 
                                                      position = "right",
                                                      size = "large")
                             ))),
@@ -1445,7 +1465,18 @@ ui <- tagList(
                           
                           # Select organism
                           selectInput(inputId = "organism_ORA_microarray_norm",
-                                      label = "Organism",
+                                      label = tags$span(
+                                        "Organism", 
+                                        tags$span(
+                                          icon(
+                                            name = "question-circle",
+                                          ) 
+                                        ) |>
+                                          prompter::add_prompt(message = "Select the organism. 
+                                               This information is needed to match the gene IDs.", 
+                                                               position = "right",
+                                                               size = "large")
+                                      ),
                                       choices = c("Bos taurus",
                                                   "Caenorhabditis elegans",
                                                   "Homo sapiens",
@@ -1458,7 +1489,18 @@ ui <- tagList(
                           
                           # Which gene IDs do they column contain?
                           selectInput(inputId = "selID_ORA_microarray_norm",
-                                      label = "Which gene ID to use?",
+                                      label = tags$span(
+                                        "Which gene ID to use?", 
+                                        tags$span(
+                                          icon(
+                                            name = "question-circle",
+                                          ) 
+                                        ) |>
+                                          prompter::add_prompt(message = "Select which gene ID is 
+                                               used in the top table.", 
+                                                               position = "right",
+                                                               size = "large")
+                                      ),
                                       choices = c("Ensembl Gene ID" = "ENSEMBL", 
                                                   "Entrez Gene ID" = "ENTREZID", 
                                                   "Gene Symbol/Name" = "SYMBOL"),
@@ -1519,25 +1561,31 @@ ui <- tagList(
                           
                           #Title
                           h2(strong("Data upload")),
-                          h5("Before you can run the analysis workflow, you first 
-                           need to upload the expression data and the metadata."),
+                          h5("Before you can run the analysis, you first 
+                           need to upload the expression data and metadata."),
                           
                           hr(),
                           
                           h4(strong("1. Upload expression data")),
-                          h5("The expression data should be supplied as a .tsv/.csv file."),
+                          h5("The expression data should be supplied as a .tsv/.csv file. 
+                             The expression data is a matrix with the genes in the rows  
+                             and the samples in the columns. ",
+                             "Click ", downloadLink('downloadexpr_example_rnaseq_raw', 
+                                                    'here'),
+                             "for an example expression matrix."),
                           fileInput(inputId = "uploadExprData_rnaseq_raw",
                                     label = NULL,
                                     accept = c(".tsv",".csv"),
                                     placeholder = "Select .tsv/.csv file"),
                           
                           h4(strong("2. Upload metadata")),
-                          h5("The metadata includes relevant information (e.g., diagnostic group)
-                           about the samples. You can upload the metadata as a 
+                          h5("The metadata includes relevant information
+                           about the samples (e.g., genotype or experimental group). 
+                           You can upload the metadata as a 
                            .csv/.tsv file or upload a Series Matrix file.", 
                              "Click ", downloadLink('downloadmeta_example_rnaseq_raw', 
                                                     'here'),
-                             "for an example .csv meta data file. A Series Matrix File
+                             "for an example .csv metadata file. A Series Matrix File
                            can be downloaded from the",
                              a("GEO website.", 
                                href = "https://www.ncbi.nlm.nih.gov/geo/",
@@ -1738,7 +1786,8 @@ ui <- tagList(
                               ) 
                             ) |>
                               prompter::add_prompt(message = "Select which experimental groups you want 
-                                       to compare to each other.", 
+                                       to compare to each other. Comparisons are commonly defined 
+                                                   as `Disease - Control` or `Treatment - Control`.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -1855,8 +1904,7 @@ ui <- tagList(
                             condition = "input.ORA_or_GSEA_rnaseq_raw == 'ORA'",
                             h5("With",strong("Overrepresentation Analysis (ORA),"),"dysregulated 
                           processes and pathways can be idenified. These processes/pathways 
-                          are identified by testing whether their genes are overrepresented among the (most) significant genes.
-                              ."),
+                          are identified by testing whether their genes are overrepresented among the (most) significant genes."),
                           ),
                           
                           conditionalPanel(
@@ -1890,9 +1938,9 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "A geneset is a collection of genes that are association 
-                                       with a specific biological process (GO-BP), molecular function (GO-MF),
-                                       cellular component (GO-CC), or biological pathway (WikiPathways).", 
+                              prompter::add_prompt(message = "A geneset collection contains different sets of genes that are linked to 
+                                       biological processes (GO-BP), molecular functions (GO-MF),
+                                       cellular components (GO-CC), or biological pathways (WikiPathways and KEGG).", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -1916,9 +1964,7 @@ ui <- tagList(
                                   name = "question-circle",
                                 ) 
                               ) |>
-                                prompter::add_prompt(message = "Tip: look at the volcano plot in the previous 
-                                       step (statistical analysis) to find the optimal P value and 
-                                       logFC thresholds.", 
+                                prompter::add_prompt(message = "Select which genes are used in the analysis.", 
                                                      position = "right",
                                                      size = "large")
                             ))),
@@ -2028,7 +2074,18 @@ ui <- tagList(
                           ))),
                           # Select organism
                           selectInput(inputId = "organism_ORA_rnaseq_raw",
-                                      label = "Organism",
+                                      label = tags$span(
+                                        "Organism", 
+                                        tags$span(
+                                          icon(
+                                            name = "question-circle",
+                                          ) 
+                                        ) |>
+                                          prompter::add_prompt(message = "Select the organism. 
+                                               This information is needed to match the gene IDs.", 
+                                                               position = "right",
+                                                               size = "large")
+                                      ),
                                       choices = c("Bos taurus",
                                                   "Caenorhabditis elegans",
                                                   "Homo sapiens",
@@ -2041,7 +2098,18 @@ ui <- tagList(
                           
                           # Which gene IDs do they column contain?
                           selectInput(inputId = "selID_ORA_rnaseq_raw",
-                                      label = "Which gene ID to use?",
+                                      label = tags$span(
+                                        "Which gene ID to use?", 
+                                        tags$span(
+                                          icon(
+                                            name = "question-circle",
+                                          ) 
+                                        ) |>
+                                          prompter::add_prompt(message = "Select which gene ID is 
+                                               used in the top table.", 
+                                                               position = "right",
+                                                               size = "large")
+                                      ),
                                       choices = c("Ensembl Gene ID" = "ENSEMBL", 
                                                   "Entrez Gene ID" = "ENTREZID", 
                                                   "Gene Symbol/Name" = "SYMBOL"),
@@ -2104,25 +2172,35 @@ ui <- tagList(
                           
                           #Title
                           h2(strong("Data upload")),
-                          h5("Before you can run the analysis workflow, you first 
-                           need to upload the expression data as well as the meta data."),
+                          h5("Before you can run the analysis, you first 
+                           need to upload the expression data and metadata."),
                           
                           hr(),
                           
                           h4(strong("1. Upload expression data")),
-                          h5("The expression data should be supplied as a .tsv/.csv file."),
+                          h5("The expression data should be supplied as a .tsv/.csv file. 
+                             The expression data is a matrix with the genes in the rows  
+                             and the samples in the columns. ",
+                             "Click ", downloadLink('downloadexpr_example_rnaseq_norm', 
+                                                    'here'),
+                             "for an example expression matrix."),
                           fileInput(inputId = "uploadExprData_rnaseq_norm",
                                     label = NULL,
                                     accept = c(".tsv",".csv"),
                                     placeholder = "Select .tsv/.csv file"),
                           
-                          h4(strong("2. Upload meta data")),
-                          h5("The metadata includes relevant information (e.g., diagnostic group)
-                           about the samples. You can upload the meta data as a 
+                          h4(strong("2. Upload metadata")),
+                          h5("The metadata includes relevant information
+                           about the samples (e.g., genotype or experimental group). 
+                           You can upload the metadata as a 
                            .csv/.tsv file or upload a Series Matrix file.", 
-                             "Click ", downloadLink('downloadmeta_example_rnaseq_norm', 'here'),
-                             "for an example .csv meta data file. A Series Matrix File
-                           can be downloaded from the GEO website."),
+                             "Click ", downloadLink('downloadmeta_example_rnaseq_norm', 
+                                                    'here'),
+                             "for an example .csv metadata file. A Series Matrix File
+                           can be downloaded from the",
+                             a("GEO website.", 
+                               href = "https://www.ncbi.nlm.nih.gov/geo/",
+                               target="_blank")),
                           
                           shinyWidgets::prettyRadioButtons(
                             inputId = "MetaFileType_rnaseq_norm", 
@@ -2369,7 +2447,8 @@ ui <- tagList(
                               ) 
                             ) |>
                               prompter::add_prompt(message = "Select which experimental groups you want 
-                                       to compare to each other.", 
+                                       to compare to each other. Comparisons are commonly defined 
+                                                   as `Disease - Control` or `Treatment - Control`.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -2469,8 +2548,7 @@ ui <- tagList(
                             condition = "input.ORA_or_GSEA_rnaseq_norm == 'ORA'",
                             h5("With",strong("Overrepresentation Analysis (ORA),"),"dysregulated 
                           processes and pathways can be idenified. These processes/pathways 
-                          are identified by testing whether their genes are overrepresented among the (most) significant genes.
-                              ."),
+                          are identified by testing whether their genes are overrepresented among the (most) significant genes."),
                           ),
                           
                           conditionalPanel(
@@ -2489,8 +2567,7 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Choose from the comparisons for which 
-                                       the statistical analysis was performed in the previous step.", 
+                              prompter::add_prompt(message = "Choose for which comparison you want to perform gene set analysis.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -2504,9 +2581,9 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "A geneset is a collection of genes that are association 
-                                       with a specific biological process (GO-BP), molecular function (GO-MF),
-                                       cellular component (GO-CC), or biological pathway (WikiPathways).", 
+                              prompter::add_prompt(message = "A geneset collection contains different sets of genes that are linked to 
+                                       biological processes (GO-BP), molecular functions (GO-MF),
+                                       cellular components (GO-CC), or biological pathways (WikiPathways and KEGG).", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -2530,9 +2607,7 @@ ui <- tagList(
                                   name = "question-circle",
                                 ) 
                               ) |>
-                                prompter::add_prompt(message = "Tip: look at the volcano plot in the previous 
-                                       step (statistical analysis) to find the optimal P value and 
-                                       logFC thresholds.", 
+                                prompter::add_prompt(message = "Select which genes are used in the analysis.", 
                                                      position = "right",
                                                      size = "large")
                             ))),
@@ -2643,7 +2718,18 @@ ui <- tagList(
                           
                           # Select organism
                           selectInput(inputId = "organism_ORA_rnaseq_norm",
-                                      label = "Organism",
+                                      label = tags$span(
+                                        "Organism", 
+                                        tags$span(
+                                          icon(
+                                            name = "question-circle",
+                                          ) 
+                                        ) |>
+                                          prompter::add_prompt(message = "Select the organism. 
+                                               This information is needed to match the gene IDs.", 
+                                                               position = "right",
+                                                               size = "large")
+                                      ),
                                       choices = c("Bos taurus",
                                                   "Caenorhabditis elegans",
                                                   "Homo sapiens",
@@ -2655,7 +2741,18 @@ ui <- tagList(
                           
                           # Which gene IDs do they column contain?
                           selectInput(inputId = "selID_ORA_rnaseq_norm",
-                                      label = "Which gene ID to use?",
+                                      label =  tags$span(
+                                        "Which gene ID to use?", 
+                                        tags$span(
+                                          icon(
+                                            name = "question-circle",
+                                          ) 
+                                        ) |>
+                                          prompter::add_prompt(message = "Select which gene ID is 
+                                               used in the top table.", 
+                                                               position = "right",
+                                                               size = "large")
+                                      ),
                                       choices = c("Ensembl Gene ID" = "ENSEMBL", 
                                                   "Entrez Gene ID" = "ENTREZID", 
                                                   "Gene Symbol/Name" = "SYMBOL"),
