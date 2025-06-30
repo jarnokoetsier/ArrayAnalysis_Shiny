@@ -686,8 +686,7 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Choose from the comparisons for which 
-                                       the statistical analysis was performed in the previous step.", 
+                              prompter::add_prompt(message = "Choose for which comparison you want to perform gene set analysis.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -1350,8 +1349,7 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Choose from the comparisons for which 
-                                       the statistical analysis was performed in the previous step.", 
+                              prompter::add_prompt(message = "Choose for which comparison you want to perform gene set analysis.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -1959,8 +1957,7 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Choose from the comparisons for which 
-                                       the statistical analysis was performed in the previous step.", 
+                              prompter::add_prompt(message = "Choose for which comparison you want to perform gene set analysis.", 
                                                    position = "right",
                                                    size = "large")
                           ))),

@@ -621,11 +621,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "geneboxplot_file_rnaseq_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     inline = TRUE,
+                     fill = TRUE
                    )
             )
           ),
@@ -851,11 +853,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "boxplots_file_rnaseq_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     inline = TRUE,
+                     fill = TRUE
                    )
             )
           ),
@@ -1069,11 +1073,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "density_file_rnaseq_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF", "HTML"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     inline = TRUE,
+                     fill = TRUE
                    )
             )
           ),
@@ -1360,11 +1366,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "heatmap_file_rnaseq_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF", "HTML"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     inline = TRUE,
+                     fill = TRUE
                    )
             )
           ),
@@ -1626,11 +1634,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "pca_file_rnaseq_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF", "HTML"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     inline = TRUE,
+                     fill = TRUE
                    )
             )
           ),
@@ -2463,11 +2473,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "statboxplot_file_rnaseq_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     inline = TRUE,
+                     fill = TRUE
                    )
             )
           ),
@@ -2563,11 +2575,13 @@ observe({
             footer = tagList(
               fluidRow(
                 column(6,align = "left",
-                       shinyWidgets::radioGroupButtons(
+                       shinyWidgets::prettyRadioButtons(
                          inputId = "Phistogram_file_rnaseq_raw",
                          label = NULL,
                          choices = c("PNG","PDF", "TIF", "HTML"),
-                         selected = "PNG"
+                         selected = "PNG",
+                         inline = TRUE,
+                         fill = TRUE
                        )
                 )
               ),
@@ -2661,11 +2675,13 @@ observe({
             footer = tagList(
               fluidRow(
                 column(6,align = "left",
-                       shinyWidgets::radioGroupButtons(
+                       shinyWidgets::prettyRadioButtons(
                          inputId = "logFChistogram_file_rnaseq_raw",
                          label = NULL,
                          choices = c("PNG","PDF", "TIF", "HTML"),
-                         selected = "PNG"
+                         selected = "PNG",
+                         inline = TRUE,
+                         fill = TRUE
                        )
                 )
               ),
@@ -2785,11 +2801,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "volcano_file_rnaseq_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF", "HTML"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     inline = TRUE,
+                     fill = TRUE
                    )
             )
           ),
@@ -2903,11 +2921,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "MA_file_rnaseq_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF", "HTML"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     fill = TRUE,
+                     inline = TRUE
                    )
             )
           ),
@@ -3827,11 +3847,13 @@ observe({
               footer = tagList(
                 fluidRow(
                   column(6,align = "left",
-                         shinyWidgets::radioGroupButtons(
+                         shinyWidgets::prettyRadioButtons(
                            inputId = "ORAplot_file_rnaseq_raw",
                            label = NULL,
                            choices = c("PNG","PDF", "TIF", "HTML"),
-                           selected = "PNG"
+                           selected = "PNG",
+                           fill = TRUE,
+                           inline = TRUE
                          )
                   )
                 ),
@@ -3921,11 +3943,13 @@ observe({
               footer = tagList(
                 fluidRow(
                   column(6,align = "left",
-                         shinyWidgets::radioGroupButtons(
+                         shinyWidgets::prettyRadioButtons(
                            inputId = "ORAnetwork_file_rnaseq_raw",
                            label = NULL,
                            choices = c("PNG","PDF", "TIF"),
-                           selected = "PNG"
+                           selected = "PNG",
+                           fill = TRUE,
+                           inline = TRUE
                          )
                   )
                 ),
@@ -4078,39 +4102,32 @@ observe({
                          br(),
                          
                          # Dropdown Button to adjust the plot settings
-                         shinyWidgets::dropdownButton(
-                           tags$div(
-                             style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                             
-                             # Color gradient
-                             tags$h4("Color gradient"),
-                             selectInput(inputId = "color_ORAplot_rnaseq_raw",
-                                         label = NULL,
-                                         choices = c("Viridis", 
-                                                     "Yellow-red", 
-                                                     "Blues", 
-                                                     "Reds")),
-                             br(),
-                             
-                             # Number of genesets
-                             tags$h4("# Genesets"),
-                             sliderInput(
-                               inputId = "nSets_ORAplot_rnaseq_raw",
-                               label = NULL,
-                               value = 10,
-                               min = 5,
-                               max = 20,
-                               step = 1),
-                             
-                             br(),br()
-                           ),
-                           circle = TRUE, status = "info",
-                           icon = icon("fas fa-cog"),
-                           
-                           tooltip = shinyWidgets::tooltipOptions(
-                             title = "Click to personalize the barchart!")
-                           
-                         ), # EO dropdownButton
+                         tags$div(class = "dropdown",
+                                  tags$button(class = "dropbtn", icon("cog")),
+                                  tags$div(class = "dropdown-content",
+                                           
+                                           # Color gradient
+                                           tags$h4("Color gradient"),
+                                           selectInput(inputId = "color_ORAplot_rnaseq_raw",
+                                                       label = NULL,
+                                                       choices = c("Viridis", 
+                                                                   "Yellow-red", 
+                                                                   "Blues", 
+                                                                   "Reds")),
+                                           br(),
+                                           
+                                           # Number of genesets
+                                           tags$h4("# Genesets"),
+                                           sliderInput(
+                                             inputId = "nSets_ORAplot_rnaseq_raw",
+                                             label = NULL,
+                                             value = 10,
+                                             min = 5,
+                                             max = 20,
+                                             step = 1),
+                                           
+                                           br(),br()
+                                  )), # EO dropdownButton
                          
                          # Interactive plot output
                          plotly::plotlyOutput("ORAplot_rnaseq_raw") %>% 
@@ -4135,48 +4152,41 @@ observe({
                          br(),
                          
                          # Dropdown Button to adjust the plot settings
-                         shinyWidgets::dropdownButton(
-                           tags$div(
-                             style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                             
-                             # Color gradient
-                             tags$h4("Color gradient"),
-                             selectInput(inputId = "color_ORAnetwork_rnaseq_raw",
-                                         label = NULL,
-                                         choices = c("Viridis", 
-                                                     "Yellow-red", 
-                                                     "Blues", 
-                                                     "Reds")),
-                             br(),
-                             
-                             # Network layout
-                             tags$h4("Network layout"),
-                             selectInput(inputId = "layout_ORAnetwork_rnaseq_raw",
-                                         label = NULL,
-                                         choices = c('star', 'circle', 'gem', 'dh', 'graphopt', 'grid', 'mds', 
-                                                     'randomly', 'fr', 'kk', 'drl', 'lgl'),
-                                         selected = 'graphopt',
-                                         multiple = FALSE),
-                             br(),
-                             
-                             # Number of genesets
-                             tags$h4("# Genesets"),
-                             sliderInput(
-                               inputId = "nSets_ORAnetwork_rnaseq_raw",
-                               label = NULL,
-                               value = 10,
-                               min = 5,
-                               max = 20,
-                               step = 1),
-                             br(),br()
-                           ),
-                           circle = TRUE, status = "info",
-                           icon = icon("fas fa-cog"),
-                           
-                           tooltip = shinyWidgets::tooltipOptions(
-                             title = "Click to personalize the network!")
-                           
-                         ), # EO dropdownButton
+                         tags$div(class = "dropdown",
+                                  tags$button(class = "dropbtn", icon("cog")),
+                                  tags$div(class = "dropdown-content",
+                                           
+                                           # Color gradient
+                                           tags$h4("Color gradient"),
+                                           selectInput(inputId = "color_ORAnetwork_rnaseq_raw",
+                                                       label = NULL,
+                                                       choices = c("Viridis", 
+                                                                   "Yellow-red", 
+                                                                   "Blues", 
+                                                                   "Reds")),
+                                           br(),
+                                           
+                                           # Network layout
+                                           tags$h4("Network layout"),
+                                           selectInput(inputId = "layout_ORAnetwork_rnaseq_raw",
+                                                       label = NULL,
+                                                       choices = c('star', 'circle', 'gem', 'dh', 'graphopt', 'grid', 'mds', 
+                                                                   'randomly', 'fr', 'kk', 'drl', 'lgl'),
+                                                       selected = 'graphopt',
+                                                       multiple = FALSE),
+                                           br(),
+                                           
+                                           # Number of genesets
+                                           tags$h4("# Genesets"),
+                                           sliderInput(
+                                             inputId = "nSets_ORAnetwork_rnaseq_raw",
+                                             label = NULL,
+                                             value = 10,
+                                             min = 5,
+                                             max = 20,
+                                             step = 1),
+                                           br(),br()
+                                  )), # EO dropdownButton
                          
                          
                          
@@ -4464,11 +4474,13 @@ observe({
               footer = tagList(
                 fluidRow(
                   column(6,align = "left",
-                         shinyWidgets::radioGroupButtons(
+                         shinyWidgets::prettyRadioButtons(
                            inputId = "GSEAplot_file_rnaseq_raw",
                            label = NULL,
                            choices = c("PNG","PDF", "TIF", "HTML"),
-                           selected = "PNG"
+                           selected = "PNG",
+                           fill = TRUE,
+                           inline = TRUE
                          )
                   )
                 ),
@@ -4561,11 +4573,13 @@ observe({
               footer = tagList(
                 fluidRow(
                   column(6,align = "left",
-                         shinyWidgets::radioGroupButtons(
+                         shinyWidgets::prettyRadioButtons(
                            inputId = "GSEAnetwork_file_rnaseq_raw",
                            label = NULL,
                            choices = c("PNG","PDF", "TIF"),
-                           selected = "PNG"
+                           selected = "PNG",
+                           fill = TRUE,
+                           inline = TRUE
                          )
                   )
                 ),
@@ -4716,41 +4730,34 @@ observe({
                          br(),
                          
                          # Dropdown Button to adjust the plot settings
-                         shinyWidgets::dropdownButton(
-                           tags$div(
-                             style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                             
-                             # Color gradient
-                             tags$h4("Color gradient"),
-                             colourpicker::colourInput("lowcol_GSEAplot_rnaseq_raw",
-                                                       NULL,
-                                                       "#000072"),
-                             colourpicker::colourInput("midcol_GSEAplot_rnaseq_raw",
-                                                       NULL,
-                                                       "#FEE6CE"),
-                             colourpicker::colourInput("highcol_GSEAplot_rnaseq_raw",
-                                                       NULL,
-                                                       "red"),
-                             br(),
-                             
-                             # Number of genesets
-                             tags$h4("# Genesets"),
-                             sliderInput(
-                               inputId = "nSets_GSEAplot_rnaseq_raw",
-                               label = NULL,
-                               value = 10,
-                               min = 5,
-                               max = 20,
-                               step = 1),
-                             br(),br()
-                           ),
-                           circle = TRUE, status = "info",
-                           icon = icon("fas fa-cog"),
-                           
-                           tooltip = shinyWidgets::tooltipOptions(
-                             title = "Click to personalize the barchart!")
-                           
-                         ), # EO dropdownButton
+                         tags$div(class = "dropdown",
+                                  tags$button(class = "dropbtn", icon("cog")),
+                                  tags$div(class = "dropdown-content",
+                                           
+                                           # Color gradient
+                                           tags$h4("Color gradient"),
+                                           colourpicker::colourInput("lowcol_GSEAplot_rnaseq_raw",
+                                                                     NULL,
+                                                                     "#000072"),
+                                           colourpicker::colourInput("midcol_GSEAplot_rnaseq_raw",
+                                                                     NULL,
+                                                                     "#FEE6CE"),
+                                           colourpicker::colourInput("highcol_GSEAplot_rnaseq_raw",
+                                                                     NULL,
+                                                                     "red"),
+                                           br(),
+                                           
+                                           # Number of genesets
+                                           tags$h4("# Genesets"),
+                                           sliderInput(
+                                             inputId = "nSets_GSEAplot_rnaseq_raw",
+                                             label = NULL,
+                                             value = 10,
+                                             min = 5,
+                                             max = 20,
+                                             step = 1),
+                                           br(),br()
+                                  )), # EO dropdownButton
                          
                          # Interactive plot output
                          plotly::plotlyOutput("GSEAplot_rnaseq_raw") %>%
@@ -4775,51 +4782,44 @@ observe({
                          br(),
                          
                          # Dropdown Button to adjust the plot settings
-                         shinyWidgets::dropdownButton(
-                           tags$div(
-                             style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                             
-                             # Color gradient
-                             tags$h4("Color gradient"),
-                             colourpicker::colourInput("lowcol_GSEAnetwork_rnaseq_raw",
-                                                       NULL,
-                                                       "#000072"),
-                             colourpicker::colourInput("midcol_GSEAnetwork_rnaseq_raw",
-                                                       NULL,
-                                                       "#FEE6CE"),
-                             colourpicker::colourInput("highcol_GSEAnetwork_rnaseq_raw",
-                                                       NULL,
-                                                       "red"),
-                             br(),
-                             
-                             # Network layout
-                             tags$h4("Network layout"),
-                             selectInput(inputId = "layout_GSEAnetwork_rnaseq_raw",
-                                         label = NULL,
-                                         choices = c('star', 'circle', 'gem', 'dh', 'graphopt', 'grid', 'mds',
-                                                     'randomly', 'fr', 'kk', 'drl', 'lgl'),
-                                         selected = 'graphopt',
-                                         multiple = FALSE),
-                             br(),
-                             
-                             # Number of genesets
-                             tags$h4("# Gene sets"),
-                             sliderInput(
-                               inputId = "nSets_GSEAnetwork_rnaseq_raw",
-                               label = NULL,
-                               value = 10,
-                               min = 5,
-                               max = 20,
-                               step = 1),
-                             br(),br()
-                           ),
-                           circle = TRUE, status = "info",
-                           icon = icon("fas fa-cog"),
-                           
-                           tooltip = shinyWidgets::tooltipOptions(
-                             title = "Click to personalize the network!")
-                           
-                         ), # EO dropdownButton
+                         tags$div(class = "dropdown",
+                                  tags$button(class = "dropbtn", icon("cog")),
+                                  tags$div(class = "dropdown-content",
+                                           
+                                           # Color gradient
+                                           tags$h4("Color gradient"),
+                                           colourpicker::colourInput("lowcol_GSEAnetwork_rnaseq_raw",
+                                                                     NULL,
+                                                                     "#000072"),
+                                           colourpicker::colourInput("midcol_GSEAnetwork_rnaseq_raw",
+                                                                     NULL,
+                                                                     "#FEE6CE"),
+                                           colourpicker::colourInput("highcol_GSEAnetwork_rnaseq_raw",
+                                                                     NULL,
+                                                                     "red"),
+                                           br(),
+                                           
+                                           # Network layout
+                                           tags$h4("Network layout"),
+                                           selectInput(inputId = "layout_GSEAnetwork_rnaseq_raw",
+                                                       label = NULL,
+                                                       choices = c('star', 'circle', 'gem', 'dh', 'graphopt', 'grid', 'mds',
+                                                                   'randomly', 'fr', 'kk', 'drl', 'lgl'),
+                                                       selected = 'graphopt',
+                                                       multiple = FALSE),
+                                           br(),
+                                           
+                                           # Number of genesets
+                                           tags$h4("# Gene sets"),
+                                           sliderInput(
+                                             inputId = "nSets_GSEAnetwork_rnaseq_raw",
+                                             label = NULL,
+                                             value = 10,
+                                             min = 5,
+                                             max = 20,
+                                             step = 1),
+                                           br(),br()
+                                  )), # EO dropdownButton
                          
                          # Make plot
                          plotOutput("GSEAnetwork_rnaseq_raw") %>%

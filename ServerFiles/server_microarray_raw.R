@@ -761,11 +761,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "geneboxplot_file_microarray_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     inline = TRUE,
+                     fill = TRUE
                    )
             )
           ),
@@ -993,11 +995,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "boxplots_file_microarray_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     fill = TRUE,
+                     inline = TRUE
                    )
             )
           ),
@@ -1210,11 +1214,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "density_file_microarray_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF", "HTML"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     fill = TRUE,
+                     inline = TRUE
                    )
             )
           ),
@@ -1502,11 +1508,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "heatmap_file_microarray_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF", "HTML"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     fill = TRUE,
+                     inline = TRUE
                    )
             )
           ),
@@ -1763,11 +1771,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "pca_file_microarray_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF", "HTML"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     fill = TRUE,
+                     inline = TRUE
                    )
             )
           ),
@@ -2614,11 +2624,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets:prettyRadioButtons(
                      inputId = "statboxplot_file_microarray_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     fill = TRUE,
+                     inline = TRUE
                    )
             )
           ),
@@ -2715,11 +2727,12 @@ observe({
             footer = tagList(
               fluidRow(
                 column(6,align = "left",
-                       shinyWidgets::radioGroupButtons(
+                       shinyWidgets::prettyRadioButtons(
                          inputId = "Phistogram_file_microarray_raw",
                          label = NULL,
                          choices = c("PNG","PDF", "TIF", "HTML"),
-                         selected = "PNG"
+                         selected = "PNG",
+                         fill = TRUE
                        )
                 )
               ),
@@ -2814,11 +2827,13 @@ observe({
             footer = tagList(
               fluidRow(
                 column(6,align = "left",
-                       shinyWidgets::radioGroupButtons(
+                       shinyWidgets::prettyRadioButtons(
                          inputId = "logFChistogram_file_microarray_raw",
                          label = NULL,
                          choices = c("PNG","PDF", "TIF", "HTML"),
-                         selected = "PNG"
+                         selected = "PNG",
+                         fill = TRUE,
+                         inline = TRUE
                        )
                 )
               ),
@@ -2936,11 +2951,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "volcano_file_microarray_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF", "HTML"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     fill = TRUE,
+                     inline = TRUE
                    )
             )
           ),
@@ -3054,11 +3071,13 @@ observe({
         footer = tagList(
           fluidRow(
             column(6,align = "left",
-                   shinyWidgets::radioGroupButtons(
+                   shinyWidgets::prettyRadioButtons(
                      inputId = "MA_file_microarray_raw",
                      label = NULL,
                      choices = c("PNG","PDF", "TIF", "HTML"),
-                     selected = "PNG"
+                     selected = "PNG",
+                     fill = TRUE,
+                     inline = TRUE
                    )
             )
           ),
@@ -3989,11 +4008,13 @@ observe({
               footer = tagList(
                 fluidRow(
                   column(6,align = "left",
-                         shinyWidgets::radioGroupButtons(
+                         shinyWidgets::prettyRadioButtons(
                            inputId = "ORAplot_file_microarray_raw",
                            label = NULL,
                            choices = c("PNG","PDF", "TIF", "HTML"),
-                           selected = "PNG"
+                           selected = "PNG",
+                           fill = TRUE,
+                           inline = TRUE
                          )
                   )
                 ),
@@ -4084,11 +4105,13 @@ observe({
               footer = tagList(
                 fluidRow(
                   column(6,align = "left",
-                         shinyWidgets::radioGroupButtons(
+                         shinyWidgets::prettyRadioButtons(
                            inputId = "ORAnetwork_file_microarray_raw",
                            label = NULL,
                            choices = c("PNG","PDF", "TIF"),
-                           selected = "PNG"
+                           selected = "PNG",
+                           inline = TRUE,
+                           fill = TRUE
                          )
                   )
                 ),
@@ -4294,7 +4317,6 @@ observe({
                          tags$div(class = "dropdown",
                                   tags$button(class = "dropbtn", icon("cog")),
                                   tags$div(class = "dropdown-content",
-                                           style = "max-height: 300px; overflow-y: auto; padding: 5px;",
                                            
                                            # Color gradient
                                            tags$h4("Color gradient"),
@@ -4614,11 +4636,13 @@ observe({
               footer = tagList(
                 fluidRow(
                   column(6,align = "left",
-                         shinyWidgets::radioGroupButtons(
+                         shinyWidgets::prettyRadioButtons(
                            inputId = "GSEAplot_file_microarray_raw",
                            label = NULL,
                            choices = c("PNG","PDF", "TIF", "HTML"),
-                           selected = "PNG"
+                           selected = "PNG",
+                           fill = TRUE,
+                           inline = TRUE
                          )
                   )
                 ),
@@ -4710,11 +4734,13 @@ observe({
               footer = tagList(
                 fluidRow(
                   column(6,align = "left",
-                         shinyWidgets::radioGroupButtons(
+                         shinyWidgets::prettyRadioButtons(
                            inputId = "GSEAnetwork_file_microarray_raw",
                            label = NULL,
                            choices = c("PNG","PDF", "TIF"),
-                           selected = "PNG"
+                           selected = "PNG",
+                           fill = TRUE,
+                           inline = TRUE
                          )
                   )
                 ),
