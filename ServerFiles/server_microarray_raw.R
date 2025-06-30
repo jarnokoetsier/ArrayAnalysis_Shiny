@@ -418,19 +418,19 @@ observe({
     if(!input$outlier_microarray_raw){
       samples <- rownames(rv$metaData)
       selectInput(inputId = "select_outliers_microarray_raw",
-                                label = tags$span(
-                                  "Select samples to be removed", 
-                                  tags$span(
-                                    icon(
-                                      name = "question-circle",
-                                    ) 
-                                  ) |>
-                                    prompter::add_prompt(message = "Select one or more sample(s) to exclude from the analysis.", 
-                                                         position = "right",
-                                                         size = "large")
-                                ),
-                                choices = samples,
-                                multiple = TRUE)
+                  label = tags$span(
+                    "Select samples to be removed", 
+                    tags$span(
+                      icon(
+                        name = "question-circle",
+                      ) 
+                    ) |>
+                      prompter::add_prompt(message = "Select one or more sample(s) to exclude from the analysis.", 
+                                           position = "right",
+                                           size = "large")
+                  ),
+                  choices = samples,
+                  multiple = TRUE)
     } else{
       NULL
     }
@@ -440,10 +440,10 @@ observe({
   # 2. Select experimental groups
   output$UI_groupselect_microarray_raw <- renderUI({
     selectInput(inputId = "groupselect_microarray_raw",
-                              label = NULL,
-                              choices = colnames(rv$metaData),
-                              selected = autoGroup(rv$metaData),
-                              multiple = TRUE)
+                label = NULL,
+                choices = colnames(rv$metaData),
+                selected = autoGroup(rv$metaData),
+                multiple = TRUE)
   })
   
   # print the experimental levels
@@ -701,7 +701,7 @@ observe({
     output$ExprBoxplot_microarray_raw <- renderPlot({
       req(input$exprTable_microarray_raw_rows_selected)
       
-      if (length(levels(rv$experimentFactor)) > 4){
+      if (length(levels(rv$experimentFactor)) > 6){
         legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
       } else{
         legendColors <- c(input$geneboxplot_col1_microarray_raw,
@@ -836,48 +836,54 @@ observe({
       if (test == 2){
         output$UI_color_boxplots_microarray_raw <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("boxplots_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("boxplots_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("boxplots_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("boxplots_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2])
+            )
           )
         })
       }
       if (test == 3){
         output$UI_color_boxplots_microarray_raw <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("boxplots_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("boxplots_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2]),
-            colourpicker::colourInput("boxplots_col3_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[3])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("boxplots_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("boxplots_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("boxplots_col3_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3])
+            )
           )
         })
       }
       if (test == 4){
         output$UI_color_boxplots_microarray_raw <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("boxplots_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("boxplots_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2]),
-            colourpicker::colourInput("boxplots_col3_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[3]),
-            colourpicker::colourInput("boxplots_col4_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[4])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("boxplots_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("boxplots_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("boxplots_col3_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                     colourpicker::colourInput("boxplots_col4_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[4])
+            )
           )
         })
         
@@ -885,29 +891,33 @@ observe({
       if (test == 5){
         output$UI_color_boxplots_microarray_raw <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("boxplots_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("boxplots_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2]),
-            colourpicker::colourInput("boxplots_col3_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[3]),
-            colourpicker::colourInput("boxplots_col4_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[4]),
-            colourpicker::colourInput("boxplots_col5_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[5])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("boxplots_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("boxplots_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("boxplots_col3_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                     colourpicker::colourInput("boxplots_col4_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[4]),
+                     colourpicker::colourInput("boxplots_col5_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[5])
+            )
           )
         })
         
       }
       if (test > 5){
         output$UI_color_boxplots_microarray_raw <- renderUI({
-          h5("There are too many experimental groups to select colour manually")
+          tags$div(class = "dropdown-content",
+                   h5("There are too many experimental groups to select colour manually")
+          )
         })
         
       }
@@ -1054,48 +1064,54 @@ observe({
       if (test == 2){
         output$UI_color_density_microarray_raw <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("density_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("density_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("density_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("density_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2])
+            )
           )
         })
       }
       if (test == 3){
         output$UI_color_density_microarray_raw <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("density_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("density_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2]),
-            colourpicker::colourInput("density_col3_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[3])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("density_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("density_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("density_col3_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3])
+            )
           )
         })
       }
       if (test == 4){
         output$UI_color_density_microarray_raw <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("density_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("density_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2]),
-            colourpicker::colourInput("density_col3_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[3]),
-            colourpicker::colourInput("density_col4_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[4])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("density_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("density_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("density_col3_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                     colourpicker::colourInput("density_col4_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[4])
+            )
           )
         })
         
@@ -1103,29 +1119,33 @@ observe({
       if (test == 5){
         output$UI_color_density_microarray_raw <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("density_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("density_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2]),
-            colourpicker::colourInput("density_col3_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[3]),
-            colourpicker::colourInput("density_col4_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[4]),
-            colourpicker::colourInput("density_col5_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[5])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("density_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("density_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("density_col3_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                     colourpicker::colourInput("density_col4_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[4]),
+                     colourpicker::colourInput("density_col5_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[5])
+            )
           )
         })
         
       }
       if (test > 5){
         output$UI_color_density_microarray_raw <- renderUI({
-          h5("There are too many experimental groups to select colour manually")
+          tags$div(class = "dropdown-content",
+                   h5("There are too many experimental groups to select colour manually")
+          )
         })
         
       }
@@ -1286,13 +1306,23 @@ observe({
       if (test == 2){
         output$UI_color_heatmap_microarray_raw <- renderUI({
           tagList(
-            h4("Side color"),
-            colourpicker::colourInput("heatmap_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("heatmap_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2])
+            tags$div(class = "dropdown-content",
+                     h4("Heatmap theme"),
+                     selectInput(inputId = 'heatmaptheme_microarray_raw',
+                                 label = NULL,
+                                 choices = c("Default", 
+                                             "Yellow-red", 
+                                             "Blues", 
+                                             "Reds")),
+                     br(),
+                     h4("Side color"),
+                     colourpicker::colourInput("heatmap_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("heatmap_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2])
+            )
           )
         })
       }
@@ -1300,35 +1330,55 @@ observe({
       if (test == 3){
         output$UI_color_heatmap_microarray_raw <- renderUI({
           tagList(
-            h4("Side color"),
-            colourpicker::colourInput("heatmap_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("heatmap_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2]),
-            colourpicker::colourInput("heatmap_col3_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[3])
+            tags$div(class = "dropdown-content",
+                     h4("Heatmap theme"),
+                     selectInput(inputId = 'heatmaptheme_microarray_raw',
+                                 label = NULL,
+                                 choices = c("Default", 
+                                             "Yellow-red", 
+                                             "Blues", 
+                                             "Reds")),
+                     br(),
+                     h4("Side color"),
+                     colourpicker::colourInput("heatmap_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("heatmap_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2]),
+                     colourpicker::colourInput("heatmap_col3_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[3])
+            )
           )
         })
       }
       if (test == 4){
         output$UI_color_heatmap_microarray_raw <- renderUI({
           tagList(
-            h4("Side color"),
-            colourpicker::colourInput("heatmap_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("heatmap_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2]),
-            colourpicker::colourInput("heatmap_col3_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[3]),
-            colourpicker::colourInput("heatmap_col4_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[4])
+            tags$div(class = "dropdown-content",
+                     h4("Heatmap theme"),
+                     selectInput(inputId = 'heatmaptheme_microarray_raw',
+                                 label = NULL,
+                                 choices = c("Default", 
+                                             "Yellow-red", 
+                                             "Blues", 
+                                             "Reds")),
+                     br(),
+                     h4("Side color"),
+                     colourpicker::colourInput("heatmap_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("heatmap_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2]),
+                     colourpicker::colourInput("heatmap_col3_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[3]),
+                     colourpicker::colourInput("heatmap_col4_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[4])
+            )
           )
         })
         
@@ -1336,29 +1386,48 @@ observe({
       if (test == 5){
         output$UI_color_heatmap_microarray_raw <- renderUI({
           tagList(
-            h4("Side color"),
-            colourpicker::colourInput("heatmap_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("heatmap_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2]),
-            colourpicker::colourInput("heatmap_col3_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[3]),
-            colourpicker::colourInput("heatmap_col4_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[4]),
-            colourpicker::colourInput("heatmap_col5_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[5])
+            tags$div(class = "dropdown-content",
+                     h4("Heatmap theme"),
+                     selectInput(inputId = 'heatmaptheme_microarray_raw',
+                                 label = NULL,
+                                 choices = c("Default", 
+                                             "Yellow-red", 
+                                             "Blues", 
+                                             "Reds")),
+                     br(),
+                     h4("Side color"),
+                     colourpicker::colourInput("heatmap_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("heatmap_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2]),
+                     colourpicker::colourInput("heatmap_col3_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[3]),
+                     colourpicker::colourInput("heatmap_col4_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[4]),
+                     colourpicker::colourInput("heatmap_col5_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[5])
+            )
           )
         })
         
       }
       if (test > 5){
         output$UI_color_heatmap_microarray_raw <- renderUI({
-          NULL
+          tags$div(class = "dropdown-content",
+                   h4("Heatmap theme"),
+                   selectInput(inputId = 'heatmaptheme_microarray_raw',
+                               label = NULL,
+                               choices = c("Default", 
+                                           "Yellow-red", 
+                                           "Blues", 
+                                           "Reds")),
+                   br()
+          )
         })
         
       }
@@ -1537,13 +1606,15 @@ observe({
       if (test == 2){
         output$UI_color_PCA_microarray_raw <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("PCA_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("PCA_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("PCA_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("PCA_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2])
+            )
           )
         })
       }
@@ -1551,35 +1622,39 @@ observe({
       if (test == 3){
         output$UI_color_PCA_microarray_raw <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("PCA_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("PCA_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2]),
-            colourpicker::colourInput("PCA_col3_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[3])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("PCA_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("PCA_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2]),
+                     colourpicker::colourInput("PCA_col3_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[3])
+            )
           )
         })
       }
       if (test == 4){
         output$UI_color_PCA_microarray_raw <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("PCA_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("PCA_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2]),
-            colourpicker::colourInput("PCA_col3_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[3]),
-            colourpicker::colourInput("PCA_col4_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[4])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("PCA_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("PCA_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2]),
+                     colourpicker::colourInput("PCA_col3_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[3]),
+                     colourpicker::colourInput("PCA_col4_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[4])
+            )
           )
         })
         
@@ -1587,29 +1662,33 @@ observe({
       if (test == 5){
         output$UI_color_PCA_microarray_raw <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("PCA_col1_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("PCA_col2_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2]),
-            colourpicker::colourInput("PCA_col3_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[3]),
-            colourpicker::colourInput("PCA_col4_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[4]),
-            colourpicker::colourInput("PCA_col5_microarray_raw", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[5])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("PCA_col1_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("PCA_col2_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2]),
+                     colourpicker::colourInput("PCA_col3_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[3]),
+                     colourpicker::colourInput("PCA_col4_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[4]),
+                     colourpicker::colourInput("PCA_col5_microarray_raw", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[5])
+            )
           )
         })
         
       }
       if (test > 5){
         output$UI_color_PCA_microarray_raw <- renderUI({
-          NULL
+          tags$div(class = "dropdown-content",
+                   NULL
+          )
         })
         
       }
@@ -1801,87 +1880,80 @@ observe({
                    br(),
                    
                    # Dropdown Button to adjust the plot settings
-                   shinyWidgets::dropdownButton(
-                     tags$div(
-                       style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                       
-                       # Change order of the boxplots:
-                       tags$h4("Drag to change boxplot order"),
-                       shinyjqui::orderInput(inputId = 'geneboxplot_order_microarray_raw', 
-                                             label = NULL, 
-                                             items = levels(rv$experimentFactor),
-                                             item_class = 'default'),
-                       br(),
-                       
-                       # Change colour of the boxplots by button. 
-                       # This is used when there are more than 6 experimental groups
-                       conditionalPanel(
-                         condition = "output.length_geneboxplot_microarray_raw > 6",
-                         tags$h4("Click to change boxplot colors"),
-                         shinyWidgets::actionBttn("geneboxplot_changeOrder_microarray_raw",
-                                                  label = "Change color",
-                                                  style = "simple",
-                                                  color = "primary",
-                                                  icon = icon("sync"))
-                       ),
-                       
-                       # Change colour of the boxplots by colour picker
-                       # This is used when there are less than 7 experimental groups
-                       conditionalPanel(
-                         condition = "output.length_geneboxplot_microarray_raw < 7",
-                         tags$h4("Click to select boxplot colours"),
-                         conditionalPanel(
-                           condition = "output.length_geneboxplot_microarray_raw > 0",
-                           colourpicker::colourInput("geneboxplot_col1_microarray_raw", 
-                                                     NULL, 
-                                                     colorsByFactor(rv$experimentFactor)$legendColors[1])
-                         ),
-                         conditionalPanel(
-                           condition = "output.length_geneboxplot_microarray_raw > 1",
-                           colourpicker::colourInput("geneboxplot_col2_microarray_raw", 
-                                                     NULL, 
-                                                     colorsByFactor(rv$experimentFactor)$legendColors[2])
-                         ),
-                         conditionalPanel(
-                           condition = "output.length_geneboxplot_microarray_raw > 2",
-                           colourpicker::colourInput("geneboxplot_col3_microarray_raw", 
-                                                     NULL, 
-                                                     colorsByFactor(rv$experimentFactor)$legendColors[3])
-                         ),
-                         conditionalPanel(
-                           condition = "output.length_geneboxplot_microarray_raw > 3",
-                           colourpicker::colourInput("geneboxplot_col4_microarray_raw", 
-                                                     NULL, 
-                                                     colorsByFactor(rv$experimentFactor)$legendColors[4])
-                         ),
-                         conditionalPanel(
-                           condition = "output.length_geneboxplot_microarray_raw > 4",
-                           colourpicker::colourInput("geneboxplot_col5_microarray_raw", 
-                                                     NULL, 
-                                                     colorsByFactor(rv$experimentFactor)$legendColors[5])
-                         ),
-                         conditionalPanel(
-                           condition = "output.length_geneboxplot_microarray_raw > 5",
-                           colourpicker::colourInput("geneboxplot_col6_microarray_raw", 
-                                                     NULL, 
-                                                     colorsByFactor(rv$experimentFactor)$legendColors[6])
-                         )
-                       ),
-                       br(),
-                       tags$h4("Drag to change jitter"),
-                       sliderInput("jitter_geneboxplot_microarray_raw", 
-                                   NULL,
-                                   min = 0, max = 0.3,
-                                   value = 0.1, step = 0.01),
-                       br()
-                     ),
-                     circle = TRUE, status = "info",
-                     icon = icon("fas fa-cog"),
-                     
-                     tooltip = shinyWidgets::tooltipOptions(
-                       title = "Click to personalize plot!")
-                     
-                   ), # EO dropdownButton
+                   tags$div(class = "dropdown",
+                            tags$button(class = "dropbtn", icon("cog")),
+                            tags$div(class = "dropdown-content",
+                                     
+                                     # Change order of the boxplots:
+                                     tags$h4("Drag to change boxplot order"),
+                                     shinyjqui::orderInput(inputId = 'geneboxplot_order_microarray_raw', 
+                                                           label = NULL, 
+                                                           items = levels(rv$experimentFactor),
+                                                           item_class = 'default'),
+                                     br(),
+                                     
+                                     # Change colour of the boxplots by button. 
+                                     # This is used when there are more than 6 experimental groups
+                                     conditionalPanel(
+                                       condition = "output.length_geneboxplot_microarray_raw > 6",
+                                       tags$h4("Click to change boxplot colors"),
+                                       shinyWidgets::actionBttn("geneboxplot_changeOrder_microarray_raw",
+                                                                label = "Change color",
+                                                                style = "simple",
+                                                                color = "primary",
+                                                                icon = icon("sync"))
+                                     ),
+                                     
+                                     # Change colour of the boxplots by colour picker
+                                     # This is used when there are less than 7 experimental groups
+                                     conditionalPanel(
+                                       condition = "output.length_geneboxplot_microarray_raw < 7",
+                                       tags$h4("Click to select boxplot colours"),
+                                       conditionalPanel(
+                                         condition = "output.length_geneboxplot_microarray_raw > 0",
+                                         colourpicker::colourInput("geneboxplot_col1_microarray_raw", 
+                                                                   NULL, 
+                                                                   colorsByFactor(rv$experimentFactor)$legendColors[1])
+                                       ),
+                                       conditionalPanel(
+                                         condition = "output.length_geneboxplot_microarray_raw > 1",
+                                         colourpicker::colourInput("geneboxplot_col2_microarray_raw", 
+                                                                   NULL, 
+                                                                   colorsByFactor(rv$experimentFactor)$legendColors[2])
+                                       ),
+                                       conditionalPanel(
+                                         condition = "output.length_geneboxplot_microarray_raw > 2",
+                                         colourpicker::colourInput("geneboxplot_col3_microarray_raw", 
+                                                                   NULL, 
+                                                                   colorsByFactor(rv$experimentFactor)$legendColors[3])
+                                       ),
+                                       conditionalPanel(
+                                         condition = "output.length_geneboxplot_microarray_raw > 3",
+                                         colourpicker::colourInput("geneboxplot_col4_microarray_raw", 
+                                                                   NULL, 
+                                                                   colorsByFactor(rv$experimentFactor)$legendColors[4])
+                                       ),
+                                       conditionalPanel(
+                                         condition = "output.length_geneboxplot_microarray_raw > 4",
+                                         colourpicker::colourInput("geneboxplot_col5_microarray_raw", 
+                                                                   NULL, 
+                                                                   colorsByFactor(rv$experimentFactor)$legendColors[5])
+                                       ),
+                                       conditionalPanel(
+                                         condition = "output.length_geneboxplot_microarray_raw > 5",
+                                         colourpicker::colourInput("geneboxplot_col6_microarray_raw", 
+                                                                   NULL, 
+                                                                   colorsByFactor(rv$experimentFactor)$legendColors[6])
+                                       )
+                                     ),
+                                     br(),
+                                     tags$h4("Drag to change jitter"),
+                                     sliderInput("jitter_geneboxplot_microarray_raw", 
+                                                 NULL,
+                                                 min = 0, max = 0.3,
+                                                 value = 0.1, step = 0.01),
+                                     br()
+                            )), # EO dropdownButton
                    
                    # Boxplot of the selected gene's expression values
                    plotOutput("ExprBoxplot_microarray_raw")%>% 
@@ -1903,13 +1975,10 @@ observe({
                                 icon = shiny::icon("download")),
                    br(),
                    br(),
-                   # customize heatmap
-                   shinyWidgets::dropdownButton(
-                     uiOutput("UI_color_boxplots_microarray_raw"),
-                     circle = TRUE, status = "info",
-                     icon = icon("fas fa-cog"), width = "300px",
-                     tooltip = shinyWidgets::tooltipOptions(
-                       title = "Click to change colors!")
+                   tags$div(class = "dropdown",
+                            tags$button(class = "dropbtn", icon("cog")),
+                            uiOutput("UI_color_boxplots_microarray_raw")
+                            
                    ),
                    h2(strong("Boxplot of normalized intensities"), align = "center"),
                    h4("Distributions should be comparable between samples", align = "center"),
@@ -1928,12 +1997,9 @@ observe({
                    br(),
                    br(),
                    # customize heatmap
-                   shinyWidgets::dropdownButton(
-                     uiOutput("UI_color_density_microarray_raw"),
-                     circle = TRUE, status = "info",
-                     icon = icon("fas fa-cog"), width = "300px",
-                     tooltip = shinyWidgets::tooltipOptions(
-                       title = "Click to change colors!")
+                   tags$div(class = "dropdown",
+                            tags$button(class = "dropbtn", icon("cog")),
+                            uiOutput("UI_color_density_microarray_raw")
                    ),
                    h2(strong("Density plot of normalized intensities"), align = "center"),
                    h4("Distributions should be comparable between samples", align = "center"),
@@ -1984,21 +2050,9 @@ observe({
                    br(),
                    
                    # customize heatmap
-                   shinyWidgets::dropdownButton(
-                     h4("Heatmap theme"),
-                     selectInput(inputId = 'heatmaptheme_microarray_raw',
-                                 label = NULL,
-                                 choices = c("Default", 
-                                             "Yellow-red", 
-                                             "Blues", 
-                                             "Reds")),
-                     br(),
-                     uiOutput("UI_color_heatmap_microarray_raw"),
-                     
-                     circle = TRUE, status = "info",
-                     icon = icon("fas fa-cog"), width = "300px",
-                     tooltip = shinyWidgets::tooltipOptions(
-                       title = "Click to change colors!")
+                   tags$div(class = "dropdown",
+                            tags$button(class = "dropbtn", icon("cog")),
+                            uiOutput("UI_color_heatmap_microarray_raw")
                    ),
                    
                    # Make heatmap
@@ -2028,36 +2082,36 @@ observe({
                      column(3,
                             # Color by which factor?
                             selectInput(inputId = "colorFactor_PCA_microarray_raw",
-                                                      label = "Color by:",
-                                                      choices = colnames(rv$metaData_fil),
-                                                      selected = rv$experimentName,
-                                                      multiple = TRUE)
+                                        label = "Color by:",
+                                        choices = colnames(rv$metaData_fil),
+                                        selected = rv$experimentName,
+                                        multiple = TRUE)
                      ),
                      column(3,
                             #X-axis
                             selectInput(inputId = "xpca_microarray_raw", 
-                                                      label = "x-axis",
-                                                      choices = c("PC1","PC2","PC3", "PC4", "PC5",
-                                                                  "PC6", "PC7", "PC8"),
-                                                      selected = "PC1")
+                                        label = "x-axis",
+                                        choices = c("PC1","PC2","PC3", "PC4", "PC5",
+                                                    "PC6", "PC7", "PC8"),
+                                        selected = "PC1")
                      ),
                      column(3,
                             #Y-axis
                             selectInput(inputId = "ypca_microarray_raw", 
-                                                      label = "y-axis",
-                                                      choices = c("PC1","PC2","PC3", "PC4", "PC5", 
-                                                                  "PC6", "PC7", "PC8"),
-                                                      selected = "PC2")
+                                        label = "y-axis",
+                                        choices = c("PC1","PC2","PC3", "PC4", "PC5", 
+                                                    "PC6", "PC7", "PC8"),
+                                        selected = "PC2")
                      ),
                      column(3,
                             #Z-axis
                             conditionalPanel(
                               condition = "input.xyz_microarray_raw==true",
                               selectInput(inputId = "zpca_microarray_raw", 
-                                                        label = "z-axis",
-                                                        choices = c("PC1","PC2","PC3", "PC4", "PC5", 
-                                                                    "PC6", "PC7", "PC8"),
-                                                        selected = "PC3")
+                                          label = "z-axis",
+                                          choices = c("PC1","PC2","PC3", "PC4", "PC5", 
+                                                      "PC6", "PC7", "PC8"),
+                                          selected = "PC3")
                             )
                      )
                    ),
@@ -2073,13 +2127,9 @@ observe({
                    fluidRow(
                      
                      # Customize PCA plot
-                     shinyWidgets::dropdownButton(
-                       
-                       uiOutput("UI_color_PCA_microarray_raw"),
-                       circle = TRUE, status = "info",
-                       icon = icon("fas fa-cog"), width = "300px",
-                       tooltip = shinyWidgets::tooltipOptions(
-                         title = "Click to change colors!")
+                     tags$div(class = "dropdown",
+                              tags$button(class = "dropbtn", icon("cog")),
+                              uiOutput("UI_color_PCA_microarray_raw"),
                      ),
                      
                      # Make PCA plot
@@ -2148,11 +2198,11 @@ observe({
   output$UI_covGroups_num_microarray_raw <- renderUI({
     tagList(
       selectInput(inputId = "covGroups_num_microarray_raw",
-                                label = "Continuous covariates (e.g., age):",
-                                choices = setdiff(colnames(rv$metaData_fil),
-                                                  rv$experimentName),
-                                selected = NULL,
-                                multiple = TRUE)
+                  label = "Continuous covariates (e.g., age):",
+                  choices = setdiff(colnames(rv$metaData_fil),
+                                    rv$experimentName),
+                  selected = NULL,
+                  multiple = TRUE)
     )
   })
   
@@ -2160,11 +2210,11 @@ observe({
   output$UI_covGroups_char_microarray_raw <- renderUI({
     tagList(
       selectInput(inputId = "covGroups_char_microarray_raw",
-                                label = "Discrete covariates (e.g., sex):",
-                                choices = setdiff(colnames(rv$metaData_fil),
-                                                  rv$experimentName),
-                                selected = NULL,
-                                multiple = TRUE)
+                  label = "Discrete covariates (e.g., sex):",
+                  choices = setdiff(colnames(rv$metaData_fil),
+                                    rv$experimentName),
+                  selected = NULL,
+                  multiple = TRUE)
     )
   })
   
@@ -2193,30 +2243,30 @@ observe({
   output$UI_biomart_dataset_microarray_raw <- renderUI({
     req(input$addAnnotation_microarray_raw)
     selectInput(inputId = "biomart_dataset_microarray_raw",
-                              label = tags$span(
-                                "Organism", 
-                                tags$span(
-                                  icon(
-                                    name = "question-circle",
-                                  ) 
-                                ) |>
-                                  prompter::add_prompt(message = "Select the organism. 
+                label = tags$span(
+                  "Organism", 
+                  tags$span(
+                    icon(
+                      name = "question-circle",
+                    ) 
+                  ) |>
+                    prompter::add_prompt(message = "Select the organism. 
                                                This information is needed to match the probset IDs to the gene IDs.", 
-                                             position = "right",
-                                             size = "large")
-                              ),
-                              choices = c("Homo sapiens" = "hsapiens_gene_ensembl" ,
-                                          "Bos taurus" = "btaurus_gene_ensembl",
-                                          "Caenorhabditis elegans" = "celegans_gene_ensembl",
-                                          "Mus musculus" = "mmusculus_gene_ensembl",
-                                          "Rattus norvegicus" = "rnorvegicus_gene_ensembl"),
-                              selected = switch(rv$Organism,
-                                                "Homo sapiens" = "hsapiens_gene_ensembl" ,
-                                                "Bos taurus" = "btaurus_gene_ensembl",
-                                                "Caenorhabditis elegans" = "celegans_gene_ensembl",
-                                                "Mus musculus" = "mmusculus_gene_ensembl",
-                                                "Rattus norvegicus" = "rnorvegicus_gene_ensembl"),
-                              multiple = FALSE)
+                                         position = "right",
+                                         size = "large")
+                ),
+                choices = c("Homo sapiens" = "hsapiens_gene_ensembl" ,
+                            "Bos taurus" = "btaurus_gene_ensembl",
+                            "Caenorhabditis elegans" = "celegans_gene_ensembl",
+                            "Mus musculus" = "mmusculus_gene_ensembl",
+                            "Rattus norvegicus" = "rnorvegicus_gene_ensembl"),
+                selected = switch(rv$Organism,
+                                  "Homo sapiens" = "hsapiens_gene_ensembl" ,
+                                  "Bos taurus" = "btaurus_gene_ensembl",
+                                  "Caenorhabditis elegans" = "celegans_gene_ensembl",
+                                  "Mus musculus" = "mmusculus_gene_ensembl",
+                                  "Rattus norvegicus" = "rnorvegicus_gene_ensembl"),
+                multiple = FALSE)
   })
   
   output$UI_addAnnotations_microarray_raw <- renderUI({
@@ -2226,40 +2276,40 @@ observe({
     tagList(
       
       selectInput(inputId = "biomart_filter_microarray_raw",
-                                label = tags$span(
-                                  "Probeset ID", 
-                                  tags$span(
-                                    icon(
-                                      name = "question-circle",
-                                    ) 
-                                  ) |>
-                                    prompter::add_prompt(message = "Select which probeset ID is 
+                  label = tags$span(
+                    "Probeset ID", 
+                    tags$span(
+                      icon(
+                        name = "question-circle",
+                      ) 
+                    ) |>
+                      prompter::add_prompt(message = "Select which probeset ID is 
                                                used in the expression matrix.", 
-                                               position = "right",
-                                               size = "large")
-                                ),
-                                choices = filterList[[input$biomart_dataset_microarray_raw]],
-                                selected = selFilter(rv$ProbeAnnotation),
-                                multiple = FALSE),
+                                           position = "right",
+                                           size = "large")
+                  ),
+                  choices = filterList[[input$biomart_dataset_microarray_raw]],
+                  selected = selFilter(rv$ProbeAnnotation),
+                  multiple = FALSE),
       
       selectInput(inputId = "biomart_attributes_microarray_raw",
-                                label = tags$span(
-                                  "Output", 
-                                  tags$span(
-                                    icon(
-                                      name = "question-circle",
-                                    ) 
-                                  ) |>
-                                    prompter::add_prompt(message = "Select which gene IDs should be added 
+                  label = tags$span(
+                    "Output", 
+                    tags$span(
+                      icon(
+                        name = "question-circle",
+                      ) 
+                    ) |>
+                      prompter::add_prompt(message = "Select which gene IDs should be added 
                                                to the output.", 
-                                               position = "right",
-                                               size = "large")
-                                ),
-                                choices = c("Ensembl Gene ID",
-                                            "Entrez Gene ID",
-                                            "Gene Symbol/Name"),
-                                selected = "Gene Symbol/Name",
-                                multiple = TRUE)
+                                           position = "right",
+                                           size = "large")
+                  ),
+                  choices = c("Ensembl Gene ID",
+                              "Entrez Gene ID",
+                              "Gene Symbol/Name"),
+                  selected = "Gene Symbol/Name",
+                  multiple = TRUE)
     )
     
   })
@@ -2360,10 +2410,10 @@ observe({
         # Show comparisons
         output$UI_comparisons_view_microarray_raw <- renderUI({
           selectInput(inputId = "comparisons_view_microarray_raw",
-                                    label = "Select comparison:",
-                                    choices = names(rv$top_table),
-                                    selected = names(rv$top_table)[1],
-                                    multiple = FALSE)
+                      label = "Select comparison:",
+                      choices = names(rv$top_table),
+                      selected = names(rv$top_table)[1],
+                      multiple = FALSE)
         })
         
         # Show message
@@ -2480,15 +2530,15 @@ observe({
       }
       
       # Change color by click on button
-      rv$colorOrder <- 1:length(levels(rv$newFactor))
+      rv$colorOrder_stat <- 1:length(levels(rv$newFactor))
       observeEvent(input$statboxplot_changeOrder_microarray_raw,{
         all_orders <- permute(1:length(levels(rv$newFactor))) 
-        sel <- which(unlist(lapply(all_orders, function(x) all(x == rv$colorOrder))))
+        sel <- which(unlist(lapply(all_orders, function(x) all(x == rv$colorOrder_stat))))
         
         if (sel < length(all_orders)){
-          rv$colorOrder <- all_orders[[sel+1]]
+          rv$colorOrder_stat <- all_orders[[sel+1]]
         } else{
-          rv$colorOrder <- all_orders[[1]]
+          rv$colorOrder_stat <- all_orders[[1]]
         }
       })
       
@@ -2516,7 +2566,7 @@ observe({
         rv$temp <- geneBoxplot(experimentFactor = rv$newFactor, 
                                normMatrix = rv$newData, 
                                sel_row = sel_row,
-                               legendColors = legendColors[rv$colorOrder],
+                               legendColors = legendColors[rv$colorOrder_stat],
                                groupOrder = input$statboxplot_order_microarray_raw,
                                jitter = input$jitter_statboxplot_microarray_raw,
                                rnaseq=FALSE,
@@ -2636,7 +2686,7 @@ observe({
               
               if (input$Phistogram_file_microarray_raw != "HTML"){
                 
-                # Make volcano plot
+                # Make histogram
                 p <- makePHistogram(P = rv$top_table[[input$comparisons_view_microarray_raw]][,"p-value"],
                                     color = input$histogram_color_microarray_raw,
                                     bins = input$histogram_bins_microarray_raw,
@@ -2830,7 +2880,7 @@ observe({
                                   unchanged_color = input$volcano_unchanged_color_microarray_raw,
                                   down_color = input$volcano_down_color_microarray_raw,
                                   up_color = input$volcano_up_color_microarray_raw
-                                  )
+        )
         
         output$volcano_microarray_raw <- plotly::renderPlotly(rv$volcano)
       }
@@ -3177,80 +3227,84 @@ observe({
     #--------------------------------------#
     # dynamic UI: Output in different tabs
     #--------------------------------------#
+    
     observe({
       req(rv$top_table)
       
       output$UI_boxplotAll_microarray_raw <- renderUI({
         tagList(
-          # Change order of the boxplots:
-          tags$h4("Drag to change boxplot order"),
-          shinyjqui::orderInput(inputId = 'statboxplot_order_microarray_raw', 
-                                label = NULL, 
-                                items = levels(rv$newFactor),
-                                item_class = 'default'),
-          br(),
-          
-          # Change colour of the boxplots by button. 
-          # This is used when there are more than 6 experimental groups
-          conditionalPanel(
-            condition = "output.length_statboxplot_microarray_raw > 6",
-            tags$h4("Click to change boxplot colours"),
-            shinyWidgets::actionBttn("statboxplot_changeOrder_microarray_raw",
-                                     label = "Change color",
-                                     style = "simple",
-                                     color = "primary",
-                                     icon = icon("sync"))
-          ),
-          
-          # Change colour of the boxplots by colour picker
-          # This is used when there are less than 7 experimental groups
-          conditionalPanel(
-            condition = "output.length_statboxplot_microarray_raw < 7",
-            tags$h4("Click to select boxplot colours"),
-            conditionalPanel(
-              condition = "output.length_statboxplot_microarray_raw > 0",
-              colourpicker::colourInput("statboxplot_col1_microarray_raw", 
-                                        NULL, 
-                                        colorsByFactor(rv$newFactor)$legendColors[1])
-            ),
-            conditionalPanel(
-              condition = "output.length_statboxplot_microarray_raw > 1",
-              colourpicker::colourInput("statboxplot_col2_microarray_raw", 
-                                        NULL, 
-                                        colorsByFactor(rv$newFactor)$legendColors[2])
-            ),
-            conditionalPanel(
-              condition = "output.length_statboxplot_microarray_raw > 2",
-              colourpicker::colourInput("statboxplot_col3_microarray_raw", 
-                                        NULL, 
-                                        colorsByFactor(rv$newFactor)$legendColors[3])
-            ),
-            conditionalPanel(
-              condition = "output.length_statboxplot_microarray_raw > 3",
-              colourpicker::colourInput("statboxplot_col4_microarray_raw", 
-                                        NULL, 
-                                        colorsByFactor(rv$newFactor)$legendColors[4])
-            ),
-            conditionalPanel(
-              condition = "output.length_statboxplot_microarray_raw > 4",
-              colourpicker::colourInput("statboxplot_col5_microarray_raw", 
-                                        NULL, 
-                                        colorsByFactor(rv$newFactor)$legendColors[5])
-            ),
-            conditionalPanel(
-              condition = "output.length_statboxplot_microarray_raw > 5",
-              colourpicker::colourInput("statboxplot_col6_microarray_raw", 
-                                        NULL, 
-                                        colorsByFactor(rv$newFactor)$legendColors[6])
-            )
-          ),
-          br(),
-          tags$h4("Drag to change jitter"),
-          sliderInput("jitter_statboxplot_microarray_raw", 
-                      NULL,
-                      min = 0, max = 0.3,
-                      value = 0.1, step = 0.01),
-          br()
+          tags$div(class = "dropdown-content",
+                   
+                   # Change order of the boxplots:
+                   tags$h4("Drag to change boxplot order"),
+                   shinyjqui::orderInput(inputId = 'statboxplot_order_microarray_raw', 
+                                         label = NULL, 
+                                         items = levels(rv$newFactor),
+                                         item_class = 'default'),
+                   br(),
+                   
+                   # Change colour of the boxplots by button. 
+                   # This is used when there are more than 6 experimental groups
+                   conditionalPanel(
+                     condition = "output.length_statboxplot_microarray_raw > 6",
+                     tags$h4("Click to change boxplot colours"),
+                     shinyWidgets::actionBttn("statboxplot_changeOrder_microarray_raw",
+                                              label = "Change color",
+                                              style = "simple",
+                                              color = "primary",
+                                              icon = icon("sync"))
+                   ),
+                   
+                   # Change colour of the boxplots by colour picker
+                   # This is used when there are less than 7 experimental groups
+                   conditionalPanel(
+                     condition = "output.length_statboxplot_microarray_raw < 7",
+                     tags$h4("Click to select boxplot colours"),
+                     conditionalPanel(
+                       condition = "output.length_statboxplot_microarray_raw > 0",
+                       colourpicker::colourInput("statboxplot_col1_microarray_raw", 
+                                                 NULL, 
+                                                 colorsByFactor(rv$newFactor)$legendColors[1])
+                     ),
+                     conditionalPanel(
+                       condition = "output.length_statboxplot_microarray_raw > 1",
+                       colourpicker::colourInput("statboxplot_col2_microarray_raw", 
+                                                 NULL, 
+                                                 colorsByFactor(rv$newFactor)$legendColors[2])
+                     ),
+                     conditionalPanel(
+                       condition = "output.length_statboxplot_microarray_raw > 2",
+                       colourpicker::colourInput("statboxplot_col3_microarray_raw", 
+                                                 NULL, 
+                                                 colorsByFactor(rv$newFactor)$legendColors[3])
+                     ),
+                     conditionalPanel(
+                       condition = "output.length_statboxplot_microarray_raw > 3",
+                       colourpicker::colourInput("statboxplot_col4_microarray_raw", 
+                                                 NULL, 
+                                                 colorsByFactor(rv$newFactor)$legendColors[4])
+                     ),
+                     conditionalPanel(
+                       condition = "output.length_statboxplot_microarray_raw > 4",
+                       colourpicker::colourInput("statboxplot_col5_microarray_raw", 
+                                                 NULL, 
+                                                 colorsByFactor(rv$newFactor)$legendColors[5])
+                     ),
+                     conditionalPanel(
+                       condition = "output.length_statboxplot_microarray_raw > 5",
+                       colourpicker::colourInput("statboxplot_col6_microarray_raw", 
+                                                 NULL, 
+                                                 colorsByFactor(rv$newFactor)$legendColors[6])
+                     )
+                   ),
+                   br(),
+                   tags$h4("Drag to change jitter"),
+                   sliderInput("jitter_statboxplot_microarray_raw", 
+                               NULL,
+                               min = 0, max = 0.3,
+                               value = 0.1, step = 0.01),
+                   br()
+          )
         )
       })
     })
@@ -3288,35 +3342,23 @@ observe({
                        br(),
                        
                        # Dropdown Button to adjust the plot settings
-                       shinyWidgets::dropdownButton(
-                         tags$div(
-                           style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                           
-                           # Plot all experimental groups?
-                           conditionalPanel(
-                             condition = "output.length_statboxplot_microarray_raw > 2",
-                             tags$h4("Plot all experimental groups?"),
-                             shinyWidgets::materialSwitch(inputId = "boxplotAll_microarray_raw",
-                                                          label = NULL, 
-                                                          value = TRUE,
-                                                          status = "primary"),
-                             
-                             br()
-                           ),
-                           uiOutput("UI_boxplotAll_microarray_raw")
-                           
-                           
-                           
-                         ),
-                         circle = TRUE, status = "info",
-                         icon = icon("fas fa-cog"),
-                         
-                         tooltip = shinyWidgets::tooltipOptions(
-                           title = "Click to personalize plot!")
-                         
+                       tags$div(class = "dropdown",
+                                tags$button(class = "dropbtn", icon("cog")),
+                                uiOutput("UI_boxplotAll_microarray_raw")
                        ), # EO dropdownButton
+                       
                        plotOutput("ExprBoxplot_statistics_microarray_raw")%>% 
                          shinycssloaders::withSpinner(color="#0dc5c1"),
+                       # Plot all experimental groups?
+                       conditionalPanel(
+                         condition = "output.length_statboxplot_microarray_raw > 2",
+                         br(),
+                         shinyWidgets::materialSwitch(inputId = "boxplotAll_microarray_raw",
+                                                      label = "Plot all experimental groups?", 
+                                                      value =  TRUE,
+                                                      status = "primary"),
+                         
+                       ),
                        actionButton("download_statboxplot_microarray_raw", 
                                     "Download figure",
                                     icon = shiny::icon("download")),
@@ -3332,27 +3374,20 @@ observe({
                        icon = icon("fas fa-mouse-pointer"),
                        br(),
                        # Dropdown Button to adjust the plot settings
-                       shinyWidgets::dropdownButton(
-                         tags$div(
-                           style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                           tags$h4("Select color"),
-                           colourpicker::colourInput("histogram_color_microarray_raw", 
-                                                     NULL, 
-                                                     "#d3d3d3"),
-                           br(),
-                           tags$h4("Number of bins"),
-                           numericInput(inputId = "histogram_bins_microarray_raw",
-                                        label = NULL,
-                                        value = 100),
-                           br(),br()
-                         ),
-                         circle = TRUE, status = "info",
-                         icon = icon("fas fa-cog"),
-                         
-                         tooltip = shinyWidgets::tooltipOptions(
-                           title = "Click to personalize histograms!")
-                         
-                       ), # EO dropdownButton
+                       tags$div(class = "dropdown",
+                                tags$button(class = "dropbtn", icon("cog")),
+                                tags$div(class = "dropdown-content",
+                                         tags$h4("Select color"),
+                                         colourpicker::colourInput("histogram_color_microarray_raw", 
+                                                                   NULL, 
+                                                                   "#d3d3d3"),
+                                         br(),
+                                         tags$h4("Number of bins"),
+                                         numericInput(inputId = "histogram_bins_microarray_raw",
+                                                      label = NULL,
+                                                      value = 100),
+                                         br(),br()
+                                )), # EO dropdownButton
                        plotly::plotlyOutput("Phistogram_microarray_raw")%>% 
                          shinycssloaders::withSpinner(color="#0dc5c1"),
                        actionButton("download_Phistogram_microarray_raw", 
@@ -3376,30 +3411,23 @@ observe({
                        br(),
                        
                        # Dropdown Button to adjust the plot settings
-                       shinyWidgets::dropdownButton(
-                         tags$div(
-                           style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                           tags$h4("Color of unchanged genes"),
-                           colourpicker::colourInput("volcano_unchanged_color_microarray_raw", 
-                                                     NULL, 
-                                                     "darkgrey"),
-                           tags$h4("Color of downregulated genes"),
-                           colourpicker::colourInput("volcano_down_color_microarray_raw", 
-                                                     NULL, 
-                                                     "blue"),
-                           tags$h4("Color of upregulated genes"),
-                           colourpicker::colourInput("volcano_up_color_microarray_raw", 
-                                                     NULL, 
-                                                     "red"),
-                           br()
-                         ),
-                         circle = TRUE, status = "info",
-                         icon = icon("fas fa-cog"),
-                         
-                         tooltip = shinyWidgets::tooltipOptions(
-                           title = "Click to personalize the volcano plot!")
-                         
-                       ), # EO dropdownButton
+                       tags$div(class = "dropdown",
+                                tags$button(class = "dropbtn", icon("cog")),
+                                tags$div(class = "dropdown-content",
+                                         tags$h4("Color of unchanged genes"),
+                                         colourpicker::colourInput("volcano_unchanged_color_microarray_raw", 
+                                                                   NULL, 
+                                                                   "darkgrey"),
+                                         tags$h4("Color of downregulated genes"),
+                                         colourpicker::colourInput("volcano_down_color_microarray_raw", 
+                                                                   NULL, 
+                                                                   "blue"),
+                                         tags$h4("Color of upregulated genes"),
+                                         colourpicker::colourInput("volcano_up_color_microarray_raw", 
+                                                                   NULL, 
+                                                                   "red"),
+                                         br()
+                                )), # EO dropdownButton
                        
                        # Volcano plot output
                        plotly::plotlyOutput("volcano_microarray_raw")%>% 
@@ -3464,30 +3492,23 @@ observe({
                        br(),
                        
                        # Dropdown Button to adjust the plot settings
-                       shinyWidgets::dropdownButton(
-                         tags$div(
-                           style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                           tags$h4("Color of unchanged genes"),
-                           colourpicker::colourInput("MA_unchanged_color_microarray_raw", 
-                                                     NULL, 
-                                                     "darkgrey"),
-                           tags$h4("Color of downregulated genes"),
-                           colourpicker::colourInput("MA_down_color_microarray_raw", 
-                                                     NULL, 
-                                                     "blue"),
-                           tags$h4("Color of upregulated genes"),
-                           colourpicker::colourInput("MA_up_color_microarray_raw", 
-                                                     NULL, 
-                                                     "red"),
-                           br()
-                         ),
-                         circle = TRUE, status = "info",
-                         icon = icon("fas fa-cog"),
-                         
-                         tooltip = shinyWidgets::tooltipOptions(
-                           title = "Click to personalize the MA plot!")
-                         
-                       ), # EO dropdownButton
+                       tags$div(class = "dropdown",
+                                tags$button(class = "dropbtn", icon("cog")),
+                                tags$div(class = "dropdown-content",
+                                         tags$h4("Color of unchanged genes"),
+                                         colourpicker::colourInput("MA_unchanged_color_microarray_raw", 
+                                                                   NULL, 
+                                                                   "darkgrey"),
+                                         tags$h4("Color of downregulated genes"),
+                                         colourpicker::colourInput("MA_down_color_microarray_raw", 
+                                                                   NULL, 
+                                                                   "blue"),
+                                         tags$h4("Color of upregulated genes"),
+                                         colourpicker::colourInput("MA_up_color_microarray_raw", 
+                                                                   NULL, 
+                                                                   "red"),
+                                         br()
+                                )), # EO dropdownButton
                        
                        # MA plot output
                        plotly::plotlyOutput("MA_microarray_raw")%>% 
@@ -3637,10 +3658,10 @@ observe({
                                    color = "primary",
                                    icon = icon("download")),
         shinyWidgets::actionBttn(inputId = "next_statistics_microarray_raw",
-                   label = "Next",
-                   style = "jelly",
-                   color = "danger",
-                   icon = icon("arrow-right"))
+                                 label = "Next",
+                                 style = "jelly",
+                                 color = "danger",
+                                 icon = icon("arrow-right"))
       )
     })
     
@@ -3667,10 +3688,10 @@ observe({
     req(rv$top_table)
     output$UI_comparisons_view_ORA_microarray_raw <- renderUI({
       selectInput(inputId = "comparisons_view_ORA_microarray_raw",
-                                label = NULL,
-                                choices = names(rv$top_table),
-                                selected = names(rv$top_table)[1],
-                                multiple = FALSE)
+                  label = NULL,
+                  choices = names(rv$top_table),
+                  selected = names(rv$top_table)[1],
+                  multiple = FALSE)
     })
   })
   
@@ -3690,10 +3711,10 @@ observe({
         
         # Which columns of the top table contains the gene ids?
         selectInput(inputId = "geneID_ORA_microarray_raw",
-                                  label = "Which column of the top table contains the gene IDs?",
-                                  choices = colnames(rv$top_table[[1]])[col_choice],
-                                  selected = colnames(rv$top_table[[1]])[1],
-                                  multiple = FALSE)
+                    label = "Which column of the top table contains the gene IDs?",
+                    choices = colnames(rv$top_table[[1]])[col_choice],
+                    selected = colnames(rv$top_table[[1]])[1],
+                    multiple = FALSE)
       )
     })
   })
@@ -4025,8 +4046,8 @@ observe({
                                             color = input$color_ORAnetwork_microarray_raw)
             
             output$ORAnetwork_microarray_raw <- renderPlot(rv$ORAnetwork,
-                                                       height = 500, 
-                                                       width = 800)
+                                                           height = 500, 
+                                                           width = 800)
             
             
           })
@@ -4220,39 +4241,32 @@ observe({
                          br(),
                          
                          # Dropdown Button to adjust the plot settings
-                         shinyWidgets::dropdownButton(
-                           tags$div(
-                             style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                             
-                             # Color gradient
-                             tags$h4("Color gradient"),
-                             selectInput(inputId = "color_ORAplot_microarray_raw",
-                                         label = NULL,
-                                         choices = c("Viridis", 
-                                                     "Yellow-red", 
-                                                     "Blues", 
-                                                     "Reds")),
-                             br(),
-                             
-                             # Number of genesets
-                             tags$h4("# Genesets"),
-                             sliderInput(
-                               inputId = "nSets_ORAplot_microarray_raw",
-                               label = NULL,
-                               value = 10,
-                               min = 5,
-                               max = 20,
-                               step = 1),
-                             
-                             br(),br()
-                           ),
-                           circle = TRUE, status = "info",
-                           icon = icon("fas fa-cog"),
-                           
-                           tooltip = shinyWidgets::tooltipOptions(
-                             title = "Click to personalize the barchart!")
-                           
-                         ), # EO dropdownButton
+                         tags$div(class = "dropdown",
+                                  tags$button(class = "dropbtn", icon("cog")),
+                                  tags$div(class = "dropdown-content",
+                                           
+                                           # Color gradient
+                                           tags$h4("Color gradient"),
+                                           selectInput(inputId = "color_ORAplot_microarray_raw",
+                                                       label = NULL,
+                                                       choices = c("Viridis", 
+                                                                   "Yellow-red", 
+                                                                   "Blues", 
+                                                                   "Reds")),
+                                           br(),
+                                           
+                                           # Number of genesets
+                                           tags$h4("# Genesets"),
+                                           sliderInput(
+                                             inputId = "nSets_ORAplot_microarray_raw",
+                                             label = NULL,
+                                             value = 10,
+                                             min = 5,
+                                             max = 20,
+                                             step = 1),
+                                           
+                                           br(),br()
+                                  )), # EO dropdownButton
                          
                          # Interactive plot output
                          plotly::plotlyOutput("ORAplot_microarray_raw") %>% 
@@ -4277,48 +4291,42 @@ observe({
                          br(),
                          
                          # Dropdown Button to adjust the plot settings
-                         shinyWidgets::dropdownButton(
-                           tags$div(
-                             style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                             
-                             # Color gradient
-                             tags$h4("Color gradient"),
-                             selectInput(inputId = "color_ORAnetwork_microarray_raw",
-                                         label = NULL,
-                                         choices = c("Viridis", 
-                                                     "Yellow-red", 
-                                                     "Blues", 
-                                                     "Reds")),
-                             br(),
-                             
-                             # Network layout
-                             tags$h4("Network layout"),
-                             selectInput(inputId = "layout_ORAnetwork_microarray_raw",
-                                         label = NULL,
-                                         choices = c('star', 'circle', 'gem', 'dh', 'graphopt', 'grid', 'mds', 
-                                                     'randomly', 'fr', 'kk', 'drl', 'lgl'),
-                                         selected = 'graphopt',
-                                         multiple = FALSE),
-                             br(),
-                             
-                             # Number of genesets
-                             tags$h4("# Genesets"),
-                             sliderInput(
-                               inputId = "nSets_ORAnetwork_microarray_raw",
-                               label = NULL,
-                               value = 10,
-                               min = 5,
-                               max = 20,
-                               step = 1),
-                             br(),br()
-                           ),
-                           circle = TRUE, status = "info",
-                           icon = icon("fas fa-cog"),
-                           
-                           tooltip = shinyWidgets::tooltipOptions(
-                             title = "Click to personalize the network!")
-                           
-                         ), # EO dropdownButton
+                         tags$div(class = "dropdown",
+                                  tags$button(class = "dropbtn", icon("cog")),
+                                  tags$div(class = "dropdown-content",
+                                           style = "max-height: 300px; overflow-y: auto; padding: 5px;",
+                                           
+                                           # Color gradient
+                                           tags$h4("Color gradient"),
+                                           selectInput(inputId = "color_ORAnetwork_microarray_raw",
+                                                       label = NULL,
+                                                       choices = c("Viridis", 
+                                                                   "Yellow-red", 
+                                                                   "Blues", 
+                                                                   "Reds")),
+                                           br(),
+                                           
+                                           # Network layout
+                                           tags$h4("Network layout"),
+                                           selectInput(inputId = "layout_ORAnetwork_microarray_raw",
+                                                       label = NULL,
+                                                       choices = c('star', 'circle', 'gem', 'dh', 'graphopt', 'grid', 'mds', 
+                                                                   'randomly', 'fr', 'kk', 'drl', 'lgl'),
+                                                       selected = 'graphopt',
+                                                       multiple = FALSE),
+                                           br(),
+                                           
+                                           # Number of genesets
+                                           tags$h4("# Genesets"),
+                                           sliderInput(
+                                             inputId = "nSets_ORAnetwork_microarray_raw",
+                                             label = NULL,
+                                             value = 10,
+                                             min = 5,
+                                             max = 20,
+                                             step = 1),
+                                           br(),br()
+                                  )), # EO dropdownButton
                          
                          
                          
@@ -4665,8 +4673,8 @@ observe({
                                                         input$highcol_GSEAnetwork_microarray_raw))
             
             output$GSEAnetwork_microarray_raw <- renderPlot(rv$GSEAnetwork,
-                                                        height = 500, 
-                                                        width = 800)
+                                                            height = 500, 
+                                                            width = 800)
             
           })
           
@@ -4858,41 +4866,34 @@ observe({
                          br(),
                          
                          # Dropdown Button to adjust the plot settings
-                         shinyWidgets::dropdownButton(
-                           tags$div(
-                             style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                             
-                             # Color gradient
-                             tags$h4("Color gradient"),
-                             colourpicker::colourInput("lowcol_GSEAplot_microarray_raw",
-                                                       NULL,
-                                                       "#000072"),
-                             colourpicker::colourInput("midcol_GSEAplot_microarray_raw",
-                                                       NULL,
-                                                       "#FEE6CE"),
-                             colourpicker::colourInput("highcol_GSEAplot_microarray_raw",
-                                                       NULL,
-                                                       "red"),
-                             br(),
-                             
-                             # Number of genesets
-                             tags$h4("# Genesets"),
-                             sliderInput(
-                               inputId = "nSets_GSEAplot_microarray_raw",
-                               label = NULL,
-                               value = 10,
-                               min = 5,
-                               max = 20,
-                               step = 1),
-                             br(),br()
-                           ),
-                           circle = TRUE, status = "info",
-                           icon = icon("fas fa-cog"),
-                           
-                           tooltip = shinyWidgets::tooltipOptions(
-                             title = "Click to personalize the barchart!")
-                           
-                         ), # EO dropdownButton
+                         tags$div(class = "dropdown",
+                                  tags$button(class = "dropbtn", icon("cog")),
+                                  tags$div(class = "dropdown-content",
+                                           
+                                           # Color gradient
+                                           tags$h4("Color gradient"),
+                                           colourpicker::colourInput("lowcol_GSEAplot_microarray_raw",
+                                                                     NULL,
+                                                                     "#000072"),
+                                           colourpicker::colourInput("midcol_GSEAplot_microarray_raw",
+                                                                     NULL,
+                                                                     "#FEE6CE"),
+                                           colourpicker::colourInput("highcol_GSEAplot_microarray_raw",
+                                                                     NULL,
+                                                                     "red"),
+                                           br(),
+                                           
+                                           # Number of genesets
+                                           tags$h4("# Genesets"),
+                                           sliderInput(
+                                             inputId = "nSets_GSEAplot_microarray_raw",
+                                             label = NULL,
+                                             value = 10,
+                                             min = 5,
+                                             max = 20,
+                                             step = 1),
+                                           br(),br()
+                                  )), # EO dropdownButton
                          
                          # Interactive plot output
                          plotly::plotlyOutput("GSEAplot_microarray_raw") %>%
@@ -4917,51 +4918,44 @@ observe({
                          br(),
                          
                          # Dropdown Button to adjust the plot settings
-                         shinyWidgets::dropdownButton(
-                           tags$div(
-                             style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                             
-                             # Color gradient
-                             tags$h4("Color gradient"),
-                             colourpicker::colourInput("lowcol_GSEAnetwork_microarray_raw",
-                                                       NULL,
-                                                       "#000072"),
-                             colourpicker::colourInput("midcol_GSEAnetwork_microarray_raw",
-                                                       NULL,
-                                                       "#FEE6CE"),
-                             colourpicker::colourInput("highcol_GSEAnetwork_microarray_raw",
-                                                       NULL,
-                                                       "red"),
-                             br(),
-                             
-                             # Network layout
-                             tags$h4("Network layout"),
-                             selectInput(inputId = "layout_GSEAnetwork_microarray_raw",
-                                         label = NULL,
-                                         choices = c('star', 'circle', 'gem', 'dh', 'graphopt', 'grid', 'mds',
-                                                     'randomly', 'fr', 'kk', 'drl', 'lgl'),
-                                         selected = 'graphopt',
-                                         multiple = FALSE),
-                             br(),
-                             
-                             # Number of genesets
-                             tags$h4("# Gene sets"),
-                             sliderInput(
-                               inputId = "nSets_GSEAnetwork_microarray_raw",
-                               label = NULL,
-                               value = 10,
-                               min = 5,
-                               max = 20,
-                               step = 1),
-                             br(),br()
-                           ),
-                           circle = TRUE, status = "info",
-                           icon = icon("fas fa-cog"),
-                           
-                           tooltip = shinyWidgets::tooltipOptions(
-                             title = "Click to personalize the network!")
-                           
-                         ), # EO dropdownButton
+                         tags$div(class = "dropdown",
+                                  tags$button(class = "dropbtn", icon("cog")),
+                                  tags$div(class = "dropdown-content",
+                                           
+                                           # Color gradient
+                                           tags$h4("Color gradient"),
+                                           colourpicker::colourInput("lowcol_GSEAnetwork_microarray_raw",
+                                                                     NULL,
+                                                                     "#000072"),
+                                           colourpicker::colourInput("midcol_GSEAnetwork_microarray_raw",
+                                                                     NULL,
+                                                                     "#FEE6CE"),
+                                           colourpicker::colourInput("highcol_GSEAnetwork_microarray_raw",
+                                                                     NULL,
+                                                                     "red"),
+                                           br(),
+                                           
+                                           # Network layout
+                                           tags$h4("Network layout"),
+                                           selectInput(inputId = "layout_GSEAnetwork_microarray_raw",
+                                                       label = NULL,
+                                                       choices = c('star', 'circle', 'gem', 'dh', 'graphopt', 'grid', 'mds',
+                                                                   'randomly', 'fr', 'kk', 'drl', 'lgl'),
+                                                       selected = 'graphopt',
+                                                       multiple = FALSE),
+                                           br(),
+                                           
+                                           # Number of genesets
+                                           tags$h4("# Gene sets"),
+                                           sliderInput(
+                                             inputId = "nSets_GSEAnetwork_microarray_raw",
+                                             label = NULL,
+                                             value = 10,
+                                             min = 5,
+                                             max = 20,
+                                             step = 1),
+                                           br(),br()
+                                  )), # EO dropdownButton
                          
                          # Make plot
                          plotOutput("GSEAnetwork_microarray_raw") %>%

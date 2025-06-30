@@ -1553,7 +1553,7 @@ The expression profile of a gene can be viewed by clicking on the table.</p>
 <p>3. <b>Density plots</b> (interactive). Similar to the boxplots, the density plot shows the distribution of expression values for all samples.</p>
 <p>4. <b>Correlation plot</b> (interactive). The correlation plot shows the sample-wise correlations. You can choose between different linkage and clustering methods.</p>
 <p>5. <b>PCA plot</b> (interactive). 2D and 3D PCA plots can be viewed to assess data quality.</p>
-<p>6. <b>Table of pre-processing settings</b> (static). An overview of the selected pre-processing settings is provided and can be downloaded. This ensures reproducibility of your analysis.</p>
+<p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
 </div>
 <br>
 
@@ -1573,23 +1573,28 @@ the time required for the statistical analysis will increase significantly.</p>
 <p>For each of the selected statistical comparisons, the following output are provided:</p>
 <p>1. <b>Top table</b> (interactive). A table with the relevant statistics as calculated by <i>limma</i>.</p>
 <p>2. <b>Histograms</b> (interactive) of the p-value and logFC distribution.</p>
-<p>3. <b>Volcano plot</b> (interactive).</p>
+<p>3. <b>Volcano plot</b> (interactive): scatter plot of logFC versus -log P value.</p>
+<p>4. <b>MA plot</b> (interactive): scatter plot of mean log expression versus logFC.</p>
+<p>5. <b>Summary</b> of the number of differentially expressed genes for selected P and logFC thresholds.</p>
+<p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
 </div>
 <br>
 
-<div id="mr_ora" class="section level2">
-<h3>Overrepresentation Analysis</h3>
-<p><b>Input</b></p>
-<p>After the statistical analysis, you can perform geneset (<i>i.e.</i>, <a href = "https://geneontology.org/" target="_blank">Gene Ontology</a>, 
+<div id="mr_gsa" class="section level2">
+<h3>Gene Set Analysis</h3>
+<p>After the statistical analysis, you can perform Gene Set Analysis (GSA) using different gene set colections (<i>i.e.</i>, <a href = "https://geneontology.org/" target="_blank">Gene Ontology</a>, 
 <a href = "https://www.genome.jp/kegg/pathway.html" target="_blank">KEGG</a> and 
-<a href = "https://www.wikipathways.org/" target="_blank">WikiPathways</a>) overrepresentation analysis (ORA). 
-For this, you can select from various options:</p>
+<a href = "https://www.wikipathways.org/" target="_blank">WikiPathways</a>). 
+Two different methods can be used for GSA: Overrepresentation analyis (ORA) and Gene Set Enrichment Analysis (GSEA).</p>
+<br>
+<h4>Overrepresentation Analysis (ORA)</h4>
+<p><b>Input</b></p>
 <p>1. <b>Statistical comparison</b>. Select the statistical comparison for which you want to perform ORA.</p>
 <p>2. <b>Geneset collection</b>. Select from Gene Ontology (GO)-Biological Process (BP), -Cellular Component (CC), and -Molecular Function (MF), as well as WikiPathways geneset collections.</p>
-<p>3. <b>Differentially expressed genes</b>. Indicate whether you want to perform ORA on up- and/or downregulated genes. 
-Furhermore, you can also indicate whether the differentially expressed genes should be selected based on a p-value/logFC threshold 
-or whether ORA should simply be performed on the top most significantly up/downregulated genes.</p>
-<p>4. <b>Gene identifier</b>. Select which column contains the gene identifiers and what type of identifiers these are (<i>e.g.</i>, ENTREZG, Ensembl, or gene symbol). 
+<p>3. <b>Input genes</b>. Indicate whether you want to perform ORA on up- and/or downregulated genes. 
+Furhermore, you can also indicate whether the input genes should be selected based on a p-value/logFC threshold 
+or whether ORA should simply be performed on the top most significantly up/downregulated genes. The background gene list includes all genes that passed QC. </p>
+<p>4. <b>Gene identifier</b>. Select which column of the statistics table contains the gene identifiers and what type of identifiers these are (<i>e.g.</i>, Entrez Gene, Ensembl Gene, or Gene Symbol). 
 Furthermore, indicate to which organism the gene identifiers belong.</p>
 </br>
 <p><b>Output</b></p>
@@ -1597,7 +1602,26 @@ Furthermore, indicate to which organism the gene identifiers belong.</p>
 <p>1. <b>ORA table</b>. Table with the statistics of the ORA. This table can be downloaded.</p>
 <p>2. <b>Barchart</b> of the most significantly overrepresented genesets. You can select the number of genesets in the chart.</p>
 <p>3. <b>Network</b> of the most significantly overrepresented genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
+You can select the network layout and number of genesets in the network.</p>
+<p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
+
+<br>
+
+<h4>Gene Set Enrichment Analysis (GSEA)</h4>
+<p><b>Input</b></p>
+<p>1. <b>Statistical comparison</b>. Select the statistical comparison for which you want to perform ORA.</p>
+<p>2. <b>Geneset collection</b>. Select from Gene Ontology (GO)-Biological Process (BP), -Cellular Component (CC), and -Molecular Function (MF), KEGG, and WikiPathways geneset collections.</p>
+<p>3. <b>Ranking variable</b>. Indicate which variable (logFC, -log P value, or signed -log P value) will be used to rank genes for the GSEA.</p>
+<p>4. <b>Gene identifier</b>. Select which column of the statistics table contains the gene identifiers and what type of identifiers these are (<i>e.g.</i>, Entrez Gene, Ensembl Gene, or Gene Symbol). 
+Furthermore, indicate to which organism the gene identifiers belong.</p>
+</br>
+<p><b>Output</b></p>
+<p>Data and preprocessing quality can be checked in the different outputs and QC plots:</p>
+<p>1. <b>Interactive table</b> with GSEA statistics. This table can be downloaded.</p>
+<p>2. <b>Barchart</b> of the most significantly enriched genesets. You can select the number of genesets in the chart.</p>
+<p>3. <b>Network</b> of the most significantly enriched genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
 You can select the network layout and number of genesets in the network.</p> 
+<p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p> 
 </div>
 <hr>
 <br>
@@ -1642,7 +1666,7 @@ The expression profile of a gene can be viewed by clicking on the table.</p>
 <p>3. <b>Density plots</b> (interactive). Similar to the boxplots, the density plot shows the distribution of expression values for all samples.</p>
 <p>4. <b>Correlation plot</b> (interactive). The correlation plot shows the sample-wise correlations. You can choose between different linkage and clustering methods.</p>
 <p>5. <b>PCA plot</b> (interactive). 2D and 3D PCA plots can be viewed to assess data quality.</p>
-<p>6. <b>Table of pre-processing settings</b> (static). An overview of the selected pre-processing settings is provided and can be downloaded. This ensures reproducibility of your analysis.</p>
+<p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
 </div>
 <br>
 
@@ -1662,23 +1686,28 @@ the time required for the statistical analysis will increase significantly.</p>
 <p>For each of the selected statistical comparisons, the following output are provided:</p>
 <p>1. <b>Top table</b> (interactive). A table with the relevant statistics as calculated by <i>limma</i>.</p>
 <p>2. <b>Histograms</b> (interactive) of the p-value and logFC distribution.</p>
-<p>3. <b>Volcano plot</b> (interactive).</p>
+<p>3. <b>Volcano plot</b> (interactive): scatter plot of logFC versus -log P value.</p>
+<p>4. <b>MA plot</b> (interactive): scatter plot of mean log expression versus logFC.</p>
+<p>5. <b>Summary</b> of the number of differentially expressed genes for selected P and logFC thresholds.</p>
+<p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
 </div>
 <br>
 
-<div id="mn_ora" class="section level2">
-<h3>Overrepresentation Analysis</h3>
-<p><b>Input</b></p>
-<p>After the statistical analysis, you can perform geneset (<i>i.e.</i>, <a href = "https://geneontology.org/" target="_blank">Gene Ontology</a>, 
+<div id="mn_gsa" class="section level2">
+<h3>Gene Set Analysis</h3>
+<p>After the statistical analysis, you can perform Gene Set Analysis (GSA) using different gene set colections (<i>i.e.</i>, <a href = "https://geneontology.org/" target="_blank">Gene Ontology</a>, 
 <a href = "https://www.genome.jp/kegg/pathway.html" target="_blank">KEGG</a> and 
-<a href = "https://www.wikipathways.org/" target="_blank">WikiPathways</a>) overrepresentation analysis (ORA). 
-For this, you can select from various options:</p>
+<a href = "https://www.wikipathways.org/" target="_blank">WikiPathways</a>). 
+Two different methods can be used for GSA: Overrepresentation analyis (ORA) and Gene Set Enrichment Analysis (GSEA).</p>
+<br>
+<h4>Overrepresentation Analysis (ORA)</h4>
+<p><b>Input</b></p>
 <p>1. <b>Statistical comparison</b>. Select the statistical comparison for which you want to perform ORA.</p>
 <p>2. <b>Geneset collection</b>. Select from Gene Ontology (GO)-Biological Process (BP), -Cellular Component (CC), and -Molecular Function (MF), as well as WikiPathways geneset collections.</p>
-<p>3. <b>Differentially expressed genes</b>. Indicate whether you want to perform ORA on up- and/or downregulated genes. 
-Furhermore, you can also indicate whether the differentially expressed genes should be selected based on a p-value/logFC threshold 
-or whether ORA should simply be performed on the top most significantly up/downregulated genes.</p>
-<p>4. <b>Gene identifier</b>. Select which column contains the gene identifiers and what type of identifiers these are (<i>e.g.</i>, ENTREZG, Ensembl, or gene symbol). 
+<p>3. <b>Input genes</b>. Indicate whether you want to perform ORA on up- and/or downregulated genes. 
+Furhermore, you can also indicate whether the input genes should be selected based on a p-value/logFC threshold 
+or whether ORA should simply be performed on the top most significantly up/downregulated genes. The background gene list includes all genes that passed QC. </p>
+<p>4. <b>Gene identifier</b>. Select which column of the statistics table contains the gene identifiers and what type of identifiers these are (<i>e.g.</i>, Entrez Gene, Ensembl Gene, or Gene Symbol). 
 Furthermore, indicate to which organism the gene identifiers belong.</p>
 </br>
 <p><b>Output</b></p>
@@ -1686,7 +1715,26 @@ Furthermore, indicate to which organism the gene identifiers belong.</p>
 <p>1. <b>ORA table</b>. Table with the statistics of the ORA. This table can be downloaded.</p>
 <p>2. <b>Barchart</b> of the most significantly overrepresented genesets. You can select the number of genesets in the chart.</p>
 <p>3. <b>Network</b> of the most significantly overrepresented genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
+You can select the network layout and number of genesets in the network.</p>
+<p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
+
+<br>
+
+<h4>Gene Set Enrichment Analysis (GSEA)</h4>
+<p><b>Input</b></p>
+<p>1. <b>Statistical comparison</b>. Select the statistical comparison for which you want to perform ORA.</p>
+<p>2. <b>Geneset collection</b>. Select from Gene Ontology (GO)-Biological Process (BP), -Cellular Component (CC), and -Molecular Function (MF), KEGG, and WikiPathways geneset collections.</p>
+<p>3. <b>Ranking variable</b>. Indicate which variable (logFC, -log P value, or signed -log P value) will be used to rank genes for the GSEA.</p>
+<p>4. <b>Gene identifier</b>. Select which column of the statistics table contains the gene identifiers and what type of identifiers these are (<i>e.g.</i>, Entrez Gene, Ensembl Gene, or Gene Symbol). 
+Furthermore, indicate to which organism the gene identifiers belong.</p>
+</br>
+<p><b>Output</b></p>
+<p>Data and preprocessing quality can be checked in the different outputs and QC plots:</p>
+<p>1. <b>Interactive table</b> with GSEA statistics. This table can be downloaded.</p>
+<p>2. <b>Barchart</b> of the most significantly enriched genesets. You can select the number of genesets in the chart.</p>
+<p>3. <b>Network</b> of the most significantly enriched genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
 You can select the network layout and number of genesets in the network.</p> 
+<p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p> 
 </div>
 <hr>
 <br>
@@ -1739,7 +1787,7 @@ The expression profile of a gene can be viewed by clicking on the table.</p>
 <p>3. <b>Density plots</b> (interactive). Similar to the boxplots, the density plot shows the distribution of expression values for all samples.</p>
 <p>4. <b>Correlation plot</b> (interactive). The correlation plot shows the sample-wise correlations. You can choose between different linkage and clustering methods.</p>
 <p>5. <b>PCA plot</b> (interactive). 2D and 3D PCA plots can be viewed to assess data quality.</p>
-<p>6. <b>Table of pre-processing settings</b> (static). An overview of the selected pre-processing settings is provided and can be downloaded. This ensures reproducibility of your analysis.</p>
+<p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
 </div>
 <br>
 
@@ -1760,23 +1808,29 @@ the time required for the statistical analysis will increase significantly.</p>
 <p>1. <b>Top table</b> (interactive). A table with the relevant statistics as calculated by <i>DESeq2</i>. 
 The log2FC estimates are shrunken using the <a href = "https://doi.org/10.1093/bioinformatics/bty895" target="_blank">apeglm</a> method.</p>
 <p>2. <b>Histograms</b> (interactive) of the p-value and logFC distribution.</p>
-<p>3. <b>Volcano plot</b> (interactive).</p>
+<p>3. <b>Volcano plot</b> (interactive): scatter plot of logFC versus -log P value.</p>
+<p>4. <b>MA plot</b> (interactive): scatter plot of mean log expression versus logFC.</p>
+<p>5. <b>Summary</b> of the number of differentially expressed genes for selected P and logFC thresholds.</p>
+<p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
+
 </div>
 <br>
 
-<div id="rr_ora" class="section level2">
-<h3>Overrepresentation Analysis</h3>
-<p><b>Input</b></p>
-<p>After the statistical analysis, you can perform geneset (<i>i.e.</i>, <a href = "https://geneontology.org/" target="_blank">Gene Ontology</a>, 
+<div id="rr_gsa" class="section level2">
+<h3>Gene Set Analysis</h3>
+<p>After the statistical analysis, you can perform Gene Set Analysis (GSA) using different gene set colections (<i>i.e.</i>, <a href = "https://geneontology.org/" target="_blank">Gene Ontology</a>, 
 <a href = "https://www.genome.jp/kegg/pathway.html" target="_blank">KEGG</a> and 
-<a href = "https://www.wikipathways.org/" target="_blank">WikiPathways</a>) overrepresentation analysis (ORA). 
-For this, you can select from various options:</p>
+<a href = "https://www.wikipathways.org/" target="_blank">WikiPathways</a>). 
+Two different methods can be used for GSA: Overrepresentation analyis (ORA) and Gene Set Enrichment Analysis (GSEA).</p>
+<br>
+<h4>Overrepresentation Analysis (ORA)</h4>
+<p><b>Input</b></p>
 <p>1. <b>Statistical comparison</b>. Select the statistical comparison for which you want to perform ORA.</p>
 <p>2. <b>Geneset collection</b>. Select from Gene Ontology (GO)-Biological Process (BP), -Cellular Component (CC), and -Molecular Function (MF), as well as WikiPathways geneset collections.</p>
-<p>3. <b>Differentially expressed genes</b>. Indicate whether you want to perform ORA on up- and/or downregulated genes. 
-Furhermore, you can also indicate whether the differentially expressed genes should be selected based on a p-value/logFC threshold 
-or whether ORA should simply be performed on the top most significantly up/downregulated genes.</p>
-<p>4. <b>Gene identifier</b>. Select which column contains the gene identifiers and what type of identifiers these are (<i>e.g.</i>, ENTREZG, Ensembl, or gene symbol). 
+<p>3. <b>Input genes</b>. Indicate whether you want to perform ORA on up- and/or downregulated genes. 
+Furhermore, you can also indicate whether the input genes should be selected based on a p-value/logFC threshold 
+or whether ORA should simply be performed on the top most significantly up/downregulated genes. The background gene list includes all genes that passed QC. </p>
+<p>4. <b>Gene identifier</b>. Select which column of the statistics table contains the gene identifiers and what type of identifiers these are (<i>e.g.</i>, Entrez Gene, Ensembl Gene, or Gene Symbol). 
 Furthermore, indicate to which organism the gene identifiers belong.</p>
 </br>
 <p><b>Output</b></p>
@@ -1784,7 +1838,26 @@ Furthermore, indicate to which organism the gene identifiers belong.</p>
 <p>1. <b>ORA table</b>. Table with the statistics of the ORA. This table can be downloaded.</p>
 <p>2. <b>Barchart</b> of the most significantly overrepresented genesets. You can select the number of genesets in the chart.</p>
 <p>3. <b>Network</b> of the most significantly overrepresented genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
+You can select the network layout and number of genesets in the network.</p>
+<p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
+
+<br>
+
+<h4>Gene Set Enrichment Analysis (GSEA)</h4>
+<p><b>Input</b></p>
+<p>1. <b>Statistical comparison</b>. Select the statistical comparison for which you want to perform ORA.</p>
+<p>2. <b>Geneset collection</b>. Select from Gene Ontology (GO)-Biological Process (BP), -Cellular Component (CC), and -Molecular Function (MF), KEGG, and WikiPathways geneset collections.</p>
+<p>3. <b>Ranking variable</b>. Indicate which variable (logFC, -log P value, or signed -log P value) will be used to rank genes for the GSEA.</p>
+<p>4. <b>Gene identifier</b>. Select which column of the statistics table contains the gene identifiers and what type of identifiers these are (<i>e.g.</i>, Entrez Gene, Ensembl Gene, or Gene Symbol). 
+Furthermore, indicate to which organism the gene identifiers belong.</p>
+</br>
+<p><b>Output</b></p>
+<p>Data and preprocessing quality can be checked in the different outputs and QC plots:</p>
+<p>1. <b>Interactive table</b> with GSEA statistics. This table can be downloaded.</p>
+<p>2. <b>Barchart</b> of the most significantly enriched genesets. You can select the number of genesets in the chart.</p>
+<p>3. <b>Network</b> of the most significantly enriched genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
 You can select the network layout and number of genesets in the network.</p> 
+<p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p> 
 </div>
 <hr>
 <br>
@@ -1827,11 +1900,11 @@ where n is the number of samples in the smallest experiment group.</p>
 <p>Data and preprocessing quality can be checked in the different output tables and figures:</p>
 <p>1. <b>Normalized expression matrix</b> (interactive). The table of normalized expression values is provided and can be downloaded. 
 The expression profile of a gene can be viewed by clicking on the table.</p>
-<p>2. <b>Boxplots</b> (static). The boxplots show the distribution of expression values for all samples.</p>
+<p>2. <b>Boxplots</b>. The boxplots show the distribution of expression values for all samples.</p>
 <p>3. <b>Density plots</b> (interactive). Similar to the boxplots, the density plot shows the distribution of expression values for all samples.</p>
 <p>4. <b>Correlation plot</b> (interactive). The correlation plot shows the sample-wise correlations. You can choose between different linkage and clustering methods.</p>
 <p>5. <b>PCA plot</b> (interactive). 2D and 3D PCA plots can be viewed to assess data quality.</p>
-<p>6. <b>Table of pre-processing settings</b> (static). An overview of the selected pre-processing settings is provided and can be downloaded. This ensures reproducibility of your analysis.</p>
+<p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p> 
 </div>
 <br>
 
@@ -1851,23 +1924,28 @@ the time required for the statistical analysis will increase significantly.</p>
 <p>For each of the selected statistical comparisons, the following output are provided:</p>
 <p>1. <b>Top table</b> (interactive). A table with the relevant statistics as calculated by <i>limma</i>.</p>
 <p>2. <b>Histograms</b> (interactive) of the p-value and logFC distribution.</p>
-<p>3. <b>Volcano plot</b> (interactive).</p>
+<p>3. <b>Volcano plot</b> (interactive): scatter plot of logFC versus -log P value.</p>
+<p>4. <b>MA plot</b> (interactive): scatter plot of mean log expression versus logFC.</p>
+<p>5. <b>Summary</b> of the number of differentially expressed genes for selected P and logFC thresholds.</p>
+<p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
 </div>
 <br>
 
-<div id="rn_ora" class="section level2">
-<h3>Overrepresentation Analysis</h3>
-<p><b>Input</b></p>
-<p>After the statistical analysis, you can perform geneset (<i>i.e.</i>, <a href = "https://geneontology.org/" target="_blank">Gene Ontology</a>, 
+<div id="rn_gsa" class="section level2">
+<h3>Gene Set Analysis</h3>
+<p>After the statistical analysis, you can perform Gene Set Analysis (GSA) using different gene set colections (<i>i.e.</i>, <a href = "https://geneontology.org/" target="_blank">Gene Ontology</a>, 
 <a href = "https://www.genome.jp/kegg/pathway.html" target="_blank">KEGG</a> and 
-<a href = "https://www.wikipathways.org/" target="_blank">WikiPathways</a>) overrepresentation analysis (ORA). 
-For this, you can select from various options:</p>
+<a href = "https://www.wikipathways.org/" target="_blank">WikiPathways</a>). 
+Two different methods can be used for GSA: Overrepresentation analyis (ORA) and Gene Set Enrichment Analysis (GSEA).</p>
+<br>
+<h4>Overrepresentation Analysis (ORA)</h4>
+<p><b>Input</b></p>
 <p>1. <b>Statistical comparison</b>. Select the statistical comparison for which you want to perform ORA.</p>
 <p>2. <b>Geneset collection</b>. Select from Gene Ontology (GO)-Biological Process (BP), -Cellular Component (CC), and -Molecular Function (MF), as well as WikiPathways geneset collections.</p>
-<p>3. <b>Differentially expressed genes</b>. Indicate whether you want to perform ORA on up- and/or downregulated genes. 
-Furhermore, you can also indicate whether the differentially expressed genes should be selected based on a p-value/logFC threshold 
-or whether ORA should simply be performed on the top most significantly up/downregulated genes.</p>
-<p>4. <b>Gene identifier</b>. Select which column contains the gene identifiers and what type of identifiers these are (<i>e.g.</i>, ENTREZG, Ensembl, or gene symbol). 
+<p>3. <b>Input genes</b>. Indicate whether you want to perform ORA on up- and/or downregulated genes. 
+Furhermore, you can also indicate whether the input genes should be selected based on a p-value/logFC threshold 
+or whether ORA should simply be performed on the top most significantly up/downregulated genes. The background gene list includes all genes that passed QC. </p>
+<p>4. <b>Gene identifier</b>. Select which column of the statistics table contains the gene identifiers and what type of identifiers these are (<i>e.g.</i>, Entrez Gene, Ensembl Gene, or Gene Symbol). 
 Furthermore, indicate to which organism the gene identifiers belong.</p>
 </br>
 <p><b>Output</b></p>
@@ -1875,7 +1953,26 @@ Furthermore, indicate to which organism the gene identifiers belong.</p>
 <p>1. <b>ORA table</b>. Table with the statistics of the ORA. This table can be downloaded.</p>
 <p>2. <b>Barchart</b> of the most significantly overrepresented genesets. You can select the number of genesets in the chart.</p>
 <p>3. <b>Network</b> of the most significantly overrepresented genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
+You can select the network layout and number of genesets in the network.</p>
+<p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
+
+<br>
+
+<h4>Gene Set Enrichment Analysis (GSEA)</h4>
+<p><b>Input</b></p>
+<p>1. <b>Statistical comparison</b>. Select the statistical comparison for which you want to perform ORA.</p>
+<p>2. <b>Geneset collection</b>. Select from Gene Ontology (GO)-Biological Process (BP), -Cellular Component (CC), and -Molecular Function (MF), KEGG, and WikiPathways geneset collections.</p>
+<p>3. <b>Ranking variable</b>. Indicate which variable (logFC, -log P value, or signed -log P value) will be used to rank genes for the GSEA.</p>
+<p>4. <b>Gene identifier</b>. Select which column of the statistics table contains the gene identifiers and what type of identifiers these are (<i>e.g.</i>, Entrez Gene, Ensembl Gene, or Gene Symbol). 
+Furthermore, indicate to which organism the gene identifiers belong.</p>
+</br>
+<p><b>Output</b></p>
+<p>Data and preprocessing quality can be checked in the different outputs and QC plots:</p>
+<p>1. <b>GSEA table</b> (interactive) with GSEA statistics. This table can be downloaded.</p>
+<p>2. <b>Barchart</b> (interactive) of the most significantly enriched genesets. You can select the number of genesets in the chart.</p>
+<p>3. <b>Network</b> of the most significantly enriched genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
 You can select the network layout and number of genesets in the network.</p> 
+<p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p> 
 </div>
 <hr>
 

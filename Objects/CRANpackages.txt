@@ -1,5 +1,5 @@
 name	version	direction
-shiny	1.9.0	smaller
+shiny	1.10.0	smaller
 BiocManager	1.30.25	smaller
 ggplot2	3.5.1	smaller
 stringr	1.5.1	smaller

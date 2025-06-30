@@ -45,7 +45,43 @@ ui <- tagList(
     background-color: black!important;
 }"))),
   
+  tags$head(tags$style(HTML("
+    .dropbtn {
+       background-color: #D9D9D9;
+      color: white;
+      padding: 0;
+      display: flex;
+      font-size: 28px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      width: 50px;
+      height: 50px;
+      align-items: center;
+      justify-content: center;
+      line-height = 1;
+    }
 
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #f9f9f9;
+      min-width: 250px;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      padding: 12px;
+      z-index: 1;
+      border-radius: 4px;
+    }
+
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+  "))),
   
   fluidPage(
     

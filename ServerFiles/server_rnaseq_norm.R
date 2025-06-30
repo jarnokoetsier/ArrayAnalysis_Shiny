@@ -770,48 +770,54 @@ observe({
       if (test == 2){
         output$UI_color_boxplots_rnaseq_norm <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("boxplots_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("boxplots_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("boxplots_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("boxplots_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2])
+            )
           )
         })
       }
       if (test == 3){
         output$UI_color_boxplots_rnaseq_norm <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("boxplots_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("boxplots_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2]),
-            colourpicker::colourInput("boxplots_col3_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[3])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("boxplots_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("boxplots_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("boxplots_col3_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3])
+            )
           )
         })
       }
       if (test == 4){
         output$UI_color_boxplots_rnaseq_norm <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("boxplots_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("boxplots_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2]),
-            colourpicker::colourInput("boxplots_col3_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[3]),
-            colourpicker::colourInput("boxplots_col4_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[4])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("boxplots_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("boxplots_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("boxplots_col3_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                     colourpicker::colourInput("boxplots_col4_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[4])
+            )
           )
         })
         
@@ -819,29 +825,35 @@ observe({
       if (test == 5){
         output$UI_color_boxplots_rnaseq_norm <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("boxplots_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("boxplots_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2]),
-            colourpicker::colourInput("boxplots_col3_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[3]),
-            colourpicker::colourInput("boxplots_col4_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[4]),
-            colourpicker::colourInput("boxplots_col5_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[5])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("boxplots_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("boxplots_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("boxplots_col3_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                     colourpicker::colourInput("boxplots_col4_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[4]),
+                     colourpicker::colourInput("boxplots_col5_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[5])
+            )
           )
         })
         
       }
       if (test > 5){
         output$UI_color_boxplots_rnaseq_norm <- renderUI({
-          h5("There are too many experimental groups to select colour manually")
+          tagList(
+            tags$div(class = "dropdown-content",
+                     h5("There are too many experimental groups to select colour manually")
+            )
+          )
         })
         
       }
@@ -988,48 +1000,54 @@ observe({
       if (test == 2){
         output$UI_color_density_rnaseq_norm <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("density_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("density_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("density_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("density_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2])
+            )
           )
         })
       }
       if (test == 3){
         output$UI_color_density_rnaseq_norm <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("density_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("density_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2]),
-            colourpicker::colourInput("density_col3_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[3])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("density_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("density_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("density_col3_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3])
+            )
           )
         })
       }
       if (test == 4){
         output$UI_color_density_rnaseq_norm <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("density_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("density_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2]),
-            colourpicker::colourInput("density_col3_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[3]),
-            colourpicker::colourInput("density_col4_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[4])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("density_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("density_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("density_col3_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                     colourpicker::colourInput("density_col4_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[4])
+            )
           )
         })
         
@@ -1037,29 +1055,35 @@ observe({
       if (test == 5){
         output$UI_color_density_rnaseq_norm <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("density_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[1]),
-            colourpicker::colourInput("density_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[2]),
-            colourpicker::colourInput("density_col3_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[3]),
-            colourpicker::colourInput("density_col4_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[4]),
-            colourpicker::colourInput("density_col5_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(rv$experimentFactor)$legendColors[5])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("density_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("density_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("density_col3_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                     colourpicker::colourInput("density_col4_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[4]),
+                     colourpicker::colourInput("density_col5_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[5])
+            )
           )
         })
         
       }
       if (test > 5){
         output$UI_color_density_rnaseq_norm <- renderUI({
-          h5("There are too many experimental groups to select colour manually")
+          tagList(
+            tags$div(class = "dropdown-content",
+                     h5("There are too many experimental groups to select colour manually")
+            )
+          )
         })
         
       }
@@ -1218,13 +1242,23 @@ observe({
       if (test == 2){
         output$UI_color_heatmap_rnaseq_norm <- renderUI({
           tagList(
-            h4("Side color"),
-            colourpicker::colourInput("heatmap_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("heatmap_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2])
+            tags$div(class = "dropdown-content",
+                     h4("Heatmap theme"),
+                     selectInput(inputId = 'heatmaptheme_rnaseq_norm',
+                                 label = NULL,
+                                 choices = c("Default", 
+                                             "Yellow-red", 
+                                             "Blues", 
+                                             "Reds")),
+                     br(),
+                     h4("Side color"),
+                     colourpicker::colourInput("heatmap_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("heatmap_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2])
+            )
           )
         })
       }
@@ -1232,35 +1266,55 @@ observe({
       if (test == 3){
         output$UI_color_heatmap_rnaseq_norm <- renderUI({
           tagList(
-            h4("Side color"),
-            colourpicker::colourInput("heatmap_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("heatmap_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2]),
-            colourpicker::colourInput("heatmap_col3_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[3])
+            tags$div(class = "dropdown-content",
+                     h4("Heatmap theme"),
+                     selectInput(inputId = 'heatmaptheme_rnaseq_norm',
+                                 label = NULL,
+                                 choices = c("Default", 
+                                             "Yellow-red", 
+                                             "Blues", 
+                                             "Reds")),
+                     br(),
+                     h4("Side color"),
+                     colourpicker::colourInput("heatmap_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("heatmap_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2]),
+                     colourpicker::colourInput("heatmap_col3_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[3])
+            )
           )
         })
       }
       if (test == 4){
         output$UI_color_heatmap_rnaseq_norm <- renderUI({
           tagList(
-            h4("Side color"),
-            colourpicker::colourInput("heatmap_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("heatmap_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2]),
-            colourpicker::colourInput("heatmap_col3_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[3]),
-            colourpicker::colourInput("heatmap_col4_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[4])
+            tags$div(class = "dropdown-content",
+                     h4("Heatmap theme"),
+                     selectInput(inputId = 'heatmaptheme_rnaseq_norm',
+                                 label = NULL,
+                                 choices = c("Default", 
+                                             "Yellow-red", 
+                                             "Blues", 
+                                             "Reds")),
+                     br(),
+                     h4("Side color"),
+                     colourpicker::colourInput("heatmap_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("heatmap_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2]),
+                     colourpicker::colourInput("heatmap_col3_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[3]),
+                     colourpicker::colourInput("heatmap_col4_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[4])
+            )
           )
         })
         
@@ -1268,29 +1322,50 @@ observe({
       if (test == 5){
         output$UI_color_heatmap_rnaseq_norm <- renderUI({
           tagList(
-            h4("Side color"),
-            colourpicker::colourInput("heatmap_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("heatmap_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2]),
-            colourpicker::colourInput("heatmap_col3_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[3]),
-            colourpicker::colourInput("heatmap_col4_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[4]),
-            colourpicker::colourInput("heatmap_col5_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[5])
+            tags$div(class = "dropdown-content",
+                     h4("Heatmap theme"),
+                     selectInput(inputId = 'heatmaptheme_rnaseq_norm',
+                                 label = NULL,
+                                 choices = c("Default", 
+                                             "Yellow-red", 
+                                             "Blues", 
+                                             "Reds")),
+                     br(),
+                     h4("Side color"),
+                     colourpicker::colourInput("heatmap_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("heatmap_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2]),
+                     colourpicker::colourInput("heatmap_col3_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[3]),
+                     colourpicker::colourInput("heatmap_col4_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[4]),
+                     colourpicker::colourInput("heatmap_col5_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[5])
+            )
           )
         })
         
       }
       if (test > 5){
         output$UI_color_heatmap_rnaseq_norm <- renderUI({
-          NULL
+          tagList(
+            tags$div(class = "dropdown-content",
+                     h4("Heatmap theme"),
+                     selectInput(inputId = 'heatmaptheme_rnaseq_norm',
+                                 label = NULL,
+                                 choices = c("Default", 
+                                             "Yellow-red", 
+                                             "Blues", 
+                                             "Reds")),
+                     br()
+            )
+          )
         })
         
       }
@@ -1469,13 +1544,15 @@ observe({
       if (test == 2){
         output$UI_color_PCA_rnaseq_norm <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("PCA_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("PCA_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("PCA_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("PCA_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2])
+            )
           )
         })
       }
@@ -1483,35 +1560,39 @@ observe({
       if (test == 3){
         output$UI_color_PCA_rnaseq_norm <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("PCA_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("PCA_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2]),
-            colourpicker::colourInput("PCA_col3_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[3])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("PCA_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("PCA_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2]),
+                     colourpicker::colourInput("PCA_col3_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[3])
+            )
           )
         })
       }
       if (test == 4){
         output$UI_color_PCA_rnaseq_norm <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("PCA_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("PCA_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2]),
-            colourpicker::colourInput("PCA_col3_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[3]),
-            colourpicker::colourInput("PCA_col4_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[4])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("PCA_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("PCA_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2]),
+                     colourpicker::colourInput("PCA_col3_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[3]),
+                     colourpicker::colourInput("PCA_col4_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[4])
+            )
           )
         })
         
@@ -1519,29 +1600,35 @@ observe({
       if (test == 5){
         output$UI_color_PCA_rnaseq_norm <- renderUI({
           tagList(
-            h4("Colors"),
-            colourpicker::colourInput("PCA_col1_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[1]),
-            colourpicker::colourInput("PCA_col2_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[2]),
-            colourpicker::colourInput("PCA_col3_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[3]),
-            colourpicker::colourInput("PCA_col4_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[4]),
-            colourpicker::colourInput("PCA_col5_rnaseq_norm", 
-                                      NULL, 
-                                      colorsByFactor(colorFactor)$legendColors[5])
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("PCA_col1_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[1]),
+                     colourpicker::colourInput("PCA_col2_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[2]),
+                     colourpicker::colourInput("PCA_col3_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[3]),
+                     colourpicker::colourInput("PCA_col4_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[4]),
+                     colourpicker::colourInput("PCA_col5_rnaseq_norm", 
+                                               NULL, 
+                                               colorsByFactor(colorFactor)$legendColors[5])
+            )
           )
         })
         
       }
       if (test > 5){
         output$UI_color_PCA_rnaseq_norm <- renderUI({
-          NULL
+          tagList(
+            tags$div(class = "dropdown-content",
+                     NULL
+            )
+          )
         })
         
       }
@@ -1728,88 +1815,81 @@ observe({
                    br(),
                    
                    # Dropdown Button to adjust the plot settings
-                   shinyWidgets::dropdownButton(
-                     tags$div(
-                       style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                       
-                       
-                       # Change order of the boxplots:
-                       tags$h4("Drag to change boxplot order"),
-                       shinyjqui::orderInput(inputId = 'geneboxplot_order_rnaseq_norm', 
-                                             label = NULL, 
-                                             items = levels(rv$experimentFactor),
-                                             item_class = 'default'),
-                       br(),
-                       
-                       # Change colour of the boxplots by button. 
-                       # This is used when there are more than 6 experimental groups
-                       conditionalPanel(
-                         condition = "output.length_geneboxplot_rnaseq_norm > 6",
-                         tags$h4("Click to change boxplot colors"),
-                         shinyWidgets::actionBttn("geneboxplot_changeOrder_rnaseq_norm",
-                                                  label = "Change color",
-                                                  style = "simple",
-                                                  color = "primary",
-                                                  icon = icon("sync"))
-                       ),
-                       
-                       # Change colour of the boxplots by colour picker
-                       # This is used when there are less than 7 experimental groups
-                       conditionalPanel(
-                         condition = "output.length_geneboxplot_rnaseq_norm < 7",
-                         tags$h4("Click to select boxplot colours"),
-                         conditionalPanel(
-                           condition = "output.length_geneboxplot_rnaseq_norm > 0",
-                           colourpicker::colourInput("geneboxplot_col1_rnaseq_norm", 
-                                                     NULL, 
-                                                     colorsByFactor(rv$experimentFactor)$legendColors[1])
-                         ),
-                         conditionalPanel(
-                           condition = "output.length_geneboxplot_rnaseq_norm > 1",
-                           colourpicker::colourInput("geneboxplot_col2_rnaseq_norm", 
-                                                     NULL, 
-                                                     colorsByFactor(rv$experimentFactor)$legendColors[2])
-                         ),
-                         conditionalPanel(
-                           condition = "output.length_geneboxplot_rnaseq_norm > 2",
-                           colourpicker::colourInput("geneboxplot_col3_rnaseq_norm", 
-                                                     NULL, 
-                                                     colorsByFactor(rv$experimentFactor)$legendColors[3])
-                         ),
-                         conditionalPanel(
-                           condition = "output.length_geneboxplot_rnaseq_norm > 3",
-                           colourpicker::colourInput("geneboxplot_col4_rnaseq_norm", 
-                                                     NULL, 
-                                                     colorsByFactor(rv$experimentFactor)$legendColors[4])
-                         ),
-                         conditionalPanel(
-                           condition = "output.length_geneboxplot_rnaseq_norm > 4",
-                           colourpicker::colourInput("geneboxplot_col5_rnaseq_norm", 
-                                                     NULL, 
-                                                     colorsByFactor(rv$experimentFactor)$legendColors[5])
-                         ),
-                         conditionalPanel(
-                           condition = "output.length_geneboxplot_rnaseq_norm > 5",
-                           colourpicker::colourInput("geneboxplot_col6_rnaseq_norm", 
-                                                     NULL, 
-                                                     colorsByFactor(rv$experimentFactor)$legendColors[6])
-                         )
-                       ),
-                       br(),
-                       tags$h4("Drag to change jitter"),
-                       sliderInput("jitter_geneboxplot_rnaseq_norm", 
-                                   NULL,
-                                   min = 0, max = 0.3,
-                                   value = 0.1, step = 0.01),
-                       br()
-                     ),
-                     circle = TRUE, status = "info",
-                     icon = icon("fas fa-cog"),
-                     
-                     tooltip = shinyWidgets::tooltipOptions(
-                       title = "Click to personalize plot!")
-                     
-                   ), # EO dropdownButton
+                   tags$div(class = "dropdown",
+                            tags$button(class = "dropbtn", icon("cog")),
+                            tags$div(class = "dropdown-content",
+                                     
+                                     
+                                     # Change order of the boxplots:
+                                     tags$h4("Drag to change boxplot order"),
+                                     shinyjqui::orderInput(inputId = 'geneboxplot_order_rnaseq_norm', 
+                                                           label = NULL, 
+                                                           items = levels(rv$experimentFactor),
+                                                           item_class = 'default'),
+                                     br(),
+                                     
+                                     # Change colour of the boxplots by button. 
+                                     # This is used when there are more than 6 experimental groups
+                                     conditionalPanel(
+                                       condition = "output.length_geneboxplot_rnaseq_norm > 6",
+                                       tags$h4("Click to change boxplot colors"),
+                                       shinyWidgets::actionBttn("geneboxplot_changeOrder_rnaseq_norm",
+                                                                label = "Change color",
+                                                                style = "simple",
+                                                                color = "primary",
+                                                                icon = icon("sync"))
+                                     ),
+                                     
+                                     # Change colour of the boxplots by colour picker
+                                     # This is used when there are less than 7 experimental groups
+                                     conditionalPanel(
+                                       condition = "output.length_geneboxplot_rnaseq_norm < 7",
+                                       tags$h4("Click to select boxplot colours"),
+                                       conditionalPanel(
+                                         condition = "output.length_geneboxplot_rnaseq_norm > 0",
+                                         colourpicker::colourInput("geneboxplot_col1_rnaseq_norm", 
+                                                                   NULL, 
+                                                                   colorsByFactor(rv$experimentFactor)$legendColors[1])
+                                       ),
+                                       conditionalPanel(
+                                         condition = "output.length_geneboxplot_rnaseq_norm > 1",
+                                         colourpicker::colourInput("geneboxplot_col2_rnaseq_norm", 
+                                                                   NULL, 
+                                                                   colorsByFactor(rv$experimentFactor)$legendColors[2])
+                                       ),
+                                       conditionalPanel(
+                                         condition = "output.length_geneboxplot_rnaseq_norm > 2",
+                                         colourpicker::colourInput("geneboxplot_col3_rnaseq_norm", 
+                                                                   NULL, 
+                                                                   colorsByFactor(rv$experimentFactor)$legendColors[3])
+                                       ),
+                                       conditionalPanel(
+                                         condition = "output.length_geneboxplot_rnaseq_norm > 3",
+                                         colourpicker::colourInput("geneboxplot_col4_rnaseq_norm", 
+                                                                   NULL, 
+                                                                   colorsByFactor(rv$experimentFactor)$legendColors[4])
+                                       ),
+                                       conditionalPanel(
+                                         condition = "output.length_geneboxplot_rnaseq_norm > 4",
+                                         colourpicker::colourInput("geneboxplot_col5_rnaseq_norm", 
+                                                                   NULL, 
+                                                                   colorsByFactor(rv$experimentFactor)$legendColors[5])
+                                       ),
+                                       conditionalPanel(
+                                         condition = "output.length_geneboxplot_rnaseq_norm > 5",
+                                         colourpicker::colourInput("geneboxplot_col6_rnaseq_norm", 
+                                                                   NULL, 
+                                                                   colorsByFactor(rv$experimentFactor)$legendColors[6])
+                                       )
+                                     ),
+                                     br(),
+                                     tags$h4("Drag to change jitter"),
+                                     sliderInput("jitter_geneboxplot_rnaseq_norm", 
+                                                 NULL,
+                                                 min = 0, max = 0.3,
+                                                 value = 0.1, step = 0.01),
+                                     br()
+                            )), # EO dropdownButton
                    
                    # Boxplot of the selected gene's expression values
                    plotOutput("ExprBoxplot_rnaseq_norm")%>% 
@@ -1832,12 +1912,9 @@ observe({
                    br(),
                    br(),
                    # customize heatmap
-                   shinyWidgets::dropdownButton(
-                     uiOutput("UI_color_boxplots_rnaseq_norm"),
-                     circle = TRUE, status = "info",
-                     icon = icon("fas fa-cog"), width = "300px",
-                     tooltip = shinyWidgets::tooltipOptions(
-                       title = "Click to change colors!")
+                   tags$div(class = "dropdown",
+                            tags$button(class = "dropbtn", icon("cog")),
+                            uiOutput("UI_color_boxplots_rnaseq_norm")
                    ),
                    h2(strong("Boxplot of normalized counts"), align = "center"),
                    h4("Distributions should be comparable between samples", align = "center"),
@@ -1856,12 +1933,9 @@ observe({
                    br(),
                    br(),
                    # customize heatmap
-                   shinyWidgets::dropdownButton(
-                     uiOutput("UI_color_density_rnaseq_norm"),
-                     circle = TRUE, status = "info",
-                     icon = icon("fas fa-cog"), width = "300px",
-                     tooltip = shinyWidgets::tooltipOptions(
-                       title = "Click to change colors!")
+                   tags$div(class = "dropdown",
+                            tags$button(class = "dropbtn", icon("cog")),
+                            uiOutput("UI_color_density_rnaseq_norm")
                    ),
                    h2(strong("Density plot of normalized counts"), align = "center"),
                    h4("Distributions should be comparable between samples", align = "center"),
@@ -1912,21 +1986,9 @@ observe({
                    br(),
                    
                    # customize heatmap
-                   shinyWidgets::dropdownButton(
-                     h4("Heatmap theme"),
-                     selectInput(inputId = 'heatmaptheme_rnaseq_norm',
-                                 label = NULL,
-                                 choices = c("Default", 
-                                             "Yellow-red", 
-                                             "Blues", 
-                                             "Reds")),
-                     br(),
-                     uiOutput("UI_color_heatmap_rnaseq_norm"),
-                     
-                     circle = TRUE, status = "info",
-                     icon = icon("fas fa-cog"), width = "300px",
-                     tooltip = shinyWidgets::tooltipOptions(
-                       title = "Click to change colors!")
+                   tags$div(class = "dropdown",
+                            tags$button(class = "dropbtn", icon("cog")),
+                            uiOutput("UI_color_heatmap_rnaseq_norm")
                    ),
                    
                    # Make heatmap
@@ -1999,13 +2061,9 @@ observe({
                    fluidRow(
                      
                      # Customize PCA plot
-                     shinyWidgets::dropdownButton(
-                       
-                       uiOutput("UI_color_PCA_rnaseq_norm"),
-                       circle = TRUE, status = "info",
-                       icon = icon("fas fa-cog"), width = "300px",
-                       tooltip = shinyWidgets::tooltipOptions(
-                         title = "Click to change colors!")
+                     tags$div(class = "dropdown",
+                              tags$button(class = "dropbtn", icon("cog")),
+                              uiOutput("UI_color_PCA_rnaseq_norm")
                      ),
                      
                      # Make PCA plot
@@ -2368,15 +2426,15 @@ observe({
       }
       
       # Change color by click on button
-      rv$colorOrder <- 1:length(levels(rv$newFactor))
+      rv$colorOrder_stat <- 1:length(levels(rv$newFactor))
       observeEvent(input$statboxplot_changeOrder_rnaseq_norm,{
         all_orders <- permute(1:length(levels(rv$newFactor))) 
-        sel <- which(unlist(lapply(all_orders, function(x) all(x == rv$colorOrder))))
+        sel <- which(unlist(lapply(all_orders, function(x) all(x == rv$colorOrder_stat))))
         
         if (sel < length(all_orders)){
-          rv$colorOrder <- all_orders[[sel+1]]
+          rv$colorOrder_stat <- all_orders[[sel+1]]
         } else{
-          rv$colorOrder <- all_orders[[1]]
+          rv$colorOrder_stat <- all_orders[[1]]
         }
       })
       
@@ -2404,7 +2462,7 @@ observe({
         rv$temp <- geneBoxplot(experimentFactor = rv$newFactor, 
                                normMatrix = rv$newData, 
                                sel_row = sel_row,
-                               legendColors = legendColors[rv$colorOrder],
+                               legendColors = legendColors[rv$colorOrder_stat],
                                groupOrder = input$statboxplot_order_rnaseq_norm,
                                jitter = input$jitter_statboxplot_rnaseq_norm,
                                rnaseq=TRUE,
@@ -3071,75 +3129,77 @@ observe({
       
       output$UI_boxplotAll_rnaseq_norm <- renderUI({
         tagList(
-          # Change order of the boxplots:
-          tags$h4("Drag to change boxplot order"),
-          shinyjqui::orderInput(inputId = 'statboxplot_order_rnaseq_norm', 
-                                label = NULL, 
-                                items = levels(rv$newFactor),
-                                item_class = 'default'),
-          br(),
-          
-          # Change colour of the boxplots by button. 
-          # This is used when there are more than 6 experimental groups
-          conditionalPanel(
-            condition = "output.length_statboxplot_rnaseq_norm > 6",
-            tags$h4("Click to change boxplot colours"),
-            shinyWidgets::actionBttn("statboxplot_changeOrder_rnaseq_norm",
-                                     label = "Change color",
-                                     style = "simple",
-                                     color = "primary",
-                                     icon = icon("sync"))
-          ),
-          
-          # Change colour of the boxplots by colour picker
-          # This is used when there are less than 7 experimental groups
-          conditionalPanel(
-            condition = "output.length_statboxplot_rnaseq_norm < 7",
-            tags$h4("Click to select boxplot colours"),
-            conditionalPanel(
-              condition = "output.length_statboxplot_rnaseq_norm > 0",
-              colourpicker::colourInput("statboxplot_col1_rnaseq_norm", 
-                                        NULL, 
-                                        colorsByFactor(rv$newFactor)$legendColors[1])
-            ),
-            conditionalPanel(
-              condition = "output.length_statboxplot_rnaseq_norm > 1",
-              colourpicker::colourInput("statboxplot_col2_rnaseq_norm", 
-                                        NULL, 
-                                        colorsByFactor(rv$newFactor)$legendColors[2])
-            ),
-            conditionalPanel(
-              condition = "output.length_statboxplot_rnaseq_norm > 2",
-              colourpicker::colourInput("statboxplot_col3_rnaseq_norm", 
-                                        NULL, 
-                                        colorsByFactor(rv$newFactor)$legendColors[3])
-            ),
-            conditionalPanel(
-              condition = "output.length_statboxplot_rnaseq_norm > 3",
-              colourpicker::colourInput("statboxplot_col4_rnaseq_norm", 
-                                        NULL, 
-                                        colorsByFactor(rv$newFactor)$legendColors[4])
-            ),
-            conditionalPanel(
-              condition = "output.length_statboxplot_rnaseq_norm > 4",
-              colourpicker::colourInput("statboxplot_col5_rnaseq_norm", 
-                                        NULL, 
-                                        colorsByFactor(rv$newFactor)$legendColors[5])
-            ),
-            conditionalPanel(
-              condition = "output.length_statboxplot_rnaseq_rorm > 5",
-              colourpicker::colourInput("statboxplot_col6_rnaseq_norm", 
-                                        NULL, 
-                                        colorsByFactor(rv$newFactor)$legendColors[6])
-            )
-          ),
-          br(),
-          tags$h4("Drag to change jitter"),
-          sliderInput("jitter_statboxplot_rnaseq_norm", 
-                      NULL,
-                      min = 0, max = 0.3,
-                      value = 0.1, step = 0.01),
-          br()
+          tags$div(class = "dropdown-content",
+                   # Change order of the boxplots:
+                   tags$h4("Drag to change boxplot order"),
+                   shinyjqui::orderInput(inputId = 'statboxplot_order_rnaseq_norm', 
+                                         label = NULL, 
+                                         items = levels(rv$newFactor),
+                                         item_class = 'default'),
+                   br(),
+                   
+                   # Change colour of the boxplots by button. 
+                   # This is used when there are more than 6 experimental groups
+                   conditionalPanel(
+                     condition = "output.length_statboxplot_rnaseq_norm > 6",
+                     tags$h4("Click to change boxplot colours"),
+                     shinyWidgets::actionBttn("statboxplot_changeOrder_rnaseq_norm",
+                                              label = "Change color",
+                                              style = "simple",
+                                              color = "primary",
+                                              icon = icon("sync"))
+                   ),
+                   
+                   # Change colour of the boxplots by colour picker
+                   # This is used when there are less than 7 experimental groups
+                   conditionalPanel(
+                     condition = "output.length_statboxplot_rnaseq_norm < 7",
+                     tags$h4("Click to select boxplot colours"),
+                     conditionalPanel(
+                       condition = "output.length_statboxplot_rnaseq_norm > 0",
+                       colourpicker::colourInput("statboxplot_col1_rnaseq_norm", 
+                                                 NULL, 
+                                                 colorsByFactor(rv$newFactor)$legendColors[1])
+                     ),
+                     conditionalPanel(
+                       condition = "output.length_statboxplot_rnaseq_norm > 1",
+                       colourpicker::colourInput("statboxplot_col2_rnaseq_norm", 
+                                                 NULL, 
+                                                 colorsByFactor(rv$newFactor)$legendColors[2])
+                     ),
+                     conditionalPanel(
+                       condition = "output.length_statboxplot_rnaseq_norm > 2",
+                       colourpicker::colourInput("statboxplot_col3_rnaseq_norm", 
+                                                 NULL, 
+                                                 colorsByFactor(rv$newFactor)$legendColors[3])
+                     ),
+                     conditionalPanel(
+                       condition = "output.length_statboxplot_rnaseq_norm > 3",
+                       colourpicker::colourInput("statboxplot_col4_rnaseq_norm", 
+                                                 NULL, 
+                                                 colorsByFactor(rv$newFactor)$legendColors[4])
+                     ),
+                     conditionalPanel(
+                       condition = "output.length_statboxplot_rnaseq_norm > 4",
+                       colourpicker::colourInput("statboxplot_col5_rnaseq_norm", 
+                                                 NULL, 
+                                                 colorsByFactor(rv$newFactor)$legendColors[5])
+                     ),
+                     conditionalPanel(
+                       condition = "output.length_statboxplot_rnaseq_rorm > 5",
+                       colourpicker::colourInput("statboxplot_col6_rnaseq_norm", 
+                                                 NULL, 
+                                                 colorsByFactor(rv$newFactor)$legendColors[6])
+                     )
+                   ),
+                   br(),
+                   tags$h4("Drag to change jitter"),
+                   sliderInput("jitter_statboxplot_rnaseq_norm", 
+                               NULL,
+                               min = 0, max = 0.3,
+                               value = 0.1, step = 0.01),
+                   br()
+          )
         )
       })
     })
@@ -3171,32 +3231,23 @@ observe({
                        br(),
                        
                        # Dropdown Button to adjust the plot settings
-                       shinyWidgets::dropdownButton(
-                         tags$div(
-                           style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                           
-                           # Plot all experimental groups?
-                           conditionalPanel(
-                             condition = "output.length_statboxplot_rnaseq_norm > 2",
-                             tags$h4("Plot all experimental groups?"),
-                             shinyWidgets::materialSwitch(inputId = "boxplotAll_rnaseq_norm",
-                                                          label = NULL, 
-                                                          value = TRUE,
-                                                          status = "primary"),
-                             
-                             br()
-                           ),
-                           uiOutput("UI_boxplotAll_rnaseq_norm")
-                         ),
-                         circle = TRUE, status = "info",
-                         icon = icon("fas fa-cog"),
-                         
-                         tooltip = shinyWidgets::tooltipOptions(
-                           title = "Click to personalize plot!")
-                         
+                       tags$div(class = "dropdown",
+                                tags$button(class = "dropbtn", icon("cog")),
+                                
+                                uiOutput("UI_boxplotAll_rnaseq_norm")
                        ), # EO dropdownButton
                        plotOutput("ExprBoxplot_statistics_rnaseq_norm")%>% 
                          shinycssloaders::withSpinner(color="#0dc5c1"),
+                       
+                       # Plot all experimental groups?
+                       conditionalPanel(
+                         condition = "output.length_statboxplot_rnaseq_norm > 2",
+                         br(),
+                         shinyWidgets::materialSwitch(inputId = "boxplotAll_rnaseq_norm",
+                                                      label = "Plot all experimental groups?", 
+                                                      value = TRUE,
+                                                      status = "primary")
+                       ),
                        actionButton("download_statboxplot_rnaseq_norm", 
                                     "Download figure",
                                     icon = shiny::icon("download")),
@@ -3211,27 +3262,20 @@ observe({
                        icon = icon("fas fa-mouse-pointer"),
                        br(),
                        # Dropdown Button to adjust the plot settings
-                       shinyWidgets::dropdownButton(
-                         tags$div(
-                           style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                           tags$h4("Select color"),
-                           colourpicker::colourInput("histogram_color_rnaseq_norm", 
-                                                     NULL, 
-                                                     "#d3d3d3"),
-                           br(),
-                           tags$h4("Number of bins"),
-                           numericInput(inputId = "histogram_bins_rnaseq_norm",
-                                        label = NULL,
-                                        value = 100),
-                           br(),br()
-                         ),
-                         circle = TRUE, status = "info",
-                         icon = icon("fas fa-cog"),
-                         
-                         tooltip = shinyWidgets::tooltipOptions(
-                           title = "Click to personalize histograms!")
-                         
-                       ), # EO dropdownButton
+                       tags$div(class = "dropdown",
+                                tags$button(class = "dropbtn", icon("cog")),
+                                tags$div(class = "dropdown-content",
+                                         tags$h4("Select color"),
+                                         colourpicker::colourInput("histogram_color_rnaseq_norm", 
+                                                                   NULL, 
+                                                                   "#d3d3d3"),
+                                         br(),
+                                         tags$h4("Number of bins"),
+                                         numericInput(inputId = "histogram_bins_rnaseq_norm",
+                                                      label = NULL,
+                                                      value = 100),
+                                         br(),br()
+                                )), # EO dropdownButton
                        plotly::plotlyOutput("Phistogram_rnaseq_norm")%>% 
                          shinycssloaders::withSpinner(color="#0dc5c1"),
                        actionButton("download_Phistogram_rnaseq_norm", 
@@ -3255,30 +3299,23 @@ observe({
                        br(),
                        
                        # Dropdown Button to adjust the plot settings
-                       shinyWidgets::dropdownButton(
-                         tags$div(
-                           style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                           tags$h4("Color of unchanged genes"),
-                           colourpicker::colourInput("volcano_unchanged_color_rnaseq_norm", 
-                                                     NULL, 
-                                                     "darkgrey"),
-                           tags$h4("Color of downregulated genes"),
-                           colourpicker::colourInput("volcano_down_color_rnaseq_norm", 
-                                                     NULL, 
-                                                     "blue"),
-                           tags$h4("Color of upregulated genes"),
-                           colourpicker::colourInput("volcano_up_color_rnaseq_norm", 
-                                                     NULL, 
-                                                     "red"),
-                           br()
-                         ),
-                         circle = TRUE, status = "info",
-                         icon = icon("fas fa-cog"),
-                         
-                         tooltip = shinyWidgets::tooltipOptions(
-                           title = "Click to personalize the volcano plot!")
-                         
-                       ), # EO dropdownButton
+                       tags$div(class = "dropdown",
+                                tags$button(class = "dropbtn", icon("cog")),
+                                tags$div(class = "dropdown-content",
+                                         tags$h4("Color of unchanged genes"),
+                                         colourpicker::colourInput("volcano_unchanged_color_rnaseq_norm", 
+                                                                   NULL, 
+                                                                   "darkgrey"),
+                                         tags$h4("Color of downregulated genes"),
+                                         colourpicker::colourInput("volcano_down_color_rnaseq_norm", 
+                                                                   NULL, 
+                                                                   "blue"),
+                                         tags$h4("Color of upregulated genes"),
+                                         colourpicker::colourInput("volcano_up_color_rnaseq_norm", 
+                                                                   NULL, 
+                                                                   "red"),
+                                         br()
+                                )), # EO dropdownButton
                        
                        # Volcano plot output
                        plotly::plotlyOutput("volcano_rnaseq_norm")%>% 
@@ -3343,30 +3380,23 @@ observe({
                        br(),
                        
                        # Dropdown Button to adjust the plot settings
-                       shinyWidgets::dropdownButton(
-                         tags$div(
-                           style = "max-height: 300px; overflow-y: auto; padding: 5px;",
-                           tags$h4("Color of unchanged genes"),
-                           colourpicker::colourInput("MA_unchanged_color_rnaseq_norm", 
-                                                     NULL, 
-                                                     "darkgrey"),
-                           tags$h4("Color of downregulated genes"),
-                           colourpicker::colourInput("MA_down_color_rnaseq_norm", 
-                                                     NULL, 
-                                                     "blue"),
-                           tags$h4("Color of upregulated genes"),
-                           colourpicker::colourInput("MA_up_color_rnaseq_norm", 
-                                                     NULL, 
-                                                     "red"),
-                           br()
-                         ),
-                         circle = TRUE, status = "info",
-                         icon = icon("fas fa-cog"),
-                         
-                         tooltip = shinyWidgets::tooltipOptions(
-                           title = "Click to personalize the MA plot!")
-                         
-                       ), # EO dropdownButton
+                       tags$div(class = "dropdown",
+                                tags$button(class = "dropbtn", icon("cog")),
+                                tags$div(class = "dropdown-content",
+                                         tags$h4("Color of unchanged genes"),
+                                         colourpicker::colourInput("MA_unchanged_color_rnaseq_norm", 
+                                                                   NULL, 
+                                                                   "darkgrey"),
+                                         tags$h4("Color of downregulated genes"),
+                                         colourpicker::colourInput("MA_down_color_rnaseq_norm", 
+                                                                   NULL, 
+                                                                   "blue"),
+                                         tags$h4("Color of upregulated genes"),
+                                         colourpicker::colourInput("MA_up_color_rnaseq_norm", 
+                                                                   NULL, 
+                                                                   "red"),
+                                         br()
+                                )), # EO dropdownButton
                        
                        # MA plot output
                        plotly::plotlyOutput("MA_rnaseq_norm")%>% 
