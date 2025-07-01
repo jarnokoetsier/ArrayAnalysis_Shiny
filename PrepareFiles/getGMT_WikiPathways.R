@@ -7,26 +7,31 @@ gc()
 setwd("C:/Users/jarno/OneDrive/Documents/GitHub/ArrayAnalysis_Shiny")
 source("global.R")
 
-organisms <- c("Homo_sapiens",
-               "Bos_taurus",
-               "Caenorhabditis_elegans",
-               "Mus_musculus",
-               "Rattus_norvegicus")
+#download gmt via: https://data.wikipathways.org/current/gmt/
+
+WPversion <- "20250610"
+organisms <- c("Homo sapiens",
+               "Bos taurus",
+               "Caenorhabditis elegans",
+               "Mus musculus",
+               "Rattus norvegicus")
 
 ensembl <- useMart("ensembl")
 gmt_all <- list()
 for (o in organisms){
   
   # Read GMT file
-  gmt <- clusterProfiler::read.gmt.wp(paste0("D:/ArrayAnalysis_Shiny/Prepare files/wikipathways-20231210-gmt-",o,".gmt"))
+  gmt <- clusterProfiler::read.gmt.wp(paste0("PrepareFiles/wikipathways-", WPversion, "-gmt-",
+                                             stringr::str_replace(o, " ", "_"),
+                                             ".gmt"))
   
   # Select biomaRt dataset
   biomaRt_dataset <- switch(o,
-                            "Homo_sapiens" = "hsapiens_gene_ensembl" ,
-                            "Bos_taurus" = "btaurus_gene_ensembl",
-                            "Caenorhabditis_elegans" = "celegans_gene_ensembl",
-                            "Mus_musculus" = "mmusculus_gene_ensembl",
-                            "Rattus_norvegicus" = "rnorvegicus_gene_ensembl"
+                            "Homo sapiens" = "hsapiens_gene_ensembl" ,
+                            "Bos taurus" = "btaurus_gene_ensembl",
+                            "Caenorhabditis elegans" = "celegans_gene_ensembl",
+                            "Mus musculus" = "mmusculus_gene_ensembl",
+                            "Rattus norvegicus" = "rnorvegicus_gene_ensembl"
   )
   
   # Get annotations
@@ -37,20 +42,20 @@ for (o in organisms){
                                       "entrezgene_id",
                                       "hgnc_symbol"), 
                          filters = "entrezgene_id",
-                         values = gmt$gene,
+                         values = gmt$gene[gmt$species == o],
                          mart = ensembl_dataset)
   } else{
     annotations <- getBM(attributes=c("ensembl_gene_id",
                                       "entrezgene_id",
                                       "external_gene_name"), 
                          filters = "entrezgene_id",
-                         values = gmt$gene,
+                         values = gmt$gene[gmt$species == o],
                          mart = ensembl_dataset)
   }
 
   
   annotations$entrezgene_id <- as.character(annotations$entrezgene_id)
-  temp <- left_join(gmt, annotations, by = c("gene" = "entrezgene_id"))
+  temp <- left_join(gmt[gmt$species == o, ], annotations, by = c("gene" = "entrezgene_id"))
   colnames(temp) <- c("name", "version", "wpid",
             "species", "ENTREZID", "ENSEMBL", "SYMBOL")
   
@@ -63,7 +68,8 @@ for (o in organisms){
 test <- listAttributes(ensembl_dataset)
 
 # Save file
-save(gmt_all, file = "Objectsgmt_WP_all.RData")
+save(gmt_all, file = "Objects/gmt_WP_all.RData")
+save(WPversion, file = "Objects/WPversion.RData")
 
 
 sapply(c("Homo_sapiens","Bos_taurus"), function(x) {

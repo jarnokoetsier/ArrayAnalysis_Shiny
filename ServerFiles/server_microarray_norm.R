@@ -3589,10 +3589,10 @@ observe({
   })
   
   #********************************************************************#
-  # Options for geneset analysis
+  # Options for gene set analysis
   #********************************************************************#
   
-  # Comparisons for which geneset analysis should be performed
+  # Comparisons for which gene set analysis should be performed
   observe({
     req(rv$top_table)
     output$UI_comparisons_view_ORA_microarray_norm <- renderUI({
@@ -3642,6 +3642,22 @@ observe({
       shinybusy::show_modal_spinner(text = "Overrepresentation analysis...",
                                     color="#0dc5c1")
       
+      # Get gene set version
+      if (input$geneset_ORA_microarray_norm == "WikiPathways"){
+        load("Objects/WPversion.RData")
+        rv$GeneSetVersion <- WPversion
+      } else {
+        pkg <- switch(input$organism_ORA_microarray_norm,
+                      "Homo sapiens" = "org.Hs.eg.db",
+                      "Bos taurus" = "org.Bt.eg.db",
+                      "Caenorhabditis elegans" = "org.Ce.eg.db",
+                      "Mus musculus" = "org.Mm.eg.db",
+                      "Rattus norvegicus" = "org.Rn.eg.db"
+        )
+        rv$GeneSetVersion <- paste0(pkg, " v", packageVersion(pkg))
+      }
+      
+      
       # Perform ORA:
       
       # Perform ORA based on logFC/P value threshold(s)
@@ -3661,7 +3677,7 @@ observe({
         
         rv$ORA_settings <- data.frame(
           Option = c("Comparison",
-                     "Geneset",
+                     "Gene set collection",
                      "Gene ID",
                      "Organism",
                      "Method",
@@ -3669,7 +3685,7 @@ observe({
                      "logFC threshold"
           ),
           Selected = c(input$comparisons_view_ORA_microarray_norm,
-                       input$geneset_ORA_microarray_norm,
+                       paste0(input$geneset_ORA_microarray_norm, " (", rv$GeneSetVersion, ")"),
                        paste0(input$selID_ORA_microarray_norm, " (top table column: ", input$geneID_ORA_microarray_norm, ")"),
                        input$organism_ORA_microarray_norm,
                        paste0("ORA (", input$topNorThres_microarray_norm, "; ", input$updown_ORA_microarray_norm, ")"),
@@ -3695,14 +3711,14 @@ observe({
         
         rv$ORA_settings <- data.frame(
           Option = c("Comparison",
-                     "Geneset",
+                     "Gene set collection",
                      "Gene ID",
                      "Organism",
                      "Method",
                      "Top N"
           ),
           Selected = c(input$comparisons_view_ORA_microarray_norm,
-                       input$geneset_ORA_microarray_norm,
+                       paste0(input$geneset_ORA_microarray_norm, " (", rv$GeneSetVersion, ")"),
                        paste0(input$selID_ORA_microarray_norm, " (top table column: ", input$geneID_ORA_microarray_norm, ")"),
                        input$organism_ORA_microarray_norm,
                        paste0("ORA (top ",input$topN_microarray_norm, "; ", input$updown_ORA_microarray_norm, ")"),
@@ -3748,7 +3764,7 @@ observe({
             req(rv$ORA_data)
             output <- rv$ORA_data@result
             
-            # Link to wikipathways website if geneset ID is from WikiPathways
+            # Link to wikipathways website if gene set ID is from WikiPathways
             if (input$geneset_ORA_microarray_norm == "WikiPathways"){
               output$ID <- paste0(
                 '<a ',
@@ -3764,7 +3780,7 @@ observe({
               )
             }
             
-            # Link to QuickGO website if geneset ID is a GO term
+            # Link to QuickGO website if gene set ID is a GO term
             if (input$geneset_ORA_microarray_norm == "KEGG"){
               output$ID <- paste0(
                 '<a ',
@@ -4111,8 +4127,7 @@ observe({
                          
                          # Title + description of statistics table
                          h3(strong("Statistics table")),
-                         h5("The ORA statistics table encompasses the output of the gene 
-                              overrepresentation analysis."),
+                         h5("The ORA statistics table encompasses the output of the overrepresentation analysis."),
                          hr(),
                          
                          # Statistics table
@@ -4127,7 +4142,7 @@ observe({
                          # Title + description of gene table
                          htmlOutput("text_ORAgene_table_microarray_norm"),
                          h5(paste0("The gene table encompasses the statistics of all genes 
-                              from the selected geneset.")),
+                              from the selected gene set.")),
                          hr(),
                          
                          # Gene table
@@ -4168,8 +4183,8 @@ observe({
                                                                    "Reds")),
                                            br(),
                                            
-                                           # Number of genesets
-                                           tags$h4("# Genesets"),
+                                           # Number of gene sets
+                                           tags$h4("# Gene sets"),
                                            sliderInput(
                                              inputId = "nSets_ORAplot_microarray_norm",
                                              label = NULL,
@@ -4195,7 +4210,7 @@ observe({
                          
                          # Title + description of the network diagram
                          h3(strong("Network diagram")),
-                         h5("The network diagram visualize the similarity between the most significant genesets."),
+                         h5("The network diagram visualize the similarity between the most significant gene sets."),
                          hr(),
                          actionButton("download_ORAnetwork_microarray_norm", 
                                       "Download figure",
@@ -4228,8 +4243,8 @@ observe({
                                                        multiple = FALSE),
                                            br(),
                                            
-                                           # Number of genesets
-                                           tags$h4("# Genesets"),
+                                           # Number of gene sets
+                                           tags$h4("# Gene sets"),
                                            sliderInput(
                                              inputId = "nSets_ORAnetwork_microarray_norm",
                                              label = NULL,
@@ -4300,8 +4315,23 @@ observe({
     if (input$ORA_or_GSEA_microarray_norm == "GSEA"){
       
       # Show modal
-      shinybusy::show_modal_spinner(text = "Gene set enrichment analysis...",
+      shinybusy::show_modal_spinner(text = "Gene Set Enrichment Analysis...",
                                     color="#0dc5c1")
+      
+      # Get gene set version
+      if (input$geneset_ORA_microarray_norm == "WikiPathways"){
+        load("Objects/WPversion.RData")
+        rv$GeneSetVersion <- WPversion
+      } else {
+        pkg <- switch(input$organism_ORA_microarray_norm,
+                      "Homo sapiens" = "org.Hs.eg.db",
+                      "Bos taurus" = "org.Bt.eg.db",
+                      "Caenorhabditis elegans" = "org.Ce.eg.db",
+                      "Mus musculus" = "org.Mm.eg.db",
+                      "Rattus norvegicus" = "org.Rn.eg.db"
+        )
+        rv$GeneSetVersion <- paste0(pkg, " v", packageVersion(pkg))
+      }
       
       # Perform GSEA:
       rv$GSEA_data <- performGSEA(top_table = rv$top_table[[input$comparisons_view_ORA_microarray_norm]],
@@ -4323,14 +4353,14 @@ observe({
       
       rv$GSEA_settings <- data.frame(
         Option = c("Comparison",
-                   "Geneset",
+                   "Gene set collection",
                    "Gene ID",
                    "Organism",
                    "Method",
                    "Ranking variable"
         ),
         Selected = c(input$comparisons_view_ORA_microarray_norm,
-                     input$geneset_ORA_microarray_norm,
+                     paste0(input$geneset_ORA_microarray_norm, " (", rv$GeneSetVersion, ")"),
                      paste0(input$selID_ORA_microarray_norm, " (top table column: ", input$geneID_ORA_microarray_norm, ")"),
                      input$organism_ORA_microarray_norm,
                      "GSEA",
@@ -4362,7 +4392,7 @@ observe({
           sendSweetAlert(
             session = session,
             title = "Info",
-            text = "Geneset enrichment analysis has been performed. You can download 
+            text = "Gene Set Enrichment Analysis has been performed. You can download 
               the results as well as view them in interactive plots.",
             type = "info")
           
@@ -4375,7 +4405,7 @@ observe({
             req(rv$GSEA_data)
             output <- rv$GSEA_data@result
             
-            # Link to wikipathways website if geneset ID is from WikiPathways
+            # Link to wikipathways website if gene set ID is from WikiPathways
             if (input$geneset_ORA_microarray_norm == "WikiPathways"){
               output$ID <- paste0(
                 '<a ',
@@ -4391,7 +4421,7 @@ observe({
               )
             }
             
-            # Link to QuickGO website if geneset ID is a GO term
+            # Link to QuickGO website if gene set ID is a GO term
             if (input$geneset_ORA_microarray_norm == "KEGG"){
               output$ID <- paste0(
                 '<a ',
@@ -4740,7 +4770,7 @@ observe({
                          
                          # Title + description of statistics table
                          h3(strong("Statistics table")),
-                         h5("The statistics table encompasses the output of the gene set enrichment analysis."),
+                         h5("The statistics table encompasses the output of the Gene Set Enrichment Analysis."),
                          hr(),
                          
                          # Statistics table
@@ -4755,7 +4785,7 @@ observe({
                          # Title + description of gene table
                          htmlOutput("text_GSEAgene_table_microarray_norm"),
                          h5(paste0("The gene table encompasses the statistics of all genes
-                              from the selected geneset.")),
+                              from the selected gene set.")),
                          hr(),
                          
                          # Gene table
@@ -4773,7 +4803,7 @@ observe({
                          
                          # Title + description of bar chart
                          h3(strong("Bar chart")),
-                         h5("The bar chart visualizes the results from the gene set enrichment analysis."),
+                         h5("The bar chart visualizes the results from the Gene Set Enrichment Analysis."),
                          hr(),
                          actionButton("download_GSEAplot_microarray_norm", 
                                       "Download figure",
@@ -4799,8 +4829,8 @@ observe({
                                                                      "red"),
                                            br(),
                                            
-                                           # Number of genesets
-                                           tags$h4("# Genesets"),
+                                           # Number of gene sets
+                                           tags$h4("# Gene sets"),
                                            sliderInput(
                                              inputId = "nSets_GSEAplot_microarray_norm",
                                              label = NULL,
@@ -4861,7 +4891,7 @@ observe({
                                                        multiple = FALSE),
                                            br(),
                                            
-                                           # Number of genesets
+                                           # Number of gene sets
                                            tags$h4("# Gene sets"),
                                            sliderInput(
                                              inputId = "nSets_GSEAnetwork_microarray_norm",

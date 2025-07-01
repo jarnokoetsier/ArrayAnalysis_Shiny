@@ -694,13 +694,13 @@ ui <- tagList(
                           br(),
                           
                           h4(strong(tags$span(
-                            "2. Select geneset collection",
+                            "2. Select gene set collection",
                             tags$span(
                               icon(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "A geneset collection contains different sets of genes that are linked to 
+                              prompter::add_prompt(message = "A gene set collection contains different sets of genes that are linked to 
                                        biological processes (GO-BP), molecular functions (GO-MF),
                                        cellular components (GO-CC), or biological pathways (WikiPathways and KEGG).", 
                                                    position = "right",
@@ -830,7 +830,7 @@ ui <- tagList(
                               ) 
                             ) |>
                               prompter::add_prompt(message = "We need to know which gene identifiers are 
-                                       used, so we can link the genes to their correct genesets.", 
+                                       used, so we can link the genes to their correct gene sets.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -1357,13 +1357,13 @@ ui <- tagList(
                           br(),
                           
                           h4(strong(tags$span(
-                            "2. Select geneset collection",
+                            "2. Select gene set collection",
                             tags$span(
                               icon(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "A geneset collection contains different sets of genes that are linked to 
+                              prompter::add_prompt(message = "A gene set collection contains different sets of genes that are linked to 
                                        biological processes (GO-BP), molecular functions (GO-MF),
                                        cellular components (GO-CC), or biological pathways (WikiPathways and KEGG).", 
                                                    position = "right",
@@ -1492,7 +1492,7 @@ ui <- tagList(
                               ) 
                             ) |>
                               prompter::add_prompt(message = "We need to know which gene identifiers are 
-                                       used, so we can link the genes to their correct genesets.", 
+                                       used, so we can link the genes to their correct gene sets.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -1965,13 +1965,13 @@ ui <- tagList(
                           br(),
                           
                           h4(strong(tags$span(
-                            "2. Select geneset collection",
+                            "2. Select gene set collection",
                             tags$span(
                               icon(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "A geneset collection contains different sets of genes that are linked to 
+                              prompter::add_prompt(message = "A gene set collection contains different sets of genes that are linked to 
                                        biological processes (GO-BP), molecular functions (GO-MF),
                                        cellular components (GO-CC), or biological pathways (WikiPathways and KEGG).", 
                                                    position = "right",
@@ -2101,7 +2101,7 @@ ui <- tagList(
                               ) 
                             ) |>
                               prompter::add_prompt(message = "We need to know which gene identifiers are 
-                                       used, so we can link the genes to their correct genesets.", 
+                                       used, so we can link the genes to their correct gene sets.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -2608,13 +2608,13 @@ ui <- tagList(
                           br(),
                           
                           h4(strong(tags$span(
-                            "2. Select geneset collection",
+                            "2. Select gene set collection",
                             tags$span(
                               icon(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "A geneset collection contains different sets of genes that are linked to 
+                              prompter::add_prompt(message = "A gene set collection contains different sets of genes that are linked to 
                                        biological processes (GO-BP), molecular functions (GO-MF),
                                        cellular components (GO-CC), or biological pathways (WikiPathways and KEGG).", 
                                                    position = "right",
@@ -2744,7 +2744,7 @@ ui <- tagList(
                               ) 
                             ) |>
                               prompter::add_prompt(message = "We need to know which gene identifiers are 
-                                       used, so we can link the genes to their correct genesets.", 
+                                       used, so we can link the genes to their correct gene sets.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
