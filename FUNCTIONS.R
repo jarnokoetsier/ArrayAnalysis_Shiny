@@ -3233,7 +3233,7 @@ makeORAplot <- function(ORA_data, nSets, color = "Viridis", static = FALSE){
     return(p)
   }else{
     p1 <- plotly::ggplotly(p, tooltip = "text") %>% 
-      plotly::layout(height = 500, width = 1000) %>%
+      #plotly::layout(height = 500, width = 1000) %>%
       layout(xaxis = list(title = '-log<sub>10</sub> p-value'))
     return(p1)
   }
@@ -3306,7 +3306,7 @@ makeGSEAplot <- function(GSEA_data, nSets, color, static = FALSE){
     return(p)
   }else{
     p1 <- plotly::ggplotly(p, tooltip = "text") %>% 
-      plotly::layout(height = 500, width = 1000) %>%
+      #plotly::layout(height = 500, width = 1000) %>%
       layout(xaxis = list(title = '-log<sub>10</sub> p-value'))
     return(p1)
   }

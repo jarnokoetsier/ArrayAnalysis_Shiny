@@ -1,5 +1,5 @@
 ---
-title: Quality control report
+title: <span style="color:black"><b>Quality control report</b></span>
 params:
   processingSettings: NA
   experimentFactor: NA
@@ -7,12 +7,28 @@ params:
   normData: NA
   PCAData: NA
   normData_vst: NA
+  dir: NA
+  ArrayAnalysis_version: NA
+output:
+  html_document:
+    includes:
+      before_body: header.html
 ---
 
-This report provides an overview of the pre-processing results. If you wish to have customized figures, please modify the figures in ArrayAnalysis and download them separately.
+<style>
+body { background-color: #C6DBEF; }
+h1 {
+text-align: center;
+}
+</style>
+
+<p style="color:black; text-align: center">
+If you wish to have customized figures, please modify the figures in ArrayAnalysis and download them separately.
+</p>
 
 <br>
 
+<div style="background-color:white; padding:1em; border-radius:25px;">
 ## Settings
 
 ```{r, echo=FALSE, results = 'asis'}
@@ -81,5 +97,7 @@ plot_PCA(PC_data = params$PCAData,
 ### Session info
 
 ```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
+params$ArrayAnalysis_version
 sessionInfo()
 ```
+</div>

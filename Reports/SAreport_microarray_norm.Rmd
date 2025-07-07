@@ -1,15 +1,31 @@
 ---
-title: Statistical analysis report
+title: <span style="color:black"><b>Statistical analysis report</b></span>
 params:
   statSettings: NA
   topTable: NA
   volcanoTable: NA
+  dir: NA
+  ArrayAnalysis_version: NA
+output:
+  html_document:
+    includes:
+      before_body: header.html
 ---
 
-This report provides an overview of the results from the statistical analysis. If you wish to have customized figures, please modify the figures in ArrayAnalysis and download them separately.
+<style>
+body { background-color: #C6DBEF; }
+h1 {
+text-align: center;
+}
+</style>
+
+<p style="color:black; text-align: center">
+If you wish to have customized figures, please modify the figures in ArrayAnalysis and download them separately.
+</p>
 
 <br>
 
+<div style="background-color:white; padding:1em; border-radius:25px;">
 ## Settings
 
 ```{r, echo=FALSE, results = 'asis', message = FALSE, warning = FALSE}
@@ -71,8 +87,10 @@ makeMAplot(top_table = params$topTable,
            logFC_threshold = 1)
 ```
 
-### Session Info
+### Session info
 
 ```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
+params$ArrayAnalysis_version
 sessionInfo()
 ```
+</div>

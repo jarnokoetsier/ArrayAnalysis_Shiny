@@ -77,7 +77,7 @@ observe({
   observeEvent(input$upload_rnaseq_raw,{
     
     # Show modal
-    show_modal_spinner(text = "Reading data...",
+    shinybusy::show_modal_spinner(text = "Reading data...",
                        color="#0dc5c1")
     
     # Read expression data
@@ -1705,11 +1705,19 @@ observe({
       # For PDF output, change this to "report.pdf"
       filename = "QCreport.html",
       content = function(file) {
+        shinybusy::show_modal_spinner(text = "Making QC report...",
+                                      color="#0dc5c1")
         # Copy the report file to a temporary directory before processing it, in
         # case we don't have write permissions to the current working dir (which
         # can happen when deployed).
         tempReport <- file.path(tempdir(), "QCreport_RNAseq_raw.Rmd")
         file.copy("Reports/QCreport_RNAseq_raw.Rmd", tempReport, overwrite = TRUE)
+        
+        tempLogo <- file.path(tempdir(), "logo_main.PNG")
+        file.copy("www/logo_main.PNG", tempLogo, overwrite = TRUE)
+        
+        tempHeader <- file.path(tempdir(), "header.html")
+        file.copy("www/header.html", tempHeader, overwrite = TRUE)
         
         # Set up parameters to pass to Rmd document
         params <- list(processingSettings = rv$processingSettings,
@@ -1717,7 +1725,9 @@ observe({
                        legendColors = colorsByFactor(rv$experimentFactor)$legendColors,
                        normData = rv$normData,
                        PCAData = rv$PCA_data,
-                       normData_vst = rv$normData_vst)
+                       normData_vst = rv$normData_vst,
+                       dir = tempdir(),
+                       ArrayAnalysis_version = ArrayAnalysis_version)
         
         # Knit the document, passing in the `params` list, and eval it in a
         # child of the global environment (this isolates the code in the document
@@ -1726,6 +1736,7 @@ observe({
                           params = params,
                           envir = new.env(parent = globalenv())
         )
+        shinybusy::remove_modal_spinner()
       }
     )
     
@@ -3071,16 +3082,26 @@ observe({
       # For PDF output, change this to "report.pdf"
       filename = "SAreport.html",
       content = function(file) {
+        shinybusy::show_modal_spinner(text = "Making statistical analysis report...",
+                                      color="#0dc5c1")
         # Copy the report file to a temporary directory before processing it, in
         # case we don't have write permissions to the current working dir (which
         # can happen when deployed).
         tempReport <- file.path(tempdir(), "SAreport_RNAseq_raw.Rmd")
         file.copy("Reports/SAreport_RNAseq_raw.Rmd", tempReport, overwrite = TRUE)
         
+        tempLogo <- file.path(tempdir(), "logo_main.PNG")
+        file.copy("www/logo_main.PNG", tempLogo, overwrite = TRUE)
+        
+        tempHeader <- file.path(tempdir(), "header.html")
+        file.copy("www/header.html", tempHeader, overwrite = TRUE)
+        
         # Set up parameters to pass to Rmd document
         params <- list(statSettings = rv$statSettings[[input$comparisons_view_rnaseq_raw]],
                        topTable = rv$top_table[[input$comparisons_view_rnaseq_raw]],
-                       volcanoTable = rv$summaryTable)
+                       volcanoTable = rv$summaryTable,
+                       dir = tempdir(),
+                       ArrayAnalysis_version = ArrayAnalysis_version)
         
         # Knit the document, passing in the `params` list, and eval it in a
         # child of the global environment (this isolates the code in the document
@@ -3089,6 +3110,7 @@ observe({
                           params = params,
                           envir = new.env(parent = globalenv())
         )
+        shinybusy::remove_modal_spinner()
       }
     )
     
@@ -4030,15 +4052,25 @@ observe({
             # For PDF output, change this to "report.pdf"
             filename = "ORAreport.html",
             content = function(file) {
+              shinybusy::show_modal_spinner(text = "Making ORA report...",
+                                           color="#0dc5c1")
               # Copy the report file to a temporary directory before processing it, in
               # case we don't have write permissions to the current working dir (which
               # can happen when deployed).
               tempReport <- file.path(tempdir(), "ORAreport_RNAseq_raw.Rmd")
               file.copy("Reports/ORAreport_RNAseq_raw.Rmd", tempReport, overwrite = TRUE)
               
+              tempLogo <- file.path(tempdir(), "logo_main.PNG")
+              file.copy("www/logo_main.PNG", tempLogo, overwrite = TRUE)
+              
+              tempHeader <- file.path(tempdir(), "header.html")
+              file.copy("www/header.html", tempHeader, overwrite = TRUE)
+              
               # Set up parameters to pass to Rmd document
               params <- list(ORASettings = rv$ORA_settings,
-                             ORATable = rv$ORA_data)
+                             ORATable = rv$ORA_data,
+                             dir = tempdir(),
+                             ArrayAnalysis_version = ArrayAnalysis_version)
               
               # Knit the document, passing in the `params` list, and eval it in a
               # child of the global environment (this isolates the code in the document
@@ -4047,6 +4079,7 @@ observe({
                                 params = params,
                                 envir = new.env(parent = globalenv())
               )
+              shinybusy::remove_modal_spinner()
             }
           )
           
@@ -4674,15 +4707,25 @@ observe({
             # For PDF output, change this to "report.pdf"
             filename = "GSEAreport.html",
             content = function(file) {
+              shinybusy::show_modal_spinner(text = "Making GSEA report...",
+                                            color="#0dc5c1")
               # Copy the report file to a temporary directory before processing it, in
               # case we don't have write permissions to the current working dir (which
               # can happen when deployed).
               tempReport <- file.path(tempdir(), "GSEAreport_RNAseq_raw.Rmd")
               file.copy("Reports/GSEAreport_RNAseq_raw.Rmd", tempReport, overwrite = TRUE)
               
+              tempLogo <- file.path(tempdir(), "logo_main.PNG")
+              file.copy("www/logo_main.PNG", tempLogo, overwrite = TRUE)
+              
+              tempHeader <- file.path(tempdir(), "header.html")
+              file.copy("www/header.html", tempHeader, overwrite = TRUE)
+              
               # Set up parameters to pass to Rmd document
               params <- list(GSEASettings = rv$GSEA_settings,
-                             GSEATable = rv$GSEA_data)
+                             GSEATable = rv$GSEA_data,
+                             dir = tempdir(),
+                             ArrayAnalysis_version = ArrayAnalysis_version)
               
               # Knit the document, passing in the `params` list, and eval it in a
               # child of the global environment (this isolates the code in the document
@@ -4691,6 +4734,7 @@ observe({
                                 params = params,
                                 envir = new.env(parent = globalenv())
               )
+              shinybusy::remove_modal_spinner()
             }
           )
           

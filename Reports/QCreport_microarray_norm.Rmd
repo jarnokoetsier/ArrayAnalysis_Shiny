@@ -1,5 +1,5 @@
 ---
-title: Quality control report
+title: <span style="color:black"><b>Quality control report</b></span>
 params:
   processingSettings: NA
   experimentFactor: NA
@@ -7,12 +7,28 @@ params:
   normData: NA
   normMatrix: NA
   PCAData: NA
+  dir: NA
+  ArrayAnalysis_version: NA
+output:
+  html_document:
+    includes:
+      before_body: header.html
 ---
 
-This report provides an overview of the pre-processing results. If you wish to have customized figures, please modify the figures in ArrayAnalysis and download them separately.
+<style>
+body { background-color: #C6DBEF; }
+h1 {
+text-align: center;
+}
+</style>
+
+<p style="color:black; text-align: center">
+If you wish to have customized figures, please modify the figures in ArrayAnalysis and download them separately.
+</p>
 
 <br>
 
+<div style="background-color:white; padding:1em; border-radius:25px;">
 ## Settings
 
 ```{r, echo=FALSE, results = 'asis'}
@@ -24,24 +40,48 @@ knitr::kable(params$processingSettings)
 ## Results {.tabset}
 
 ### Boxplot
-<h3 style="text-align: center;"><b>Boxplot of normalized intensities</b></h3>
-<h5 style="text-align: center;">Distributions should be comparable between samples</h5>
+
+<h3 style="text-align: center;">
+
+<b>Boxplot of normalized intensities</b>
+
+</h3>
+
+<h5 style="text-align: center;">
+
+Distributions should be comparable between samples
+
+</h5>
+
 <hr>
+
 ```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
 knitr::include_graphics(
   getBoxplots(experimentFactor = params$experimentFactor,
-            legendColors = params$legendColors,
-            normData = params$normData,
-            RNASeq = FALSE,
-            width = 1000,
-            height = 1414)$src
+              legendColors = params$legendColors,
+              normData = params$normData,
+              RNASeq = FALSE,
+              width = 1000,
+              height = 1414)$src
 )
 ```
 
 ### Density plot
-<h3 style="text-align: center;"><b>Density plot of normalized intensities</b></h3>
-<h5 style="text-align: center;">Distributions should be comparable between samples</h5>
+
+<h3 style="text-align: center;">
+
+<b>Density plot of normalized intensities</b>
+
+</h3>
+
+<h5 style="text-align: center;">
+
+Distributions should be comparable between samples
+
+</h5>
+
 <hr>
+
 ```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
 getDensityplots(experimentFactor = params$experimentFactor,
                 legendColors = params$legendColors,
@@ -50,9 +90,21 @@ getDensityplots(experimentFactor = params$experimentFactor,
 ```
 
 ### Correlation plot
-<h3 style="text-align: center;"><b>Heatmap of sample-sample correlations</b></h3>
-<h5 style="text-align: center;">Constructed using Pearson correlation and Ward D2 linkage method</h5>
+
+<h3 style="text-align: center;">
+
+<b>Heatmap of sample-sample correlations</b>
+
+</h3>
+
+<h5 style="text-align: center;">
+
+Constructed using Pearson correlation and Ward D2 linkage method
+
+</h5>
+
 <hr>
+
 ```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
 legendColors <- params$legendColors
 names(legendColors) <- levels(params$experimentFactor)
@@ -65,9 +117,21 @@ getHeatmap(experimentFactor = params$experimentFactor,
 ```
 
 ### PCA plot
-<h3 style="text-align: center;"><b>Scatter plot of PCA scores</b></h3>
-<h5 style="text-align: center;">Samples with similar expression profiles are close to each other</h5>
+
+<h3 style="text-align: center;">
+
+<b>Scatter plot of PCA scores</b>
+
+</h3>
+
+<h5 style="text-align: center;">
+
+Samples with similar expression profiles are close to each other
+
+</h5>
+
 <hr>
+
 ```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
 plot_PCA(PC_data = params$PCAData, 
          colorFactor = params$experimentFactor,
@@ -78,8 +142,10 @@ plot_PCA(PC_data = params$PCAData,
          xyz = FALSE)
 ```
 
-### Session Info
+### Session info
 
 ```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
+params$ArrayAnalysis_version
 sessionInfo()
 ```
+</div>
