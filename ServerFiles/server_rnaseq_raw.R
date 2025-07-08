@@ -78,7 +78,7 @@ observe({
     
     # Show modal
     shinybusy::show_modal_spinner(text = "Reading data...",
-                       color="#0dc5c1")
+                                  color="#0dc5c1")
     
     # Read expression data
     if (!is.null(input$uploadExprData_rnaseq_raw)){
@@ -3835,7 +3835,8 @@ observe({
                                       nSets = input$nSets_ORAplot_rnaseq_raw,
                                       color = input$color_ORAplot_rnaseq_raw)
             
-            output$ORAplot_rnaseq_raw <- plotly::renderPlotly(rv$ORAplot)
+            output$ORAplot_rnaseq_raw <- plotly::renderPlotly(rv$ORAplot%>% 
+                                                                plotly::layout(height = 500, width = 1000))
             
           })
           
@@ -4053,7 +4054,7 @@ observe({
             filename = "ORAreport.html",
             content = function(file) {
               shinybusy::show_modal_spinner(text = "Making ORA report...",
-                                           color="#0dc5c1")
+                                            color="#0dc5c1")
               # Copy the report file to a temporary directory before processing it, in
               # case we don't have write permissions to the current working dir (which
               # can happen when deployed).
@@ -4488,7 +4489,8 @@ observe({
                                                   input$midcol_GSEAplot_rnaseq_raw,
                                                   input$highcol_GSEAplot_rnaseq_raw))
             
-            output$GSEAplot_rnaseq_raw <- plotly::renderPlotly(rv$GSEAplot)
+            output$GSEAplot_rnaseq_raw <- plotly::renderPlotly(rv$GSEAplot%>% 
+                                                                 plotly::layout(height = 500, width = 1000))
             
           })
           

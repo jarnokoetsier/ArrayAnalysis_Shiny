@@ -3884,7 +3884,8 @@ observe({
                                       nSets = input$nSets_ORAplot_rnaseq_norm,
                                       color = input$color_ORAplot_rnaseq_norm)
             
-            output$ORAplot_rnaseq_norm <- plotly::renderPlotly(rv$ORAplot)
+            output$ORAplot_rnaseq_norm <- plotly::renderPlotly(rv$ORAplot%>% 
+                                                                 plotly::layout(height = 500, width = 1000))
             
           })
           
@@ -4537,7 +4538,8 @@ observe({
                                                   input$midcol_GSEAplot_rnaseq_norm,
                                                   input$highcol_GSEAplot_rnaseq_norm))
             
-            output$GSEAplot_rnaseq_norm <- plotly::renderPlotly(rv$GSEAplot)
+            output$GSEAplot_rnaseq_norm <- plotly::renderPlotly(rv$GSEAplot%>% 
+                                                                  plotly::layout(height = 500, width = 1000))
             
           })
           

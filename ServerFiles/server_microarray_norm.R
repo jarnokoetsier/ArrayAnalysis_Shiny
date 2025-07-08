@@ -3886,7 +3886,8 @@ observe({
                                       nSets = input$nSets_ORAplot_microarray_norm,
                                       color = input$color_ORAplot_microarray_norm)
             
-            output$ORAplot_microarray_norm <- plotly::renderPlotly(rv$ORAplot)
+            output$ORAplot_microarray_norm <- plotly::renderPlotly(rv$ORAplot%>% 
+                                                                     plotly::layout(height = 500, width = 1000))
             
           })
           
@@ -4540,7 +4541,8 @@ observe({
                                                   input$midcol_GSEAplot_microarray_norm,
                                                   input$highcol_GSEAplot_microarray_norm))
             
-            output$GSEAplot_microarray_norm <- plotly::renderPlotly(rv$GSEAplot)
+            output$GSEAplot_microarray_norm <- plotly::renderPlotly(rv$GSEAplot%>% 
+                                                                      plotly::layout(height = 500, width = 1000))
             
           })
           
