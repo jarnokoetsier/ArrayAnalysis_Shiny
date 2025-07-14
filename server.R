@@ -71,15 +71,20 @@ server <- function(input, output, session){
                    h4("You can run four analysis workflows in ArrayAnalysis: "),
                    h4(
                    HTML('<ol>
-                   <li><b>Raw microarray data (<i>.CEL</i>):</b> 
+                   <li><b>Microarray CEL files:</b> 
                    Select <code>Microarray analysis</code> and <code>CEL files</code>.</li>
-                        <li><b>Microarray intensity tables (<i>.csv/.tsv</i>):</b>
+                        <li><b>Microarray intensity table:</b>
                         Select <code>Microarray analysis</code> and <code>Processed intensities</code>.</li>
-                         <li><b>Raw RNA-seq count tables (<i>.csv/.tsv</i>):</b>
+                         <li><b>Raw RNA-seq count table:</b>
                          Select <code>RNA-Seq analysis</code> and <code>Raw counts</code>.</li>
-                         <li><b>Processed RNA-seq count tables (<i>.csv/.tsv</i>):</b>
+                         <li><b>Processed RNA-seq count table:</b>
                          Select <code>RNA-Seq analysis</code> and <code>Processed counts</code>.</li>
-                        </ol>'))
+                        </ol>')),
+                   br(),
+                   h4(style="text-align: justify;",
+                     "Click on", code("Start Analysis"), "to upload your own dataset or run explore the app with an example dataset. Please visit our", a("help page",
+                                            href = "https://arrayanalysis.org/help",
+                                            target = "_blank"),"for more information."),
                    )
             
           ) # EO fluidRow

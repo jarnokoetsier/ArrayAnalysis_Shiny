@@ -1173,21 +1173,27 @@ getHeatmap <- function(experimentFactor,
   colnames(sidecolors) <- "Experimental group"
   
   # Select heatmap theme colour
-  if (theme == "Default"){
+  if (!is.null(theme)){
+    if (theme == "Default"){
+      gradient = viridis(n = 256, alpha = 1, begin = 0, end = 1,
+                         option = "viridis")
+    }
+    
+    if (theme == "Yellow-red"){
+      gradient = heat.colors(100)
+    }
+    
+    if (theme == "Blues"){
+      gradient = RColorBrewer::brewer.pal(9, "Blues")
+    }
+    if (theme == "Reds"){
+      gradient = RColorBrewer::brewer.pal(9, "Reds")
+    }
+  } else{
     gradient = viridis(n = 256, alpha = 1, begin = 0, end = 1,
-                       option = "viridis")
+                      option = "viridis")
   }
   
-  if (theme == "Yellow-red"){
-    gradient = heat.colors(100)
-  }
-  
-  if (theme == "Blues"){
-    gradient = RColorBrewer::brewer.pal(9, "Blues")
-  }
-  if (theme == "Reds"){
-    gradient = RColorBrewer::brewer.pal(9, "Reds")
-  }
   
   # Make heatmap
   p <- heatmaply::heatmaply(crp, plot_method = "plotly", distfun = my.dist,
@@ -3395,7 +3401,7 @@ makeORAnetwork <- function(ORA_data, layout, nSets, color, size = 5){
   # make plot
   p <- ggraph::ggraph(g, 'igraph', algorithm = layout) +
     ggraph::geom_edge_link0(ggplot2::aes(width = `Jaccard Index`), edge_alpha = 0.1) + 
-    ggraph::geom_node_point(ggplot2::aes(color = `-log10 p-value`), size = 7) + 
+    ggraph::geom_node_point(ggplot2::aes(color = `-log10 p-value`), size = 4) + 
     ggraph::geom_node_text(ggplot2::aes(label = label), color = 'black', 
                            size = size, repel = TRUE) + 
     ggplot2::theme_void() +
@@ -3468,7 +3474,7 @@ makeGSEAnetwork <- function(GSEA_data, layout, nSets, color, size = 5){
   # make plot
   p <- ggraph::ggraph(g, 'igraph', algorithm = layout) +
     ggraph::geom_edge_link0(ggplot2::aes(width = `Jaccard Index`), edge_alpha = 0.1) + 
-    ggraph::geom_node_point(ggplot2::aes(color = NES), size = 7) + 
+    ggraph::geom_node_point(ggplot2::aes(color = NES), size = 4) + 
     ggraph::geom_node_text(ggplot2::aes(label = label), color = 'black', 
                            size = size, repel = TRUE) + 
     ggplot2::theme_void() +

@@ -159,15 +159,14 @@ observe({
           tabsetPanel(
             tabPanel("Expression matrix",
                      h3(strong("Expression matrix")),
-                     h5("These are the first six entries of the expression matrix. Please check if the data 
+                     h5("The table shows the first six entries of the expression matrix. Please check if the data 
                has been correctly imported."),
                      hr(),
                      DT::dataTableOutput(outputId = "exprTable_upload_rnaseq_norm") %>% 
                        withSpinner(color="#0dc5c1")),
             tabPanel("Metadata",                  # Meta table
                      h3(strong("Metadata")),
-                     h5("This is a preview of the metadata. Please check if the data 
-               has been correctly imported."),
+                     h5("Please check if the metadata has been correctly imported."),
                      hr(),
                      DT::dataTableOutput(outputId = "metaTable_rnaseq_norm") %>% 
                        withSpinner(color="#0dc5c1")),
@@ -293,15 +292,14 @@ observe({
           tabsetPanel(
             tabPanel("Expression matrix",
                      h3(strong("Expression matrix")),
-                     h5("These are the first six entries of the expression matrix. Please check if the data 
+                     h5("The table shows the first six entries of the expression matrix. Please check if the data 
                has been correctly imported."),
                      hr(),
                      DT::dataTableOutput(outputId = "exprTable_upload_rnaseq_norm") %>% 
                        withSpinner(color="#0dc5c1")),
             tabPanel("Metadata",                  # Meta table
                      h3(strong("Metadata")),
-                     h5("This is a preview of the metadata. Please check if the data 
-               has been correctly imported."),
+                     h5("Please check if the metadata has been correctly imported."),
                      hr(),
                      DT::dataTableOutput(outputId = "metaTable_rnaseq_norm") %>% 
                        withSpinner(color="#0dc5c1")),
@@ -4158,7 +4156,8 @@ observe({
                          
                          # Title + description of statistics table
                          h3(strong("Statistics table")),
-                         h5("The ORA statistics table encompasses the output of the overrepresentation analysis."),
+                         h5("Here you can view the statistics from the ORA. 
+                            Click on the table to get the statistics per gene."),
                          hr(),
                          
                          # Statistics table
@@ -4172,8 +4171,7 @@ observe({
                          
                          # Title + description of gene table
                          htmlOutput("text_ORAgene_table_rnaseq_norm"),
-                         h5(paste0("The gene table encompasses the statistics of all genes 
-                              from the selected gene set.")),
+                         h5("Here you can view the differential expression results for the selected gene set."),
                          hr(),
                          
                          # Gene table
@@ -4241,7 +4239,7 @@ observe({
                          
                          # Title + description of the network diagram
                          h3(strong("Network diagram")),
-                         h5("The network diagram visualize the similarity between the most significant gene sets."),
+                         h5("The network visualizes the similarity between the most significant gene sets."),
                          hr(),
                          actionButton("download_ORAnetwork_rnaseq_norm", 
                                       "Download figure",
@@ -4813,7 +4811,8 @@ observe({
                          
                          # Title + description of statistics table
                          h3(strong("Statistics table")),
-                         h5("The statistics table encompasses the output of the Gene Set Enrichment Analysis."),
+                         h5("Here you can view the statistics from the GSEA. 
+                            Click on the table to get the statistics per gene."),
                          hr(),
                          
                          # Statistics table
@@ -4827,8 +4826,7 @@ observe({
                          
                          # Title + description of gene table
                          htmlOutput("text_GSEAgene_table_rnaseq_norm"),
-                         h5(paste0("The gene table encompasses the statistics of all genes
-                              from the selected gene set.")),
+                         h5("Here you can view the differential expression results for the selected gene set."),
                          hr(),
                          
                          # Gene table

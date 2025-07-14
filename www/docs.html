@@ -1503,7 +1503,7 @@ border-radius: 0px;
 
 
 <h1 class="title toc-ignore" style="color: #004080;"><b>ArrayAnalysis Documentation</b></h1>
-<p>Check our <a href = "https://jarnokoetsier.github.io/ArrayAnalysis/" target="_blank">website</a> for the most recent information and FAQs.</p>
+<p>Check our <a href = "https://arrayanalysis.org" target="_blank">website</a> for the most recent information and FAQs.</p>
 </div>
 <br>
 
@@ -1799,7 +1799,8 @@ To perform statistical analysis, you can provide three inputs:</p>
 <p>1. <b>Statistical comparison(s)</b>. You can select one or more statistical comparisons of interest. Note that the direction of the statistical comparison is usually defined 
 as <b>Case - Control</b>.</p>
 <p>2. <b>Covariates</b>. You can adjust for continuous (<i>e.g.</i>, age) and categorical (<i>e.g.</i>, sex, tissue) covariates.</p>
-<p>3. <b>Gene annotation</b>. You can add gene annotations from the Ensembl database using the biomaRt package. For example, if you have ENTREZ gene IDs annotations, 
+<p>3. <b>logFC shrinkage</b>. You can shrink imprecise logFCs towards 0 with the 'apeglm' method. This option is recommended to get more accurate estimates of the logFCs.</p>
+<p>4. <b>Gene annotation</b>. You can add gene annotations from the Ensembl database using the biomaRt package. For example, if you have ENTREZ gene IDs annotations, 
 you can use this option to add gene symbols or Ensembl gene IDs to the statistics output. Please note that if you select this option, 
 the time required for the statistical analysis will increase significantly.</p>
 </br>

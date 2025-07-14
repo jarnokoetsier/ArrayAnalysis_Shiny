@@ -67,7 +67,7 @@ makeGSEAnetwork(GSEA_data = params$GSEATable,
                 layout = "graphopt",
                 nSets = 15,
                 color = c("#000072", "white", "red"),
-                size = 2)
+                size = 3)
 ```
 
 ### Session info
