@@ -618,7 +618,7 @@ observe({
         size = "m",
         footer = tagList(
           fluidRow(
-            column(6,align = "left",
+            column(12,align = "left",
                    shinyWidgets::prettyRadioButtons(
                      inputId = "geneboxplot_file_rnaseq_raw",
                      label = NULL,
@@ -850,7 +850,7 @@ observe({
         size = "m",
         footer = tagList(
           fluidRow(
-            column(6,align = "left",
+            column(12,align = "left",
                    shinyWidgets::prettyRadioButtons(
                      inputId = "boxplots_file_rnaseq_raw",
                      label = NULL,
@@ -1070,7 +1070,7 @@ observe({
         size = "m",
         footer = tagList(
           fluidRow(
-            column(6,align = "left",
+            column(12, align = "left",
                    shinyWidgets::prettyRadioButtons(
                      inputId = "density_file_rnaseq_raw",
                      label = NULL,
@@ -1363,7 +1363,7 @@ observe({
         size = "m",
         footer = tagList(
           fluidRow(
-            column(6,align = "left",
+            column(12,align = "left",
                    shinyWidgets::prettyRadioButtons(
                      inputId = "heatmap_file_rnaseq_raw",
                      label = NULL,
@@ -1631,7 +1631,7 @@ observe({
         size = "m",
         footer = tagList(
           fluidRow(
-            column(6,align = "left",
+            column(12,align = "left",
                    shinyWidgets::prettyRadioButtons(
                      inputId = "pca_file_rnaseq_raw",
                      label = NULL,
@@ -2481,7 +2481,7 @@ observe({
         easyClose = TRUE,
         footer = tagList(
           fluidRow(
-            column(6,align = "left",
+            column(12,align = "left",
                    shinyWidgets::prettyRadioButtons(
                      inputId = "statboxplot_file_rnaseq_raw",
                      label = NULL,
@@ -2583,7 +2583,7 @@ observe({
             size = "m",
             footer = tagList(
               fluidRow(
-                column(6,align = "left",
+                column(12,align = "left",
                        shinyWidgets::prettyRadioButtons(
                          inputId = "Phistogram_file_rnaseq_raw",
                          label = NULL,
@@ -2641,7 +2641,7 @@ observe({
         })
         
         #**********************************#
-        # Modal download to logFC histogram
+        # Modal to download logFC histogram
         #**********************************#
         
         # Download plot
@@ -2683,7 +2683,7 @@ observe({
             size = "m",
             footer = tagList(
               fluidRow(
-                column(6,align = "left",
+                column(12,align = "left",
                        shinyWidgets::prettyRadioButtons(
                          inputId = "logFChistogram_file_rnaseq_raw",
                          label = NULL,
@@ -2809,7 +2809,7 @@ observe({
         size = "m",
         footer = tagList(
           fluidRow(
-            column(6,align = "left",
+            column(12,align = "left",
                    shinyWidgets::prettyRadioButtons(
                      inputId = "volcano_file_rnaseq_raw",
                      label = NULL,
@@ -2929,7 +2929,7 @@ observe({
         size = "m",
         footer = tagList(
           fluidRow(
-            column(6,align = "left",
+            column(12,align = "left",
                    shinyWidgets::prettyRadioButtons(
                      inputId = "MA_file_rnaseq_raw",
                      label = NULL,
@@ -3883,7 +3883,7 @@ observe({
               size = "m",
               footer = tagList(
                 fluidRow(
-                  column(6,align = "left",
+                  column(12,align = "left",
                          shinyWidgets::prettyRadioButtons(
                            inputId = "ORAplot_file_rnaseq_raw",
                            label = NULL,
@@ -3979,7 +3979,7 @@ observe({
               size = "m",
               footer = tagList(
                 fluidRow(
-                  column(6,align = "left",
+                  column(12,align = "left",
                          shinyWidgets::prettyRadioButtons(
                            inputId = "ORAnetwork_file_rnaseq_raw",
                            label = NULL,
@@ -4536,7 +4536,7 @@ observe({
               size = "m",
               footer = tagList(
                 fluidRow(
-                  column(6,align = "left",
+                  column(12,align = "left",
                          shinyWidgets::prettyRadioButtons(
                            inputId = "GSEAplot_file_rnaseq_raw",
                            label = NULL,
@@ -4635,7 +4635,7 @@ observe({
               size = "m",
               footer = tagList(
                 fluidRow(
-                  column(6,align = "left",
+                  column(12,align = "left",
                          shinyWidgets::prettyRadioButtons(
                            inputId = "GSEAnetwork_file_rnaseq_raw",
                            label = NULL,
