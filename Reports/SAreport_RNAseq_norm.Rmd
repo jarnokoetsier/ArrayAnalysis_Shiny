@@ -28,7 +28,7 @@ If you wish to have customized figures, please modify the figures in ArrayAnalys
 <div style="background-color:white; padding:1em; border-radius:25px;">
 ## Settings
 
-```{r, echo=FALSE, results = 'asis'}
+```{r, echo=FALSE, results = 'asis', message = FALSE, warning = FALSE}
 statSettings <- params$statSettings
 statSettings[1,1] <- "Selected Comparison*"
 knitr::kable(statSettings)
@@ -41,25 +41,25 @@ ArrayAnalysis and downloading the report again.</p>
 
 ### Top hits
 <h3><b>Top upregulated genes</b></h3>
-```{r, echo=FALSE, results = 'asis'}
+```{r, echo=FALSE, results = 'asis', message = FALSE, warning = FALSE}
 topTable <- params$topTable
 knitr::kable(head(topTable[topTable$log2FC > 0,], 10), row.names = FALSE)
 ```
 
 <hr>
 <h3><b>Top downregulated genes</b></h3>
-```{r, echo=FALSE, results = 'asis'}
+```{r, echo=FALSE, results = 'asis', message = FALSE, warning = FALSE}
 topTable <- params$topTable
 knitr::kable(head(topTable[topTable$log2FC < 0,], 10), row.names = FALSE)
 ```
 
 ### Histograms
 
-```{r, echo=FALSE, out.width="100%", out.height = "100%"}
+```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
 makePHistogram(params$topTable[,"p-value"])
 ```
 <hr>
-```{r, echo=FALSE, out.width="100%", out.height = "100%"}
+```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
 makelogFCHistogram(params$topTable[,"log2FC"])
 ```
 
@@ -77,7 +77,7 @@ makeVolcano(top_table = params$topTable,
 
 <br>
 <h4># genes per p-value and logFC category</h4>
-```{r, echo=FALSE, out.width="100%", out.height = "100%"}
+```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
 knitr::kable(params$volcanoTable)
 
 ```
