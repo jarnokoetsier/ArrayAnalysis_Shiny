@@ -661,7 +661,6 @@ observe({
       
       # Get suggested outliers
       rv$suggestedOutliers <- outlierDetect(rv$PCA_data)
-      print(rv$suggestedOutliers)
       
       # Remove modal
       shinybusy::remove_modal_spinner()
@@ -2042,6 +2041,10 @@ observe({
                    actionButton("download_geneboxplot_microarray_raw", 
                                 "Download figure",
                                 icon = shiny::icon("download")),
+                   actionButton("link_geneboxplot_microarray_raw", 
+                                "Explain figure",
+                                icon = shiny::icon("question-circle"),
+                                onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Geneboxplot', '_blank')"),
                    br(),
                    br()
           ),
@@ -2053,6 +2056,10 @@ observe({
                    actionButton("download_boxplots_microarray_raw", 
                                 "Download figure",
                                 icon = shiny::icon("download")),
+                   actionButton("link_boxplots_microarray_raw", 
+                                "Explain figure",
+                                icon = shiny::icon("question-circle"),
+                                onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Sampleboxplot', '_blank')"),
                    br(),
                    br(),
                    tags$div(class = "dropdown",
@@ -2074,6 +2081,10 @@ observe({
                    actionButton('download_density_microarray_raw', 
                                 "Download figure",
                                 icon = shiny::icon("download")),
+                   actionButton("link_density_microarray_raw", 
+                                "Explain figure",
+                                icon = shiny::icon("question-circle"),
+                                onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Densityplot', '_blank')"),
                    br(),
                    br(),
                    # customize heatmap
@@ -2126,6 +2137,10 @@ observe({
                    actionButton('download_heatmap_microarray_raw', 
                                 "Download figure",
                                 icon = shiny::icon("download")),
+                   actionButton("link_heatmap_microarray_raw", 
+                                "Explain figure",
+                                icon = shiny::icon("question-circle"),
+                                onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Sampleheatmap', '_blank')"),
                    br(),
                    br(),
                    
@@ -2201,6 +2216,10 @@ observe({
                    actionButton("download_pca_microarray_raw", 
                                 "Download figure",
                                 icon = shiny::icon("download")),
+                   actionButton("link_pca_microarray_raw", 
+                                "Explain figure",
+                                icon = shiny::icon("question-circle"),
+                                onclick ="window.open('https://arrayanalysis.org/ExplainFigure/PCA', '_blank')"),
                    br(),
                    br(),
                    
@@ -3462,6 +3481,10 @@ observe({
                        actionButton("download_statboxplot_microarray_raw", 
                                     "Download figure",
                                     icon = shiny::icon("download")),
+                       actionButton("link_statboxplot_microarray_raw", 
+                                    "Explain figure",
+                                    icon = shiny::icon("question-circle"),
+                                    onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Geneboxplot', '_blank')"),
                        br(),
                        br()
               ),
