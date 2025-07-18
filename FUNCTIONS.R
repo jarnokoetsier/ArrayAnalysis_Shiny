@@ -1502,7 +1502,7 @@ plot_PCA <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2, zpc =
 # Make interactive PCA plot
 
 # VARIABLES:
-# PCA_data: PCA object retrieved from the prcomp function
+# PC_data: PCA object retrieved from the prcomp function
 # colorFactor: A factor the color the samples in the plot
 # xpc: Principal component on horizontal axis
 # ypc: Principal component on vertical axis
@@ -1563,6 +1563,40 @@ plot_PCA_static <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2
   return(p)
 }
 
+#==============================================================================#
+# outlierDetect()
+#==============================================================================#
+
+# DESCRIPTION:
+# Function to detect outliers
+
+# VARIABLES:
+# PC_data: PCA object retrieved from the prcomp function
+# PC_threshold: minimum variance explained by PC used for outlier detection
+
+outlierDetect <- function(PC_data, PC_threshold = 0.1){
+  
+  # Get percentage explained
+  perc_expl <- ((PC_data$sdev^2)/sum(PC_data$sdev^2))
+  
+  
+  nPCs <- max(which(perc_expl > PC_threshold))
+  
+  outlier <- NULL
+  for (i in 1:nPCs){
+    x <- PC_data$x[,i]
+    if(sum((abs(x - median(x))/mad(x))>6)>0){
+      outlier <- c(outlier,rownames(PC_data$x)[which((abs(x - median(x))/mad(x))>6)])
+    }
+  }
+  outlier <- unique(outlier)
+  
+  if (length(outlier) > 0){
+    return(outlier)
+  } else{
+    return(NA)
+  }
+}
 #==============================================================================#
 # makeComparisons()
 #==============================================================================#
@@ -2204,6 +2238,7 @@ makeVolcano_static <- function(top_table,
                        Pvalue = top_table[,"p-value"],
                        logP = -log10(top_table[,"p-value"]),
                        adjPvalue = top_table[,"adj. p-value"],
+                       logAdjP = -log10(top_table[,"p-value"]),
                        GeneID = top_table[,"GeneID"])
   
   
@@ -2241,11 +2276,11 @@ makeVolcano_static <- function(top_table,
     
     volcano <- ggplot2::ggplot() +
       ggplot2:: geom_point(data = plotDF[plotDF$Colour == "unchanged",],
-                           ggplot2::aes(x = log2FC, y = logP, color = "Unchanged")) +
+                           ggplot2::aes(x = log2FC, y = logAdjP, color = "Unchanged")) +
       ggplot2::geom_point(data = plotDF[plotDF$Colour == "downregulated",],
-                          ggplot2::aes(x = log2FC, y = logP, color = "Downregulated")) +
+                          ggplot2::aes(x = log2FC, y = logAdjP, color = "Downregulated")) +
       ggplot2::geom_point(data = plotDF[plotDF$Colour == "upregulated",],
-                          ggplot2::aes(x = log2FC, y = logP, color = "Upregulated")) +
+                          ggplot2::aes(x = log2FC, y = logAdjP, color = "Upregulated")) +
       ggplot2::geom_hline(yintercept = -log10(p_threshold), linetype = "dashed", color = "lightgrey") +
       ggplot2::geom_vline(xintercept = -1*logFC_threshold, linetype = "dashed", color = "lightgrey") +
       ggplot2::geom_vline(xintercept = logFC_threshold, linetype = "dashed", color = "lightgrey") +

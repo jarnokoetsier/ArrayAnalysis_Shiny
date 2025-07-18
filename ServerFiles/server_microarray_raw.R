@@ -190,8 +190,30 @@ observe({
         # Remove modal
         shinybusy::remove_modal_spinner()
         
-        # Show RNA-seq upload tab
+        # Show pre-processing tab
         showTab("navbar", target = "panel_preprocessing_microarray_raw")
+        
+        # Remove the other RNA-seq (raw) tabs
+        hideTab("navbar", target = "panel_upload_rnaseq_raw")
+        hideTab("navbar", target = "panel_preprocessing_rnaseq_raw")
+        hideTab("navbar", target = "panel_statistics_rnaseq_raw" )
+        hideTab("navbar", target = "panel_ORA_rnaseq_raw")
+        
+        # Remove the other RNA-seq (norm) tabs
+        hideTab("navbar", target = "panel_upload_rnaseq_norm")
+        hideTab("navbar", target = "panel_preprocessing_rnaseq_norm")
+        hideTab("navbar", target = "panel_statistics_rnaseq_norm")
+        hideTab("navbar", target = "panel_ORA_rnaseq_norm")
+        
+        # Remove the other microarray (raw) tabs
+        hideTab("navbar", target = "panel_statistics_microarray_raw" )
+        hideTab("navbar", target = "panel_ORA_microarray_raw")
+        
+        # Remove the other microarray (norm) tabs
+        hideTab("navbar", target = "panel_upload_microarray_norm")
+        hideTab("navbar", target = "panel_preprocessing_microarray_norm")
+        hideTab("navbar", target = "panel_statistics_microarray_norm")
+        hideTab("navbar", target = "panel_ORA_microarray_norm")
         
         # Show message
         if (nrow(rv$metaData) >= length(rv$celfiles)){
@@ -346,8 +368,30 @@ observe({
         # Remove modal
         shinybusy::remove_modal_spinner()
         
-        # Show RNA-seq upload tab
+        # Show pre-processing tab
         showTab("navbar", target = "panel_preprocessing_microarray_raw")
+        
+        # Remove the other RNA-seq (raw) tabs
+        hideTab("navbar", target = "panel_upload_rnaseq_raw")
+        hideTab("navbar", target = "panel_preprocessing_rnaseq_raw")
+        hideTab("navbar", target = "panel_statistics_rnaseq_raw" )
+        hideTab("navbar", target = "panel_ORA_rnaseq_raw")
+        
+        # Remove the other RNA-seq (norm) tabs
+        hideTab("navbar", target = "panel_upload_rnaseq_norm")
+        hideTab("navbar", target = "panel_preprocessing_rnaseq_norm")
+        hideTab("navbar", target = "panel_statistics_rnaseq_norm")
+        hideTab("navbar", target = "panel_ORA_rnaseq_norm")
+        
+        # Remove the other microarray (raw) tabs
+        hideTab("navbar", target = "panel_statistics_microarray_raw" )
+        hideTab("navbar", target = "panel_ORA_microarray_raw")
+        
+        # Remove the other microarray (norm) tabs
+        hideTab("navbar", target = "panel_upload_microarray_norm")
+        hideTab("navbar", target = "panel_preprocessing_microarray_norm")
+        hideTab("navbar", target = "panel_statistics_microarray_norm")
+        hideTab("navbar", target = "panel_ORA_microarray_norm")
         
         # Show success message (only if the metadata is available for 
         # each expression file)
@@ -613,17 +657,34 @@ observe({
     
     # Print expression table
     output$exprTable_microarray_raw <- DT::renderDataTable({
+      req(rv$PCA_data)
+      
+      # Get suggested outliers
+      rv$suggestedOutliers <- outlierDetect(rv$PCA_data)
+      print(rv$suggestedOutliers)
       
       # Remove modal
       shinybusy::remove_modal_spinner()
       
       # Show message
-      shinyWidgets::sendSweetAlert(
-        session = session,
-        title = "Info",
-        text = "The data has been pre-processed. Please check the different 
+      if (is.na(rv$suggestedOutliers[1])){
+        shinyWidgets::sendSweetAlert(
+          session = session,
+          title = "Info",
+          text = "The data has been pre-processed. Please check the different 
               QC plots on this page to assess the pre-processing quality.",
-        type = "info")
+          type = "info")
+      } else{
+        shinyWidgets::sendSweetAlert(
+          session = session,
+          title = "Warning",
+          text = HTML(paste0("<p>The data has been pre-processed, but the following sample(s) 
+          might be outliers:</p><br><p><b>", paste(rv$suggestedOutliers, collapse = ", "),
+                             "</b></p><br><p>Please review the QC plots on this page to assess the pre-processing quality 
+          and determine whether these outliers should be removed.</p>")),
+          type = "warning",
+          html = TRUE)
+      }
       
       # Show microarray statistics tab
       showTab("navbar", target = "panel_statistics_microarray_raw")
