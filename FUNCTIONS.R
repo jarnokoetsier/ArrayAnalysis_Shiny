@@ -2761,7 +2761,7 @@ ORA <- function(top_table,
           keyType = geneID_type,
           ont = "BP",
           pvalueCutoff = Inf,
-          pAdjustMethod = "fdr",
+          pAdjustMethod = "BH",
           universe = universe,
           qvalueCutoff = Inf,
           minGSSize = 10,
@@ -2779,7 +2779,7 @@ ORA <- function(top_table,
           keyType = geneID_type,
           ont = "MF",
           pvalueCutoff = Inf,
-          pAdjustMethod = "fdr",
+          pAdjustMethod = "BH",
           universe = universe,
           qvalueCutoff = Inf,
           minGSSize = 10,
@@ -2797,7 +2797,7 @@ ORA <- function(top_table,
           keyType = geneID_type,
           ont = "CC",
           pvalueCutoff = Inf,
-          pAdjustMethod = "fdr",
+          pAdjustMethod = "BH",
           universe = universe,
           qvalueCutoff = Inf,
           minGSSize = 10,
@@ -2826,7 +2826,7 @@ ORA <- function(top_table,
         ORA_data <- clusterProfiler::enricher(
           gene = geneList,
           pvalueCutoff = Inf,
-          pAdjustMethod = "fdr",
+          pAdjustMethod = "BH",
           universe = universe,
           minGSSize = 10,
           maxGSSize = 500,
@@ -3013,7 +3013,7 @@ performGSEA <- function(top_table,
           keyType = geneID_type,
           ont = "BP",
           pvalueCutoff = Inf,
-          pAdjustMethod = "fdr",
+          pAdjustMethod = "BH",
           minGSSize = 10,
           maxGSSize = 500
         )
@@ -3028,7 +3028,7 @@ performGSEA <- function(top_table,
           keyType = geneID_type,
           ont = "MF",
           pvalueCutoff = Inf,
-          pAdjustMethod = "fdr",
+          pAdjustMethod = "BH",
           minGSSize = 10,
           maxGSSize = 500
         )
@@ -3043,7 +3043,7 @@ performGSEA <- function(top_table,
           keyType = geneID_type,
           ont = "CC",
           pvalueCutoff = Inf,
-          pAdjustMethod = "fdr",
+          pAdjustMethod = "BH",
           minGSSize = 10,
           maxGSSize = 500
         )
@@ -3069,7 +3069,7 @@ performGSEA <- function(top_table,
           minGSSize = 10,
           maxGSSize = 500,
           pvalueCutoff = Inf,
-          pAdjustMethod = "fdr",
+          pAdjustMethod = "BH",
           TERM2GENE = path2gene,
           TERM2NAME = path2name
         )
@@ -3104,7 +3104,7 @@ performGSEA <- function(top_table,
           minGSSize = 10,
           maxGSSize = 500,
           pvalueCutoff = Inf,
-          pAdjustMethod = "fdr",
+          pAdjustMethod = "BH",
           TERM2GENE = path2gene,
           TERM2NAME = path2name
         )
@@ -3245,6 +3245,7 @@ makeORAplot <- function(ORA_data, nSets, color = "Viridis", static = FALSE){
   
   # Retrieve data from ORA object and make a data frame
   plotDF <- ORA_data@result
+  plotDF$nSig <- unlist(lapply(stringr::str_split(plotDF$GeneRatio, "/"), function(x) as.numeric(x[1])))
   plotDF$Name <- paste0(firstup(plotDF$Description), " (", plotDF$ID, ")")
   plotDF$Name <- factor(plotDF$Name, levels = rev(plotDF$Name))
   
@@ -3258,16 +3259,17 @@ makeORAplot <- function(ORA_data, nSets, color = "Viridis", static = FALSE){
                                                   "FDR-adj. p-value: ", `adj. p-value`, "\n"))) +
     ggplot2::geom_bar(ggplot2::aes(x = -log10(`p-value`), 
                                    y = Name, 
-                                   fill = -log10(`p-value`)),
+                                   fill = nSig),
                       position = ggplot2::position_dodge(), 
                       stat = "identity", 
                       color = "black",
                       size = 0.5) +
     ggplot2::xlab(expression(-log[10]~"p-value")) +
     ggplot2::ylab(NULL) +
+    ggplot2::labs(fill = "Significant\ngenes") +
     ggplot2::theme_minimal() +
     gradient +
-    ggplot2::theme(legend.position = "none")
+    ggplot2::theme(legend.position = "right")
   
   
   if (static){

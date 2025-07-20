@@ -2,8 +2,34 @@ observe({
   # Make list for reactive values
   rv <- reactiveValues()
   
-  # Download session info
-  output$downloadSessionInfo_microarray_norm <- downloadHandler(
+  # Download session info:
+  
+  # QC
+  output$downloadSessionInfo_QC_microarray_norm <- downloadHandler(
+    filename = "sessionInfo.txt",
+    content = function(file){
+      writeLines(capture.output(sessionInfo()), file)
+    }
+  )
+  
+  # Statistical analysis
+  output$downloadSessionInfo_SA_microarray_norm <- downloadHandler(
+    filename = "sessionInfo.txt",
+    content = function(file){
+      writeLines(capture.output(sessionInfo()), file)
+    }
+  )
+  
+  # ORA
+  output$downloadSessionInfo_ORA_microarray_norm <- downloadHandler(
+    filename = "sessionInfo.txt",
+    content = function(file){
+      writeLines(capture.output(sessionInfo()), file)
+    }
+  )
+  
+  # GSEA
+  output$downloadSessionInfo_GSEA_microarray_norm <- downloadHandler(
     filename = "sessionInfo.txt",
     content = function(file){
       writeLines(capture.output(sessionInfo()), file)
@@ -2193,7 +2219,7 @@ observe({
                    br(),
                    downloadButton("downloadProcessingSettings_microarray_norm", 
                                   "Download table"),
-                   downloadButton("downloadSessionInfo_microarray_norm", 
+                   downloadButton("downloadSessionInfo_QC_microarray_norm", 
                                   "Session info")
                    
           ) # EO Settings tabPanel
@@ -3350,6 +3376,10 @@ observe({
                          withSpinner(color="#0dc5c1"),
                        downloadButton("download_top_table_microarray_norm", 
                                       "Download table"),
+                       actionButton("link_Phistogram_microarray_norm", 
+                                    "Explain table",
+                                    icon = shiny::icon("question-circle"),
+                                    onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Toptable', '_blank')"),
                        br(),
                        br(),
                        
@@ -3410,12 +3440,20 @@ observe({
                        actionButton("download_Phistogram_microarray_norm", 
                                     "Download figure",
                                     icon = shiny::icon("download")),
+                       actionButton("link_Phistogram_microarray_norm", 
+                                    "Explain figure",
+                                    icon = shiny::icon("question-circle"),
+                                    onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Phistogram', '_blank')"),
                        hr(),
                        plotly::plotlyOutput("logFChistogram_microarray_norm")%>% 
                          shinycssloaders::withSpinner(color="#0dc5c1"),
                        actionButton("download_logFChistogram_microarray_norm", 
                                     "Download figure",
-                                    icon = shiny::icon("download"))
+                                    icon = shiny::icon("download")),
+                       actionButton("link_logFChistogram_microarray_norm", 
+                                    "Explain figure",
+                                    icon = shiny::icon("question-circle"),
+                                    onclick ="window.open('https://arrayanalysis.org/ExplainFigure/logFChistogram', '_blank')")
                        
               ),
               
@@ -3455,6 +3493,10 @@ observe({
                        actionButton("download_volcano_microarray_norm", 
                                     "Download figure",
                                     icon = shiny::icon("download")),
+                       actionButton("link_volcano_microarray_norm", 
+                                    "Explain figure",
+                                    icon = shiny::icon("question-circle"),
+                                    onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Volcanoplot', '_blank')"),
                        br(),
                        hr(),
                        fluidRow(
@@ -3534,6 +3576,10 @@ observe({
                        actionButton("download_MA_microarray_norm", 
                                     "Download figure",
                                     icon = shiny::icon("download")),
+                       actionButton("link_MA_microarray_norm", 
+                                    "Explain figure",
+                                    icon = shiny::icon("question-circle"),
+                                    onclick ="window.open('https://arrayanalysis.org/ExplainFigure/MAplot', '_blank')"),
                        br(),
                        hr(),
                        fluidRow(
@@ -3651,7 +3697,7 @@ observe({
                        br(),
                        downloadButton("downloadStatSettings_microarray_norm", 
                                       "Download table"),
-                       downloadButton("downloadSessionInfo_microarray_norm", 
+                       downloadButton("downloadSessionInfo_SA_microarray_norm", 
                                       "Session info")
                        
               ) # EO Settings tabPanel
@@ -4258,6 +4304,10 @@ observe({
                          # Download button
                          downloadButton("download_ORA_table_microarray_norm", 
                                         "Download"),
+                         actionButton("link_ORA_table_microarray_norm", 
+                                      "Explain table",
+                                      icon = shiny::icon("question-circle"),
+                                      onclick ="window.open('https://arrayanalysis.org/ExplainFigure/ORAtable', '_blank')"),
                          br(),
                          
                          # Title + description of gene table
@@ -4285,6 +4335,10 @@ observe({
                          actionButton("download_ORAplot_microarray_norm", 
                                       "Download figure",
                                       icon = shiny::icon("download")),
+                         actionButton("link_ORAplot_microarray_norm", 
+                                      "Explain figure",
+                                      icon = shiny::icon("question-circle"),
+                                      onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Barchart', '_blank')"),
                          br(),
                          br(),
                          
@@ -4335,6 +4389,10 @@ observe({
                          actionButton("download_ORAnetwork_microarray_norm", 
                                       "Download figure",
                                       icon = shiny::icon("download")),
+                         actionButton("link_ORAnetwork_microarray_norm", 
+                                      "Explain figure",
+                                      icon = shiny::icon("question-circle"),
+                                      onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Network', '_blank')"),
                          br(),
                          br(),
                          
@@ -4397,7 +4455,7 @@ observe({
                          br(),
                          downloadButton("downloadORASettings_microarray_norm", 
                                         "Download table"),
-                         downloadButton("downloadSessionInfo_microarray_norm", 
+                         downloadButton("downloadSessionInfo_ORA_microarray_norm", 
                                         "Session info")
                          
                 )
@@ -4913,6 +4971,10 @@ observe({
                          # Download button
                          downloadButton("download_GSEA_table_microarray_norm",
                                         "Download"),
+                         actionButton("link_GSEA_table_microarray_norm", 
+                                      "Explain table",
+                                      icon = shiny::icon("question-circle"),
+                                      onclick ="window.open('https://arrayanalysis.org/ExplainFigure/GSEAtable', '_blank')"),
                          br(),
                          
                          # Title + description of gene table
@@ -4940,6 +5002,10 @@ observe({
                          actionButton("download_GSEAplot_microarray_norm", 
                                       "Download figure",
                                       icon = shiny::icon("download")),
+                         actionButton("link_GSEAplot_microarray_norm", 
+                                      "Explain figure",
+                                      icon = shiny::icon("question-circle"),
+                                      onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Barchart', '_blank')"),
                          br(),
                          br(),
                          
@@ -4992,6 +5058,10 @@ observe({
                          actionButton("download_GSEAnetwork_microarray_norm", 
                                       "Download figure",
                                       icon = shiny::icon("download")),
+                         actionButton("link_GSEAnetwork_microarray_norm", 
+                                      "Explain figure",
+                                      icon = shiny::icon("question-circle"),
+                                      onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Network', '_blank')"),
                          br(),
                          br(),
                          
@@ -5053,7 +5123,7 @@ observe({
                          br(),
                          downloadButton("downloadGSEASettings_microarray_norm", 
                                         "Download table"),
-                         downloadButton("downloadSessionInfo_microarray_norm", 
+                         downloadButton("downloadSessionInfo_GSEA_microarray_norm", 
                                         "Session info")
                          
                 )
