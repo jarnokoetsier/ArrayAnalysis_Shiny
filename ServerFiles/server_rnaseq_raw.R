@@ -2006,6 +2006,7 @@ observe({
         params <- list(processingSettings = rv$processingSettings,
                        experimentFactor = rv$experimentFactor,
                        legendColors = colorsByFactor(rv$experimentFactor)$legendColors,
+                       gxData_fil = rv$gxData_fil,
                        normData = rv$normData,
                        PCAData = rv$PCA_data,
                        normData_vst = rv$normData_vst,

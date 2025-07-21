@@ -4,6 +4,7 @@ params:
   processingSettings: NA
   experimentFactor: NA
   legendColors: NA
+  gxData_fil: NA
   normData: NA
   PCAData: NA
   normData_vst: NA
@@ -46,11 +47,11 @@ knitr::kable(params$processingSettings)
 ```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
 knitr::include_graphics(
   getBoxplots(experimentFactor = params$experimentFactor,
-            legendColors = params$legendColors,
-            normData = params$normData,
-            RNASeq = TRUE,
-            width = 1000,
-            height = 1414)$src
+              legendColors = params$legendColors,
+              normData = params$normData,
+              RNASeq = TRUE,
+              width = 1000,
+              height = 1414)$src
 )
 ```
 
@@ -64,6 +65,17 @@ getDensityplots(experimentFactor = params$experimentFactor,
                 normMatrix = params$normData,
                 RNASeq = TRUE)
 ```
+
+### Raw Read Counts
+<h3 style="text-align: center;"><b>Bar chart of raw read counts</b></h3>
+<h5 style="text-align: center;">Total read count should be comparable between samples</h5>
+<hr>
+```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
+getReadCount(experimentFactor = params$experimentFactor,
+             legendColors = params$legendColors,
+             gxData_fil = params$gxData_fil)
+```
+
 
 ### Correlation plot
 <h3 style="text-align: center;"><b>Heatmap of sample-sample correlations</b></h3>
