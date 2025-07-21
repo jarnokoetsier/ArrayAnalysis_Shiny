@@ -614,7 +614,7 @@ observe({
           html = TRUE)
       }
       
-
+      
       
       # Show microarray statistics tab
       showTab("navbar", target = "panel_statistics_rnaseq_raw")
@@ -1210,8 +1210,205 @@ observe({
       ))
     })
     
+    
     #********************************************************************#
-    # Output 4: Heatmap
+    # Output 4: Raw read count
+    #********************************************************************#
+    
+    # Plot of raw read count
+    output$readcount_rnaseq_raw <- renderPlot({
+      
+      if (length(levels(rv$experimentFactor)) > 5){
+        legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+      } else{
+        legendColors <- c(input$readcount_col1_rnaseq_raw,
+                          input$readcount_col2_rnaseq_raw,
+                          input$readcount_col3_rnaseq_raw,
+                          input$readcount_col4_rnaseq_raw,
+                          input$readcount_col5_rnaseq_raw)
+      }
+      if (length(legendColors) != length(levels(rv$experimentFactor))){
+        legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+      }
+      names(legendColors) <- levels(rv$experimentFactor)
+      
+      rv$readcount <- getReadCount(experimentFactor = rv$experimentFactor,
+                                   legendColors = legendColors,
+                                   gxData_fil = rv$gxData_fil)
+      return(rv$readcount)
+      
+    })
+    
+    # Allow users to set colors
+    observe({
+      test <- length(levels(rv$experimentFactor))
+      
+      if (test == 2){
+        output$UI_color_readcount_rnaseq_raw <- renderUI({
+          tagList(
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("readcount_col1_rnaseq_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("readcount_col2_rnaseq_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2])
+            )
+          )
+        })
+      }
+      if (test == 3){
+        output$UI_color_readcount_rnaseq_raw <- renderUI({
+          tagList(
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("readcount_col1_rnaseq_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("readcount_rnaseq_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("readcount_col3_rnaseq_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3])
+            )
+          )
+        })
+      }
+      if (test == 4){
+        output$UI_color_readcount_rnaseq_raw <- renderUI({
+          tagList(
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("readcount_col1_rnaseq_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("readcount_col2_rnaseq_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("readcount_col3_rnaseq_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                     colourpicker::colourInput("readcount_col4_rnaseq_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[4])
+            )
+          )
+        })
+        
+      }
+      if (test == 5){
+        output$UI_color_readcount_rnaseq_raw <- renderUI({
+          tagList(
+            tags$div(class = "dropdown-content",
+                     h4("Colors"),
+                     colourpicker::colourInput("readcount_col1_rnaseq_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[1]),
+                     colourpicker::colourInput("readcount_col2_rnaseq_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[2]),
+                     colourpicker::colourInput("readcount_col3_rnaseq_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[3]),
+                     colourpicker::colourInput("readcount_col4_rnaseq_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[4]),
+                     colourpicker::colourInput("readcount_col5_rnaseq_raw", 
+                                               NULL, 
+                                               colorsByFactor(rv$experimentFactor)$legendColors[5])
+            )
+          )
+        })
+        
+      }
+      if (test > 5){
+        output$UI_color_readcount_rnaseq_raw <- renderUI({
+          tagList(
+            tags$div(class = "dropdown-content",
+                     h5("There are too many experimental groups to select colour manually")
+            )
+          )
+        })
+        
+      }
+      
+    })
+    
+    
+    #***************************#
+    # Modal to download figure
+    #***************************#
+    
+    # Download plot
+    observe({
+      req(input$readcount_file_rnaseq_raw)
+      output$realdownload_readcount_rnaseq_raw <- downloadHandler(
+        filename = ifelse(input$readcount_file_rnaseq_raw == "PNG", "QC_ReadCount.png",
+                         ifelse(input$readcount_file_rnaseq_raw == "PDF", "QC_ReadCount.pdf",
+                                "QC_ReadCount.tif")),
+        content = function(file){
+          
+          ggplot2::ggsave(plot = rv$readcount, 
+                          filename = file,
+                          width = input$width_readcount_rnaseq_raw*2.5,
+                          height = input$height_readcount_rnaseq_raw*2.5,
+                          units = "px")
+          
+        }
+      )
+    })
+    
+    # Make modal
+    observeEvent(input$download_readcount_rnaseq_raw, {
+      showModal(modalDialog(
+        title = NULL,
+        easyClose = TRUE,
+        size = "m",
+        footer = tagList(
+          fluidRow(
+            column(12, align = "left",
+                   shinyWidgets::prettyRadioButtons(
+                     inputId = "readcount_file_rnaseq_raw",
+                     label = NULL,
+                     choices = c("PNG","PDF", "TIF"),
+                     selected = "PNG",
+                     inline = TRUE,
+                     fill = TRUE
+                   )
+            )
+          ),
+          fluidRow(
+            column(6,
+                   sliderInput("height_readcount_rnaseq_raw", 
+                               "Height",
+                               min = 800, max = 2000,
+                               value = 1200, step = 10)
+                   
+            ),
+            column(6,
+                   sliderInput("width_readcount_rnaseq_raw", 
+                               "Width",
+                               min = 800, max = 2000,
+                               value = 1500, step = 10,
+                               width = "100%")
+            )
+          ),
+          
+          fluidRow(
+            column(12, align = "left",
+                   downloadButton('realdownload_readcount_rnaseq_raw', 
+                                  'Download')
+            )
+          )
+          
+        )
+        
+      ))
+    })
+    #*******************************************************************#
+    # Output 5: Heatmap
     #********************************************************************#
     
     output$heatmap_rnaseq_raw  <- plotly::renderPlotly({
@@ -1507,7 +1704,7 @@ observe({
     
     
     #********************************************************************#
-    # Output 5: PCA
+    # Output 6: PCA
     #********************************************************************#
     
     
@@ -1766,7 +1963,7 @@ observe({
     })
     
     #********************************************************************#
-    # Output 6: Overview of pre-processing settings
+    # Output 7: Overview of pre-processing settings
     #********************************************************************#
     # Print table with settings
     output$processingSettings_rnaseq_raw <- DT::renderDataTable({
@@ -1986,7 +2183,7 @@ observe({
                                 onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Densityplot', '_blank')"),
                    br(),
                    br(),
-                   # customize heatmap
+                   # customize plot
                    tags$div(class = "dropdown",
                             tags$button(class = "dropbtn", icon("cog")),
                             uiOutput("UI_color_density_rnaseq_raw")
@@ -1998,7 +2195,32 @@ observe({
                      shinycssloaders::withSpinner(color="#0dc5c1")
           ),
           
-          # TAB4: Heatmap of sample-sample correlations
+          # TAB4: Raw read count
+          tabPanel("Raw read counts",
+                   icon = icon("fas fa-file"),
+                   br(),
+                   actionButton("download_readcount_rnaseq_raw", 
+                                "Download figure",
+                                icon = shiny::icon("download")),
+                   actionButton("link_readcount_rnaseq_raw", 
+                                "Explain figure",
+                                icon = shiny::icon("question-circle"),
+                                onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Readcount', '_blank')"),
+                   br(),
+                   br(),
+                   # customize plot
+                   tags$div(class = "dropdown",
+                            tags$button(class = "dropbtn", icon("cog")),
+                            uiOutput("UI_color_readcount_rnaseq_raw")
+                   ),
+                   h2(strong("Bar chart of raw read counts"), align = "center"),
+                   h4("Total read count should be comparable between samples", align = "center"),
+                   plotOutput(outputId = "readcount_rnaseq_raw",
+                                        width = "65vw", height = "40vw") %>% 
+                     shinycssloaders::withSpinner(color="#0dc5c1")
+          ),
+          
+          # TAB5: Heatmap of sample-sample correlations
           tabPanel("Correlation plot", 
                    icon = icon("fas fa-mouse-pointer"),
                    h3(strong("Heatmap of sample-sample correlations")),
@@ -2057,7 +2279,7 @@ observe({
                    
           ),
           
-          # TAB5: PCA score plot
+          # TAB6: PCA score plot
           tabPanel("PCA",
                    icon = icon("fas fa-mouse-pointer"),
                    # Title + text
@@ -2138,7 +2360,7 @@ observe({
                    
           ), # EO PCA tabpanel
           
-          # TAB6: Settings table
+          # TAB7: Settings table
           tabPanel("Settings overview",
                    icon = icon("fas fa-file"),
                    h3(strong("Pre-processing settings")),

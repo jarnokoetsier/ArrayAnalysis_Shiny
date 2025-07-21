@@ -1112,13 +1112,76 @@ getDensityplots_static <- function(experimentFactor, legendColors,
                    axis.text.y = ggplot2::element_blank(),
                    axis.ticks.y = ggplot2::element_blank(),
                    legend.title = ggplot2::element_blank()) +
-    ggplot2::guides(shape=guide_legend(title="Group",
+    ggplot2::guides(shape=ggplot2::guide_legend(title="Group",
                                        override.aes = list(
                                          colour = legendColors)),
                     colour = "none")
   
   return(densityPlot)
   
+}
+
+
+#==============================================================================#
+# getReadCount()
+#==============================================================================#
+
+# DESCRIPTION:
+# Make static boxplots
+
+# VARIABLES:
+# experimentFactor: factor with experimental groups (will be used for colouring)
+# normData: normalized expression data (ExpressionSet)
+
+getReadCount <- function(experimentFactor, 
+                        legendColors,
+                        gxData_fil){
+  
+  plotColors <- colorsByFactor(experimentFactor)$plotColors
+  names(legendColors) <- levels(experimentFactor)
+  
+  for (i in 1:length(legendColors)){
+    group_length <- sum(experimentFactor == levels(experimentFactor)[i])
+    if (group_length > 1){
+      colors <-  c(colorspace::lighten(legendColors[i], amount = rev(seq(0,0.5,length.out = round(group_length/2)))),
+                   colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)+1)[-1])
+      )
+    } else{
+      colors <- legendColors[i]
+    }
+    
+    plotColors[experimentFactor == levels(experimentFactor)[i]] <- colors
+  }
+  
+    names(plotColors) <- colnames(gxData_fil)
+  
+    
+    plotDF <- data.frame(SampleID = colnames(gxData_fil),
+                         ExperimentFactor = experimentFactor,
+                         Count = colSums(gxData_fil))
+    
+    p <- ggplot2::ggplot() +
+      ggplot2::geom_bar(data = plotDF, ggplot2::aes(x = SampleID, y = Count/1000000, fill = SampleID),
+               stat = "identity", position = ggplot2::position_dodge()) +
+      ggplot2::geom_point(data = plotDF, ggplot2::aes(x = SampleID, y = -1*Count/1000000, color = ExperimentFactor),
+                          shape = 15, size = 8) +
+      ggplot2::labs(x = NULL, y = "# raw counts (millions)") +
+      ggplot2::theme_minimal() +
+      ggplot2::scale_fill_manual(values = plotColors) +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1,
+                                                         size = 20),
+                     axis.text.y = element_text(size = 20),
+                     axis.title.y = element_text(size = 23),
+                     legend.title = ggplot2::element_text(size = 23),
+                     legend.text = ggplot2::element_text(size = 20)) +
+      ggplot2::coord_cartesian(ylim = c(0, max(plotDF$Count)/1000000)) +
+      ggplot2::guides(color=ggplot2::guide_legend(title="Group",
+                                         override.aes = list(
+                                           colour = legendColors)),
+                      alpha = "none",
+                      fill = "none")
+
+  return(p)
 }
 
 #==============================================================================#
