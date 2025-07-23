@@ -1545,14 +1545,22 @@ However, you can also choose for <a href = "https://doi.org/10.1198/016214504000
 <p>4. <b>Select probeset annotation</b>. By default, ArrayAnalysis will use the custom ENTREZ gene annotation from <a href ="http://brainarray.mbni.med.umich.edu/Brainarray/Database/CustomCDF/CDF_download.asp" target="_blank">brainarray</a>. 
 If you select <i>No annotation</i>, the Affymatrix probeset annotation will be used.</P>
 <br>
+<p>NOTE: ArrayAnalysis automatically checks for potential outliers in the data. If potential outliers have been identified, you will receive a warning message. 
+Please always check the QC plots carefully to decide whether samples should be excluded from further analysis.</p>
+<br>
 <p><b>Output</b></p>
 <p>Data and preprocessing quality can be checked in the different output tables and figures:</p>
 <p>1. <b>Normalized expression matrix</b> (interactive). The table of normalized expression values is provided and can be downloaded. 
-The expression profile of a gene can be viewed by clicking on the table.</p>
-<p>2. <b>Boxplots</b> (static). The boxplots show the distribution of expression values for all samples.</p>
-<p>3. <b>Density plots</b> (interactive). Similar to the boxplots, the density plot shows the distribution of expression values for all samples.</p>
-<p>4. <b>Correlation plot</b> (interactive). The correlation plot shows the sample-wise correlations. You can choose between different linkage and clustering methods.</p>
-<p>5. <b>PCA plot</b> (interactive). 2D and 3D PCA plots can be viewed to assess data quality.</p>
+The expression profile of a gene can be viewed by clicking on the table. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Geneboxplot" target="_blank">here</a> for more information on this figure.</p></p>
+<p>2. <b>Boxplots</b> (static). The boxplots show the distribution of expression values for all samples. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Sampleboxplot" target="_blank">here</a> for more information on this figure.</p>
+<p>3. <b>Density plots</b> (interactive). Similar to the boxplots, the density plot shows the distribution of expression values for all samples. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Densityplot" target="_blank">here</a> for more information on this figure.</p>
+<p>4. <b>Correlation plot</b> (interactive). The correlation plot shows the sample-wise correlations. You can choose between different linkage and clustering methods.
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Sampleheatmap" target="_blank">here</a> for more information on this figure.</p>
+<p>5. <b>PCA plot</b> (interactive). 2D and 3D PCA plots can be viewed to assess data quality.
+Click <a href = "https://arrayanalysis.org/ExplainFigure/PCA" target="_blank">here</a> for more information on this figure.</p>
 <p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
 </div>
 <br>
@@ -1571,12 +1579,18 @@ the time required for the statistical analysis will increase significantly.</p>
 <br>
 <p><b>Output</b></p>
 <p>For each of the selected statistical comparisons, the following output are provided:</p>
-<p>1. <b>Top table</b> (interactive). A table with the relevant statistics as calculated by <i>limma</i>.</p>
-<p>2. <b>Histograms</b> (interactive) of the p-value and logFC distribution.</p>
-<p>3. <b>Volcano plot</b> (interactive): scatter plot of logFC versus -log P value.</p>
-<p>4. <b>MA plot</b> (interactive): scatter plot of mean log expression versus logFC.</p>
+<p>1. <b>Top table</b> (interactive). A table with the relevant statistics as calculated by <i>DESeq2</i>.
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Toptable" target="_blank">here</a> for more information on this table.</p>
+<p>2. <b>Histograms</b> (interactive) of the P value and logFC distribution. 
+Click for more information on the <a href = "https://arrayanalysis.org/ExplainFigure/Phistogram" target="_blank">P value histogram</a> 
+and <a href = "https://arrayanalysis.org/ExplainFigure/logFChistogram" target="_blank">logFC value histogram</a> .</p>
+<p>3. <b>Volcano plot</b> (interactive): scatter plot of logFC versus -log P value. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Volcanoplot" target="_blank">here</a> for more information on this figure.</p>
+<p>4. <b>MA plot</b> (interactive): scatter plot of mean log expression versus logFC. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/MAplot" target="_blank">here</a> for more information on this figure.</p>
 <p>5. <b>Summary</b> of the number of differentially expressed genes for selected P and logFC thresholds.</p>
 <p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
+ 
 </div>
 <br>
 
@@ -1599,10 +1613,13 @@ Furthermore, indicate to which organism the gene identifiers belong.</p>
 <br>
 <p><b>Output</b></p>
 <p>Data and preprocessing quality can be checked in the different outputs and QC plots:</p>
-<p>1. <b>ORA table</b>. Table with the statistics of the ORA. This table can be downloaded.</p>
-<p>2. <b>Barchart</b> of the most significantly overrepresented genesets. You can select the number of genesets in the chart.</p>
+<p>1. <b>ORA table</b>. Table with the statistics of the ORA. This table can be downloaded. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/ORAtable" target="_blank">here</a> for more information on this table.</p>
+<p>2. <b>Barchart</b> of the most significantly overrepresented genesets. You can select the number of genesets in the chart. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Barchart" target="_blank">here</a> for more information on this figure.</p>
 <p>3. <b>Network</b> of the most significantly overrepresented genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
-You can select the network layout and number of genesets in the network.</p>
+You can select the network layout and number of genesets in the network. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Network" target="_blank">here</a> for more information on this figure.</p>
 <p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
 
 <br>
@@ -1617,10 +1634,13 @@ Furthermore, indicate to which organism the gene identifiers belong.</p>
 <br>
 <p><b>Output</b></p>
 <p>Data and preprocessing quality can be checked in the different outputs and QC plots:</p>
-<p>1. <b>Interactive table</b> with GSEA statistics. This table can be downloaded.</p>
-<p>2. <b>Barchart</b> of the most significantly enriched genesets. You can select the number of genesets in the chart.</p>
+<p>1. <b>Interactive table</b> with GSEA statistics. This table can be downloaded. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/GSEAtable" target="_blank">here</a> for more information on this table.</p>
+<p>2. <b>Barchart</b> of the most significantly enriched genesets. You can select the number of genesets in the chart. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Barchart" target="_blank">here</a> for more information on this figure.</p>
 <p>3. <b>Network</b> of the most significantly enriched genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
-You can select the network layout and number of genesets in the network.</p> 
+You can select the network layout and number of genesets in the network. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Network" target="_blank">here</a> for more information on this figure.</p> 
 <p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p> 
 </div>
 <hr>
@@ -1634,7 +1654,7 @@ You can select the network layout and number of genesets in the network.</p>
 <h3>Data upload</h3>
 <p><b>Input</b></p>
 <p>To start the analysis, the user should upload two files: </p>
-<p>1. Expression data in <b>Series Matrix File</b> format. <i>Series Matrix Files</i> can be downloaded from the 
+<p>1. Intensity table in <i>.csv/.tsv</i> or <i>Series Matrix File</i> format. <i>Series Matrix Files</i> can be downloaded from the 
 <a href="https://www.ncbi.nlm.nih.gov/geo/" target="_blank">GEO website</a>.</p>
 <p>2. <b>Metadata file</b>. The metadata table can be provided as a <i>.tsv/.csv</i> file or as a <i>Series Matrix File</i>. </p>
 <p>You can analyse an <b>example dataset</b> (<a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE6955" target="_blank">GSE6955</a>) by clicking on <i>Run example</i>.</p>
@@ -1655,17 +1675,23 @@ for different tissues (<i>e.g.</i>, liver and brain). As such, you can create fo
 The selection of the experimental group will be used for the normalization (if <i>normalization per experimental group</i> selected) and for the statistical analysis in the next tab.</p>
 <p>3. <b>Select transformation method</b> (optional). You can perform log<sub>2</sub>-transformation to make the data more normally distributed.</p>
 <p>4. <b>Select normalization method</b> (optional). You can perform quantile normalization to normalize the expression values across the samples.</p>
-
-
+<br>
+<p>NOTE: ArrayAnalysis automatically checks for potential outliers in the data. If potential outliers have been identified, you will receive a warning message. 
+Please always check the QC plots carefully to decide whether samples should be excluded from further analysis.</p>
 <br>
 <p><b>Output</b></p>
 <p>Data and preprocessing quality can be checked in the different output tables and figures:</p>
 <p>1. <b>Normalized expression matrix</b> (interactive). The table of normalized expression values is provided and can be downloaded. 
-The expression profile of a gene can be viewed by clicking on the table.</p>
-<p>2. <b>Boxplots</b> (static). The boxplots show the distribution of expression values for all samples.</p>
-<p>3. <b>Density plots</b> (interactive). Similar to the boxplots, the density plot shows the distribution of expression values for all samples.</p>
-<p>4. <b>Correlation plot</b> (interactive). The correlation plot shows the sample-wise correlations. You can choose between different linkage and clustering methods.</p>
-<p>5. <b>PCA plot</b> (interactive). 2D and 3D PCA plots can be viewed to assess data quality.</p>
+The expression profile of a gene can be viewed by clicking on the table. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Geneboxplot" target="_blank">here</a> for more information on this figure.</p></p>
+<p>2. <b>Boxplots</b> (static). The boxplots show the distribution of expression values for all samples. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Sampleboxplot" target="_blank">here</a> for more information on this figure.</p>
+<p>3. <b>Density plots</b> (interactive). Similar to the boxplots, the density plot shows the distribution of expression values for all samples. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Densityplot" target="_blank">here</a> for more information on this figure.</p>
+<p>4. <b>Correlation plot</b> (interactive). The correlation plot shows the sample-wise correlations. You can choose between different linkage and clustering methods.
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Sampleheatmap" target="_blank">here</a> for more information on this figure.</p>
+<p>5. <b>PCA plot</b> (interactive). 2D and 3D PCA plots can be viewed to assess data quality.
+Click <a href = "https://arrayanalysis.org/ExplainFigure/PCA" target="_blank">here</a> for more information on this figure.</p>
 <p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
 </div>
 <br>
@@ -1684,12 +1710,18 @@ the time required for the statistical analysis will increase significantly.</p>
 <br>
 <p><b>Output</b></p>
 <p>For each of the selected statistical comparisons, the following output are provided:</p>
-<p>1. <b>Top table</b> (interactive). A table with the relevant statistics as calculated by <i>limma</i>.</p>
-<p>2. <b>Histograms</b> (interactive) of the p-value and logFC distribution.</p>
-<p>3. <b>Volcano plot</b> (interactive): scatter plot of logFC versus -log P value.</p>
-<p>4. <b>MA plot</b> (interactive): scatter plot of mean log expression versus logFC.</p>
+<p>1. <b>Top table</b> (interactive). A table with the relevant statistics as calculated by <i>DESeq2</i>.
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Toptable" target="_blank">here</a> for more information on this table.</p>
+<p>2. <b>Histograms</b> (interactive) of the P value and logFC distribution. 
+Click for more information on the <a href = "https://arrayanalysis.org/ExplainFigure/Phistogram" target="_blank">P value histogram</a> 
+and <a href = "https://arrayanalysis.org/ExplainFigure/logFChistogram" target="_blank">logFC value histogram</a> .</p>
+<p>3. <b>Volcano plot</b> (interactive): scatter plot of logFC versus -log P value. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Volcanoplot" target="_blank">here</a> for more information on this figure.</p>
+<p>4. <b>MA plot</b> (interactive): scatter plot of mean log expression versus logFC. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/MAplot" target="_blank">here</a> for more information on this figure.</p>
 <p>5. <b>Summary</b> of the number of differentially expressed genes for selected P and logFC thresholds.</p>
 <p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
+
 </div>
 <br>
 
@@ -1712,10 +1744,13 @@ Furthermore, indicate to which organism the gene identifiers belong.</p>
 <br>
 <p><b>Output</b></p>
 <p>Data and preprocessing quality can be checked in the different outputs and QC plots:</p>
-<p>1. <b>ORA table</b>. Table with the statistics of the ORA. This table can be downloaded.</p>
-<p>2. <b>Barchart</b> of the most significantly overrepresented genesets. You can select the number of genesets in the chart.</p>
+<p>1. <b>ORA table</b>. Table with the statistics of the ORA. This table can be downloaded. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/ORAtable" target="_blank">here</a> for more information on this table.</p>
+<p>2. <b>Barchart</b> of the most significantly overrepresented genesets. You can select the number of genesets in the chart. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Barchart" target="_blank">here</a> for more information on this figure.</p>
 <p>3. <b>Network</b> of the most significantly overrepresented genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
-You can select the network layout and number of genesets in the network.</p>
+You can select the network layout and number of genesets in the network. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Network" target="_blank">here</a> for more information on this figure.</p>
 <p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
 
 <br>
@@ -1730,10 +1765,13 @@ Furthermore, indicate to which organism the gene identifiers belong.</p>
 <br>
 <p><b>Output</b></p>
 <p>Data and preprocessing quality can be checked in the different outputs and QC plots:</p>
-<p>1. <b>Interactive table</b> with GSEA statistics. This table can be downloaded.</p>
-<p>2. <b>Barchart</b> of the most significantly enriched genesets. You can select the number of genesets in the chart.</p>
+<p>1. <b>Interactive table</b> with GSEA statistics. This table can be downloaded. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/GSEAtable" target="_blank">here</a> for more information on this table.</p>
+<p>2. <b>Barchart</b> of the most significantly enriched genesets. You can select the number of genesets in the chart. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Barchart" target="_blank">here</a> for more information on this figure.</p>
 <p>3. <b>Network</b> of the most significantly enriched genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
-You can select the network layout and number of genesets in the network.</p> 
+You can select the network layout and number of genesets in the network. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Network" target="_blank">here</a> for more information on this figure.</p> 
 <p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p> 
 </div>
 <hr>
@@ -1776,18 +1814,26 @@ for different tissues (<i>e.g.</i>, liver and brain). As such, you can create fo
 The selection of the experimental group will be used for the normalization (if <i>normalization per experimental group</i> selected) and for the statistical analysis in the next tab.</p>
 <p>3. <b>Select filtering threshold</b>. A gene is kept for the subsequent analysis if it has a count larger or equal to the selected filtering threshold in at least n samples, 
 where n is the number of samples in the smallest experiment group.</p>
-
-
+<br>
+<p>NOTE: ArrayAnalysis automatically checks for potential outliers in the data. If potential outliers have been identified, you will receive a warning message. 
+Please always check the QC plots carefully to decide whether samples should be excluded from further analysis.</p>
 <br>
 <p><b>Output</b></p>
 <p>Data and preprocessing quality can be checked in the different output tables and figures:</p>
 <p>1. <b>Normalized expression matrix</b> (interactive). The table of normalized expression values is provided and can be downloaded. 
-The expression profile of a gene can be viewed by clicking on the table.</p>
-<p>2. <b>Boxplots</b> (static). The boxplots show the distribution of expression values for all samples.</p>
-<p>3. <b>Density plots</b> (interactive). Similar to the boxplots, the density plot shows the distribution of expression values for all samples.</p>
-<p>4. <b>Correlation plot</b> (interactive). The correlation plot shows the sample-wise correlations. You can choose between different linkage and clustering methods.</p>
-<p>5. <b>PCA plot</b> (interactive). 2D and 3D PCA plots can be viewed to assess data quality.</p>
-<p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
+The expression profile of a gene can be viewed by clicking on the table. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Geneboxplot" target="_blank">here</a> for more information on this figure.</p></p>
+<p>2. <b>Boxplots</b> (static). The boxplots show the distribution of expression values for all samples. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Sampleboxplot" target="_blank">here</a> for more information on this figure.</p>
+<p>3. <b>Density plots</b> (interactive). Similar to the boxplots, the density plot shows the distribution of expression values for all samples. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Densityplot" target="_blank">here</a> for more information on this figure.</p>
+<p>4. <b>Raw Read Counts</b> (static). This bar chart displays the total number of raw sequencing reads measured for each sample.
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Readcount" target="_blank">here</a> for more information on this figure.</p>
+<p>5. <b>Correlation plot</b> (interactive). The correlation plot shows the sample-wise correlations. You can choose between different linkage and clustering methods.
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Sampleheatmap" target="_blank">here</a> for more information on this figure.</p>
+<p>6. <b>PCA plot</b> (interactive). 2D and 3D PCA plots can be viewed to assess data quality.
+Click <a href = "https://arrayanalysis.org/ExplainFigure/PCA" target="_blank">here</a> for more information on this figure.</p>
+<p>7. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
 </div>
 <br>
 
@@ -1797,20 +1843,25 @@ The expression profile of a gene can be viewed by clicking on the table.</p>
 <p> Statistical analysis is performed using the <a href = "https://doi.org/10.1186/s13059-014-0550-8" target="_blank">DESeq2</a> package. 
 To perform statistical analysis, you can provide three inputs:</p>
 <p>1. <b>Statistical comparison(s)</b>. You can select one or more statistical comparisons of interest. Note that the direction of the statistical comparison is usually defined 
-as <b>Case - Control</b>.</p>
+as <b>Case - Control</b>. </p>
 <p>2. <b>Covariates</b>. You can adjust for continuous (<i>e.g.</i>, age) and categorical (<i>e.g.</i>, sex, tissue) covariates.</p>
-<p>3. <b>logFC shrinkage</b>. You can shrink imprecise logFCs towards 0 with the 'apeglm' method. This option is recommended to get more accurate estimates of the logFCs.</p>
+<p>3. <b>logFC shrinkage</b>. You can shrink imprecise logFCs towards 0 with the <a href = "https://doi.org/10.1093/bioinformatics/bty895" target="_blank">apeglm</a> method. 
+This option is recommended to get more accurate estimates of the logFCs.</p>
 <p>4. <b>Gene annotation</b>. You can add gene annotations from the Ensembl database using the biomaRt package. For example, if you have ENTREZ gene IDs annotations, 
 you can use this option to add gene symbols or Ensembl gene IDs to the statistics output. Please note that if you select this option, 
 the time required for the statistical analysis will increase significantly.</p>
 <br>
 <p><b>Output</b></p>
 <p>For each of the selected statistical comparisons, the following output are provided:</p>
-<p>1. <b>Top table</b> (interactive). A table with the relevant statistics as calculated by <i>DESeq2</i>. 
-The log2FC estimates are shrunken using the <a href = "https://doi.org/10.1093/bioinformatics/bty895" target="_blank">apeglm</a> method.</p>
-<p>2. <b>Histograms</b> (interactive) of the p-value and logFC distribution.</p>
-<p>3. <b>Volcano plot</b> (interactive): scatter plot of logFC versus -log P value.</p>
-<p>4. <b>MA plot</b> (interactive): scatter plot of mean log expression versus logFC.</p>
+<p>1. <b>Top table</b> (interactive). A table with the relevant statistics as calculated by <i>DESeq2</i>.
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Toptable" target="_blank">here</a> for more information on this table.</p>
+<p>2. <b>Histograms</b> (interactive) of the P value and logFC distribution. 
+Click for more information on the <a href = "https://arrayanalysis.org/ExplainFigure/Phistogram" target="_blank">P value histogram</a> 
+and <a href = "https://arrayanalysis.org/ExplainFigure/logFChistogram" target="_blank">logFC value histogram</a> .</p>
+<p>3. <b>Volcano plot</b> (interactive): scatter plot of logFC versus -log P value. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Volcanoplot" target="_blank">here</a> for more information on this figure.</p>
+<p>4. <b>MA plot</b> (interactive): scatter plot of mean log expression versus logFC. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/MAplot" target="_blank">here</a> for more information on this figure.</p>
 <p>5. <b>Summary</b> of the number of differentially expressed genes for selected P and logFC thresholds.</p>
 <p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
 
@@ -1836,10 +1887,13 @@ Furthermore, indicate to which organism the gene identifiers belong.</p>
 <br>
 <p><b>Output</b></p>
 <p>Data and preprocessing quality can be checked in the different outputs and QC plots:</p>
-<p>1. <b>ORA table</b>. Table with the statistics of the ORA. This table can be downloaded.</p>
-<p>2. <b>Barchart</b> of the most significantly overrepresented genesets. You can select the number of genesets in the chart.</p>
+<p>1. <b>ORA table</b>. Table with the statistics of the ORA. This table can be downloaded. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/ORAtable" target="_blank">here</a> for more information on this table.</p>
+<p>2. <b>Barchart</b> of the most significantly overrepresented genesets. You can select the number of genesets in the chart. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Barchart" target="_blank">here</a> for more information on this figure.</p>
 <p>3. <b>Network</b> of the most significantly overrepresented genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
-You can select the network layout and number of genesets in the network.</p>
+You can select the network layout and number of genesets in the network. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Network" target="_blank">here</a> for more information on this figure.</p>
 <p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
 
 <br>
@@ -1854,10 +1908,13 @@ Furthermore, indicate to which organism the gene identifiers belong.</p>
 <br>
 <p><b>Output</b></p>
 <p>Data and preprocessing quality can be checked in the different outputs and QC plots:</p>
-<p>1. <b>Interactive table</b> with GSEA statistics. This table can be downloaded.</p>
-<p>2. <b>Barchart</b> of the most significantly enriched genesets. You can select the number of genesets in the chart.</p>
+<p>1. <b>Interactive table</b> with GSEA statistics. This table can be downloaded. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/GSEAtable" target="_blank">here</a> for more information on this table.</p>
+<p>2. <b>Barchart</b> of the most significantly enriched genesets. You can select the number of genesets in the chart. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Barchart" target="_blank">here</a> for more information on this figure.</p>
 <p>3. <b>Network</b> of the most significantly enriched genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
-You can select the network layout and number of genesets in the network.</p> 
+You can select the network layout and number of genesets in the network. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Network" target="_blank">here</a> for more information on this figure.</p> 
 <p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p> 
 </div>
 <hr>
@@ -1895,18 +1952,24 @@ The selection of the experimental group will be used for the normalization (if <
 <p>3. <b>Select filtering threshold</b> (optional). If this option is selected, a gene is kept for the subsequent analysis if it has a count larger or equal to the selected filtering threshold in at least n samples, 
 where n is the number of samples in the smallest experiment group.</p>
 <p>4. <b>Select normalization method</b> (optional). You can perform quantile normalization to normalize the expression values across the samples.</p>
-
+<br>
+<p>NOTE: ArrayAnalysis automatically checks for potential outliers in the data. If potential outliers have been identified, you will receive a warning message. 
+Please always check the QC plots carefully to decide whether samples should be excluded from further analysis.</p>
 <br>
 <p><b>Output</b></p>
 <p>Data and preprocessing quality can be checked in the different output tables and figures:</p>
 <p>1. <b>Normalized expression matrix</b> (interactive). The table of normalized expression values is provided and can be downloaded. 
-The expression profile of a gene can be viewed by clicking on the table.</p>
-<p>2. <b>Boxplots</b>. The boxplots show the distribution of expression values for all samples.</p>
-<p>3. <b>Density plots</b> (interactive). Similar to the boxplots, the density plot shows the distribution of expression values for all samples.</p>
-<p>4. <b>Correlation plot</b> (interactive). The correlation plot shows the sample-wise correlations. You can choose between different linkage and clustering methods.</p>
-<p>5. <b>PCA plot</b> (interactive). 2D and 3D PCA plots can be viewed to assess data quality.</p>
-<p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p> 
-</div>
+The expression profile of a gene can be viewed by clicking on the table. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Geneboxplot" target="_blank">here</a> for more information on this figure.</p></p>
+<p>2. <b>Boxplots</b> (static). The boxplots show the distribution of expression values for all samples. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Sampleboxplot" target="_blank">here</a> for more information on this figure.</p>
+<p>3. <b>Density plots</b> (interactive). Similar to the boxplots, the density plot shows the distribution of expression values for all samples. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Densityplot" target="_blank">here</a> for more information on this figure.</p>
+<p>4. <b>Correlation plot</b> (interactive). The correlation plot shows the sample-wise correlations. You can choose between different linkage and clustering methods.
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Sampleheatmap" target="_blank">here</a> for more information on this figure.</p>
+<p>5. <b>PCA plot</b> (interactive). 2D and 3D PCA plots can be viewed to assess data quality.
+Click <a href = "https://arrayanalysis.org/ExplainFigure/PCA" target="_blank">here</a> for more information on this figure.</p>
+<p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p> 
 <br>
 
 <div id="rn_statanalysis" class="section level2">
@@ -1923,12 +1986,18 @@ the time required for the statistical analysis will increase significantly.</p>
 <br>
 <p><b>Output</b></p>
 <p>For each of the selected statistical comparisons, the following output are provided:</p>
-<p>1. <b>Top table</b> (interactive). A table with the relevant statistics as calculated by <i>limma</i>.</p>
-<p>2. <b>Histograms</b> (interactive) of the p-value and logFC distribution.</p>
-<p>3. <b>Volcano plot</b> (interactive): scatter plot of logFC versus -log P value.</p>
-<p>4. <b>MA plot</b> (interactive): scatter plot of mean log expression versus logFC.</p>
+<p>1. <b>Top table</b> (interactive). A table with the relevant statistics as calculated by <i>DESeq2</i>.
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Toptable" target="_blank">here</a> for more information on this table.</p>
+<p>2. <b>Histograms</b> (interactive) of the P value and logFC distribution. 
+Click for more information on the <a href = "https://arrayanalysis.org/ExplainFigure/Phistogram" target="_blank">P value histogram</a> 
+and <a href = "https://arrayanalysis.org/ExplainFigure/logFChistogram" target="_blank">logFC value histogram</a> .</p>
+<p>3. <b>Volcano plot</b> (interactive): scatter plot of logFC versus -log P value. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Volcanoplot" target="_blank">here</a> for more information on this figure.</p>
+<p>4. <b>MA plot</b> (interactive): scatter plot of mean log expression versus logFC. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/MAplot" target="_blank">here</a> for more information on this figure.</p>
 <p>5. <b>Summary</b> of the number of differentially expressed genes for selected P and logFC thresholds.</p>
 <p>6. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
+
 </div>
 <br>
 
@@ -1951,10 +2020,13 @@ Furthermore, indicate to which organism the gene identifiers belong.</p>
 <br>
 <p><b>Output</b></p>
 <p>Data and preprocessing quality can be checked in the different outputs and QC plots:</p>
-<p>1. <b>ORA table</b>. Table with the statistics of the ORA. This table can be downloaded.</p>
-<p>2. <b>Barchart</b> of the most significantly overrepresented genesets. You can select the number of genesets in the chart.</p>
+<p>1. <b>ORA table</b>. Table with the statistics of the ORA. This table can be downloaded. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/ORAtable" target="_blank">here</a> for more information on this table.</p>
+<p>2. <b>Barchart</b> of the most significantly overrepresented genesets. You can select the number of genesets in the chart. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Barchart" target="_blank">here</a> for more information on this figure.</p>
 <p>3. <b>Network</b> of the most significantly overrepresented genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
-You can select the network layout and number of genesets in the network.</p>
+You can select the network layout and number of genesets in the network. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Network" target="_blank">here</a> for more information on this figure.</p>
 <p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p>  
 
 <br>
@@ -1969,10 +2041,13 @@ Furthermore, indicate to which organism the gene identifiers belong.</p>
 <br>
 <p><b>Output</b></p>
 <p>Data and preprocessing quality can be checked in the different outputs and QC plots:</p>
-<p>1. <b>GSEA table</b> (interactive) with GSEA statistics. This table can be downloaded.</p>
-<p>2. <b>Barchart</b> (interactive) of the most significantly enriched genesets. You can select the number of genesets in the chart.</p>
+<p>1. <b>Interactive table</b> with GSEA statistics. This table can be downloaded. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/GSEAtable" target="_blank">here</a> for more information on this table.</p>
+<p>2. <b>Barchart</b> of the most significantly enriched genesets. You can select the number of genesets in the chart. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Barchart" target="_blank">here</a> for more information on this figure.</p>
 <p>3. <b>Network</b> of the most significantly enriched genesets. The edge thickness is proportional to the Jaccard Index (<i>i.e.</i>, number of shared genes/total number of gene in both genesets). 
-You can select the network layout and number of genesets in the network.</p> 
+You can select the network layout and number of genesets in the network. 
+Click <a href = "https://arrayanalysis.org/ExplainFigure/Network" target="_blank">here</a> for more information on this figure.</p> 
 <p>4. <b>Settings</b> to ensure reproducibility. The overview of the chosen settings and the session info can be downloaded.</p> 
 </div>
 <hr>
