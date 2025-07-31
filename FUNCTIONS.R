@@ -2058,8 +2058,8 @@ makePHistogram <- function(P, color = "#d3d3d3", bins = 100, static = FALSE){
   # Make plot
   p <- ggplot2::ggplot(data = plotDF, ggplot2::aes(x = Value)) +
     ggplot2::geom_histogram(bins = bins, colour = color_edge, fill = color) +
-    ggplot2::labs(title = "P value histogram") +
-    ggplot2::xlab("P value") +
+    ggplot2::labs(title = "p-value histogram") +
+    ggplot2::xlab("p-value") +
     ggplot2::ylab("Count") +
     ggplot2::theme_classic() +
     ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5))
@@ -2197,7 +2197,7 @@ makeVolcano <- function(top_table,
         name = "Upregulated"
       )%>%
       layout(xaxis = list(title = 'log<sub>2</sub>FC'), 
-             yaxis = list(title = '-log<sub>10</sub> P value'),
+             yaxis = list(title = '-log<sub>10</sub> p-value'),
              shapes = list(vline(logFC_threshold), 
                            vline(-1*logFC_threshold),
                            hline(-log10(p_threshold))),
@@ -2251,7 +2251,7 @@ makeVolcano <- function(top_table,
         name = "Upregulated"
       )%>%
       layout(xaxis = list(title = 'log<sub>2</sub>FC'), 
-             yaxis = list(title = '-log<sub>10</sub> adj. P value'),
+             yaxis = list(title = '-log<sub>10</sub> adj. p-value'),
              shapes = list(vline(logFC_threshold), 
                            vline(-1*logFC_threshold),
                            hline(-log10(p_threshold))),
@@ -2324,7 +2324,7 @@ makeVolcano_static <- function(top_table,
       ggplot2::scale_color_manual(values = setNames(c(unchanged_color, down_color, up_color),
                                            c("Unchanged", "Downregulated", "Upregulated"))) +
       ggplot2::xlab(expression(log[2]~"FC")) +
-      ggplot2::ylab(expression(-log[10]~"P value")) +
+      ggplot2::ylab(expression(-log[10]~"p-value")) +
       ggplot2::labs(color = NULL) +
       ggplot2::theme_minimal()
     
@@ -2350,7 +2350,7 @@ makeVolcano_static <- function(top_table,
       ggplot2::scale_color_manual(values = setNames(c(unchanged_color, down_color, up_color),
                                                     c("Unchanged", "Downregulated", "Upregulated"))) +
       ggplot2::xlab(expression(log[2]~"FC")) +
-      ggplot2::ylab(expression(-log[10]~"P value")) +
+      ggplot2::ylab(expression(-log[10]~"p-value")) +
       ggplot2::labs(color = NULL) +
       ggplot2::theme_minimal()
     

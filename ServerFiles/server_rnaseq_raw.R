@@ -2141,7 +2141,7 @@ observe({
                    actionButton("link_geneboxplot_rnaseq_raw", 
                                 "Explain figure",
                                 icon = shiny::icon("question-circle"),
-                                onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Geneboxplot', '_blank')"),
+                                onclick ="window.open('https://arrayanalysis.org/explain/Geneboxplot', '_blank')"),
                    br(),
                    br()
           ),
@@ -2156,7 +2156,7 @@ observe({
                    actionButton("link_boxplots_rnaseq_raw", 
                                 "Explain figure",
                                 icon = shiny::icon("question-circle"),
-                                onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Sampleboxplot', '_blank')"),
+                                onclick ="window.open('https://arrayanalysis.org/explain/Sampleboxplot', '_blank')"),
                    br(),
                    br(),
                    # customize boxplot
@@ -2181,7 +2181,7 @@ observe({
                    actionButton("link_density_rnaseq_raw", 
                                 "Explain figure",
                                 icon = shiny::icon("question-circle"),
-                                onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Densityplot', '_blank')"),
+                                onclick ="window.open('https://arrayanalysis.org/explain/Densityplot', '_blank')"),
                    br(),
                    br(),
                    # customize plot
@@ -2206,7 +2206,7 @@ observe({
                    actionButton("link_readcount_rnaseq_raw", 
                                 "Explain figure",
                                 icon = shiny::icon("question-circle"),
-                                onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Readcount', '_blank')"),
+                                onclick ="window.open('https://arrayanalysis.org/explain/Readcount', '_blank')"),
                    br(),
                    br(),
                    # customize plot
@@ -2262,7 +2262,7 @@ observe({
                    actionButton("link_heatmap_rnaseq_raw", 
                                 "Explain figure",
                                 icon = shiny::icon("question-circle"),
-                                onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Sampleheatmap', '_blank')"),
+                                onclick ="window.open('https://arrayanalysis.org/explain/Sampleheatmap', '_blank')"),
                    br(),
                    br(),
                    
@@ -2339,7 +2339,7 @@ observe({
                    actionButton("link_pca_rnaseq_raw", 
                                 "Explain figure",
                                 icon = shiny::icon("question-circle"),
-                                onclick ="window.open('https://arrayanalysis.org/ExplainFigure/PCA', '_blank')"),
+                                onclick ="window.open('https://arrayanalysis.org/explain/PCA', '_blank')"),
                    br(),
                    br(),
                    
@@ -3554,7 +3554,7 @@ observe({
                        actionButton("link_Phistogram_rnaseq_raw", 
                                     "Explain table",
                                     icon = shiny::icon("question-circle"),
-                                    onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Toptable', '_blank')"),
+                                    onclick ="window.open('https://arrayanalysis.org/explain/Toptable', '_blank')"),
                        br(),
                        br(),
                        
@@ -3581,7 +3581,7 @@ observe({
                        actionButton("link_statboxplot_rnaseq_raw", 
                                     "Explain figure",
                                     icon = shiny::icon("question-circle"),
-                                    onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Geneboxplot', '_blank')"),
+                                    onclick ="window.open('https://arrayanalysis.org/explain/Geneboxplot', '_blank')"),
                        br(),
                        br()
               ),
@@ -3615,7 +3615,7 @@ observe({
                        actionButton("link_Phistogram_rnaseq_raw", 
                                     "Explain figure",
                                     icon = shiny::icon("question-circle"),
-                                    onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Phistogram', '_blank')"),
+                                    onclick ="window.open('https://arrayanalysis.org/explain/Phistogram', '_blank')"),
                        hr(),
                        plotly::plotlyOutput("logFChistogram_rnaseq_raw")%>% 
                          shinycssloaders::withSpinner(color="#0dc5c1"),
@@ -3625,7 +3625,7 @@ observe({
                        actionButton("link_logFChistogram_rnaseq_raw", 
                                     "Explain figure",
                                     icon = shiny::icon("question-circle"),
-                                    onclick ="window.open('https://arrayanalysis.org/ExplainFigure/logFChistogram', '_blank')")
+                                    onclick ="window.open('https://arrayanalysis.org/explain/logFChistogram', '_blank')")
                        
               ),
               
@@ -3668,7 +3668,7 @@ observe({
                        actionButton("link_volcano_rnaseq_raw", 
                                     "Explain figure",
                                     icon = shiny::icon("question-circle"),
-                                    onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Volcanoplot', '_blank')"),
+                                    onclick ="window.open('https://arrayanalysis.org/explain/Volcanoplot', '_blank')"),
                        br(),
                        hr(),
                        fluidRow(
@@ -3751,7 +3751,7 @@ observe({
                        actionButton("link_MA_rnaseq_raw", 
                                     "Explain figure",
                                     icon = shiny::icon("question-circle"),
-                                    onclick ="window.open('https://arrayanalysis.org/ExplainFigure/MAplot', '_blank')"),
+                                    onclick ="window.open('https://arrayanalysis.org/explain/MAplot', '_blank')"),
                        br(),
                        hr(),
                        fluidRow(
@@ -4476,7 +4476,7 @@ observe({
                          actionButton("link_ORA_table_rnaseq_raw", 
                                       "Explain table",
                                       icon = shiny::icon("question-circle"),
-                                      onclick ="window.open('https://arrayanalysis.org/ExplainFigure/ORAtable', '_blank')"),
+                                      onclick ="window.open('https://arrayanalysis.org/explain/ORAtable', '_blank')"),
                          br(),
                          
                          # Title + description of gene table
@@ -4507,7 +4507,7 @@ observe({
                          actionButton("link_ORAplot_rnaseq_raw", 
                                       "Explain figure",
                                       icon = shiny::icon("question-circle"),
-                                      onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Barchart', '_blank')"),
+                                      onclick ="window.open('https://arrayanalysis.org/explain/Barchart', '_blank')"),
                          br(),
                          br(),
                          
@@ -4561,7 +4561,7 @@ observe({
                          actionButton("link_ORAnetwork_rnaseq_raw", 
                                       "Explain figure",
                                       icon = shiny::icon("question-circle"),
-                                      onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Network', '_blank')"),
+                                      onclick ="window.open('https://arrayanalysis.org/explain/Network', '_blank')"),
                          br(),
                          br(),
                          
@@ -5143,7 +5143,7 @@ observe({
                          actionButton("link_GSEA_table_rnaseq_raw", 
                                       "Explain table",
                                       icon = shiny::icon("question-circle"),
-                                      onclick ="window.open('https://arrayanalysis.org/ExplainFigure/GSEAtable', '_blank')"),
+                                      onclick ="window.open('https://arrayanalysis.org/explain/GSEAtable', '_blank')"),
                          br(),
                          
                          # Title + description of gene table
@@ -5174,7 +5174,7 @@ observe({
                          actionButton("link_GSEAplot_rnaseq_norm", 
                                       "Explain figure",
                                       icon = shiny::icon("question-circle"),
-                                      onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Barchart', '_blank')"),
+                                      onclick ="window.open('https://arrayanalysis.org/explain/Barchart', '_blank')"),
                          br(),
                          br(),
                          
@@ -5230,7 +5230,7 @@ observe({
                          actionButton("link_GSEAnetwork_rnaseq_raw", 
                                       "Explain figure",
                                       icon = shiny::icon("question-circle"),
-                                      onclick ="window.open('https://arrayanalysis.org/ExplainFigure/Network', '_blank')"),
+                                      onclick ="window.open('https://arrayanalysis.org/explain/Network', '_blank')"),
                          br(),
                          br(),
                          
