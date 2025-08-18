@@ -674,8 +674,9 @@ geneBoxplot <- function(experimentFactor,
   if(is.null(groupOrder)){groupOrder <- levels(experimentFactor)}
   if(is.null(legendColors)){legendColors <- colorsByFactor(experimentFactor)$legendColors}
   if(is.null(jitter)){jitter <- 0.1}
+  if(is.null(sel_row)){sel_row <- 1}
   plotExpr <- data.frame(
-    logExpr = ifelse(is.null(sel_row),NA, as.numeric(normMatrix[sel_row,])),
+    logExpr = as.numeric(normMatrix[sel_row,]),
     Grouping = factor(experimentFactor, levels = groupOrder)
   )
   geneName <- rownames(normMatrix)[sel_row]
