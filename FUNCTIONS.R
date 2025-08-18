@@ -675,7 +675,7 @@ geneBoxplot <- function(experimentFactor,
   if(is.null(legendColors)){legendColors <- colorsByFactor(experimentFactor)$legendColors}
   if(is.null(jitter)){jitter <- 0.1}
   plotExpr <- data.frame(
-    logExpr = as.numeric(normMatrix[sel_row,]),
+    logExpr = ifelse(is.null(sel_row),NA, as.numeric(normMatrix[sel_row,])),
     Grouping = factor(experimentFactor, levels = groupOrder)
   )
   geneName <- rownames(normMatrix)[sel_row]
@@ -2957,9 +2957,11 @@ ORA <- function(top_table,
     
     ORA_data@result <- arrange(output, by = `p-value`)
     
-    return(ORA_data)
+    return(list(data = ORA_data,
+                error = FALSE))
   }, error = function(cond){
-    NULL
+    list(data = NULL,
+         error = TRUE)
   })
 }
 
@@ -3195,9 +3197,11 @@ performGSEA <- function(top_table,
     GSEA_data@result <- arrange(output, by = `p-value`)
     
     # Return output
-    return(GSEA_data)
+    return(list(data = GSEA_data,
+                error = FALSE))
   }, error = function(cond){
-    NULL
+    list(data = NULL,
+         error = TRUE)
   })
 }
 

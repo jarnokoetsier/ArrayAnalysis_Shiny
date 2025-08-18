@@ -685,8 +685,9 @@ observe({
           html = TRUE)
       }
       
-      # Show microarray statistics tab
+      # Show statistics tab
       showTab("navbar", target = "panel_statistics_microarray_norm")
+      hideTab("navbar", target = "panel_ORA_microarray_norm")
       
       output <- rv$normMatrix
       return(output)
@@ -2488,8 +2489,10 @@ observe({
           text = rv$top_table_list[[2]],
           type = "info")
         
-        # Show microarray statistics tab
+        # Show microarray gene set analysis tab
         showTab("navbar", target = "panel_ORA_microarray_norm")
+        rv$ORA_data <- NULL
+        rv$GSEA_data <- NULL
         
       } else{
         
@@ -3816,7 +3819,7 @@ observe({
       
       # Perform ORA based on logFC/P value threshold(s)
       if (input$topNorThres_microarray_norm == "Threshold"){
-        rv$ORA_data <- ORA(top_table = rv$top_table[[input$comparisons_view_ORA_microarray_norm]],
+        rv$ORA_list <- ORA(top_table = rv$top_table[[input$comparisons_view_ORA_microarray_norm]],
                            geneset = input$geneset_ORA_microarray_norm,
                            geneID_col = input$geneID_ORA_microarray_norm,
                            geneID_type = input$selID_ORA_microarray_norm,
@@ -3828,6 +3831,8 @@ observe({
                            p_thres = input$p_thres_ORA_microarray_norm,
                            logFC_thres = input$logFC_thres_ORA_microarray_norm)
         
+        rv$ORA_data <- rv$ORA_list[["data"]]
+        rv$ORA_error <- rv$ORA_list[["error"]]
         
         rv$ORA_settings <- data.frame(
           Option = c("Comparison",
@@ -3850,7 +3855,7 @@ observe({
         
         # Perform ORA based on top N most significant genes
       } else{
-        rv$ORA_data <- ORA(top_table = rv$top_table[[input$comparisons_view_ORA_microarray_norm]],
+        rv$ORA_list <- ORA(top_table = rv$top_table[[input$comparisons_view_ORA_microarray_norm]],
                            geneset = input$geneset_ORA_microarray_norm,
                            geneID_col = input$geneID_ORA_microarray_norm,
                            geneID_type = input$selID_ORA_microarray_norm,
@@ -3862,6 +3867,8 @@ observe({
                            p_thres = NULL,
                            logFC_thres = NULL)
         
+        rv$ORA_data <- rv$ORA_list[["data"]]
+        rv$ORA_error <- rv$ORA_list[["error"]]
         
         rv$ORA_settings <- data.frame(
           Option = c("Comparison",
@@ -3893,16 +3900,17 @@ observe({
         shinybusy::remove_modal_spinner()
         
         # Show error message
-        if (is.null(rv$ORA_data)){
-          sendSweetAlert(
+        if (rv$ORA_error){
+          shinyWidgets::sendSweetAlert(
             session = session,
             title = "Error!",
-            text = "No significant genes!",
+            text = "Oops...something went wrong! Please check whether the correct 
+            gene IDs and statistical thresholds have been selected.",
             type = "error")
           
           # Show success message
         }else{
-          sendSweetAlert(
+          shinyWidgets::sendSweetAlert(
             session = session,
             title = "Info",
             text = "Overrepresentation analysis has been performed. You can download 
@@ -4512,12 +4520,15 @@ observe({
       }
       
       # Perform GSEA:
-      rv$GSEA_data <- performGSEA(top_table = rv$top_table[[input$comparisons_view_ORA_microarray_norm]],
+      rv$GSEA_list <- performGSEA(top_table = rv$top_table[[input$comparisons_view_ORA_microarray_norm]],
                                   geneset = input$geneset_ORA_microarray_norm,
                                   geneID_col = input$geneID_ORA_microarray_norm,
                                   geneID_type = input$selID_ORA_microarray_norm,
                                   organism = input$organism_ORA_microarray_norm,
                                   rankingVar = input$ranking_GSEA_microarray_norm)
+      
+      rv$GSEA_data <- rv$GSEA_list[["data"]]
+      rv$GSEA_error <- rv$GSEA_list[["error"]]
       
       if (input$ranking_GSEA_microarray_norm == "pvalue"){
         rankvar <- "-log p-value"
@@ -4558,16 +4569,17 @@ observe({
         shinybusy::remove_modal_spinner()
         
         # Show error message
-        if (is.null(rv$GSEA_data)){
-          sendSweetAlert(
+        if (rv$GSEA_error){
+          shinyWidgets::sendSweetAlert(
             session = session,
             title = "Error!",
-            text = "No significant genes!",
+            text = "Oops...something went wrong! Please check whether the correct 
+            gene IDs and statistical thresholds have been selected.",
             type = "error")
           
           # Show success message
         }else{
-          sendSweetAlert(
+          shinyWidgets::sendSweetAlert(
             session = session,
             title = "Info",
             text = "Gene Set Enrichment Analysis has been performed. You can download 
