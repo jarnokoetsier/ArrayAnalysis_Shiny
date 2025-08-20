@@ -829,8 +829,8 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "We need to know which gene identifiers are 
-                                       used, so we can link the genes to their correct gene sets.", 
+                              prompter::add_prompt(message = "To link genes to gene sets, 
+                              we need to know which gene identifiers are used.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -1491,8 +1491,8 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "We need to know which gene identifiers are 
-                                       used, so we can link the genes to their correct gene sets.", 
+                              prompter::add_prompt(message = "To link genes to gene sets, 
+                              we need to know which gene identifiers are used.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -1850,7 +1850,8 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "If selected, imprecise logFCs are shrunk to 0 with the apeglm method.", 
+                              prompter::add_prompt(message = "If selected, imprecise logFCs are shrunk to 0 with the apeglm method. 
+                                                   logFC shrinkage is recommended by DESeq2.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -2100,8 +2101,8 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "We need to know which gene identifiers are 
-                                       used, so we can link the genes to their correct gene sets.", 
+                              prompter::add_prompt(message = "To link genes to gene sets, 
+                              we need to know which gene identifiers are used.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -2743,8 +2744,8 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "We need to know which gene identifiers are 
-                                       used, so we can link the genes to their correct gene sets.", 
+                              prompter::add_prompt(message = "To link genes to gene sets, 
+                              we need to know which gene identifiers are used.", 
                                                    position = "right",
                                                    size = "large")
                           ))),

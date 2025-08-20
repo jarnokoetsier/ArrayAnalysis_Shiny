@@ -793,14 +793,14 @@ getBoxplots <- function(experimentFactor,
   
   if (!isTRUE(RNASeq)){
     tmain <- " "
-    tmtext2 <- "Normalized log intensity\n\n\n"
+    tmtext2 <- expression("Normalized "~log[2]~"intensity")
     description <- NULL
     samples <- sampleNames(normData)
   }
   if (isTRUE(RNASeq)){
     tmain <- NULL
     description <- NULL
-    tmtext2 <- "Normalized log counts\n\n\n"
+    tmtext2 <- expression("Normalized "~log[2]~"counts")
     samples <- colnames(normData)
   }
   
@@ -833,7 +833,7 @@ getBoxplots <- function(experimentFactor,
     axis(1,at=1:length(samples),las=2,
          labels=samples, cex.axis=cexval)
     axis(2, cex.axis=0.7)
-    mtext(tmtext2, side=2, cex=0.8)
+    mtext(tmtext2, side = 2, cex=0.8, line = 2)
     mtext(description, side=3,
           font=1, cex=0.7)
     dev.off()
@@ -870,7 +870,7 @@ getBoxplots <- function(experimentFactor,
     axis(1,at=1:length(samples),las=2,
          labels=samples, cex.axis=cexval)
     axis(2, cex.axis=0.7)
-    mtext(tmtext2, side=2, cex=0.8)
+    mtext(tmtext2, side = 2, cex=0.8, line = 2)
     mtext(description, side=3,
           font=1, cex=0.7)
     dev.off()
@@ -932,13 +932,13 @@ getBoxplots_download <- function(experimentFactor,
   
   if (!isTRUE(RNASeq)){
     tmain <- "Boxplot of normalized intensities"
-    tmtext2 <- "Normalized log intensity\n\n\n"
+    tmtext2 <- expression("Normalized "~log[2]~"intensity")
     description <- "Distributions should be comparable between arrays\n"
     samples <- sampleNames(normData)
   }
   if (isTRUE(RNASeq)){
     tmain <- "Boxplot of normalized counts"
-    tmtext2 <- "Normalized log counts\n\n\n"
+    tmtext2 <- expression("Normalized "~log[2]~"counts")
     description <- "Distributions should be comparable between samples\n"
     samples <- colnames(normData)
   }
@@ -968,7 +968,8 @@ getBoxplots_download <- function(experimentFactor,
     axis(1,at=1:length(samples),las=2,
          labels=samples, cex.axis=cexval)
     axis(2, cex.axis=0.7)
-    mtext(tmtext2, side=2, cex=0.8)
+    #mtext(tmtext2, side=2, cex=0.8)
+    mtext(tmtext2, side = 2, cex=0.8, line = 2)
     mtext(description, side=3,
           font=1, cex=0.7)
     #dev.off()
@@ -1137,7 +1138,8 @@ getDensityplots_static <- function(experimentFactor, legendColors,
 
 getReadCount <- function(experimentFactor, 
                         legendColors,
-                        gxData_fil){
+                        gxData_fil, 
+                        report = FALSE){
   
   plotColors <- colorsByFactor(experimentFactor)$plotColors
   names(legendColors) <- levels(experimentFactor)
@@ -1162,26 +1164,50 @@ getReadCount <- function(experimentFactor,
                          ExperimentFactor = experimentFactor,
                          Count = colSums(gxData_fil))
     
-    p <- ggplot2::ggplot() +
-      ggplot2::geom_bar(data = plotDF, ggplot2::aes(x = SampleID, y = Count/1000000, fill = SampleID),
-               stat = "identity", position = ggplot2::position_dodge()) +
-      ggplot2::geom_point(data = plotDF, ggplot2::aes(x = SampleID, y = -1*Count/1000000, color = ExperimentFactor),
-                          shape = 15, size = 8) +
-      ggplot2::labs(x = NULL, y = "# raw counts (millions)") +
-      ggplot2::theme_minimal() +
-      ggplot2::scale_fill_manual(values = plotColors) +
-      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1,
-                                                         size = 20),
-                     axis.text.y = element_text(size = 20),
-                     axis.title.y = element_text(size = 23),
-                     legend.title = ggplot2::element_text(size = 23),
-                     legend.text = ggplot2::element_text(size = 20)) +
-      ggplot2::coord_cartesian(ylim = c(0, max(plotDF$Count)/1000000)) +
-      ggplot2::guides(color=ggplot2::guide_legend(title="Group",
-                                         override.aes = list(
-                                           colour = legendColors)),
-                      alpha = "none",
-                      fill = "none")
+    if (report){
+      p <- ggplot2::ggplot() +
+        ggplot2::geom_bar(data = plotDF, ggplot2::aes(x = SampleID, y = Count/1000000, fill = SampleID),
+                          stat = "identity", position = ggplot2::position_dodge()) +
+        ggplot2::geom_point(data = plotDF, ggplot2::aes(x = SampleID, y = -1*Count/1000000, color = ExperimentFactor),
+                            shape = 15, size = 8) +
+        ggplot2::labs(x = NULL, y = "# raw counts (millions)") +
+        ggplot2::theme_minimal() +
+        ggplot2::scale_fill_manual(values = plotColors) +
+        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1,
+                                                           size = 10),
+                       axis.text.y = element_text(size = 10),
+                       axis.title.y = element_text(size = 11.5),
+                       legend.title = ggplot2::element_text(size = 11.5),
+                       legend.text = ggplot2::element_text(size = 10)) +
+        ggplot2::coord_cartesian(ylim = c(0, max(plotDF$Count)/1000000)) +
+        ggplot2::guides(color=ggplot2::guide_legend(title=" ",
+                                                    override.aes = list(
+                                                      colour = legendColors)),
+                        alpha = "none",
+                        fill = "none")
+    }else{
+      p <- ggplot2::ggplot() +
+        ggplot2::geom_bar(data = plotDF, ggplot2::aes(x = SampleID, y = Count/1000000, fill = SampleID),
+                          stat = "identity", position = ggplot2::position_dodge()) +
+        ggplot2::geom_point(data = plotDF, ggplot2::aes(x = SampleID, y = -1*Count/1000000, color = ExperimentFactor),
+                            shape = 15, size = 8) +
+        ggplot2::labs(x = NULL, y = "# raw counts (millions)") +
+        ggplot2::theme_minimal() +
+        ggplot2::scale_fill_manual(values = plotColors) +
+        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1,
+                                                           size = 20),
+                       axis.text.y = element_text(size = 20),
+                       axis.title.y = element_text(size = 23),
+                       legend.title = ggplot2::element_text(size = 23),
+                       legend.text = ggplot2::element_text(size = 20)) +
+        ggplot2::coord_cartesian(ylim = c(0, max(plotDF$Count)/1000000)) +
+        ggplot2::guides(color=ggplot2::guide_legend(title=" ",
+                                                    override.aes = list(
+                                                      colour = legendColors)),
+                        alpha = "none",
+                        fill = "none")
+    }
+
 
   return(p)
 }
@@ -1836,7 +1862,7 @@ getStatistics <- function(normMatrix,
                                     "p-value", "adj. p-value")
     }
     message <- "Statistical analysis has been performed. 
-    You can download the results as well as view them in interactive plots."
+    You can download the results and view them in interactive plots."
     
     # Add annotations to table if this option is selected
     if (addAnnotation == TRUE){
@@ -1878,7 +1904,7 @@ getStatistics <- function(normMatrix,
           
           message <- "Statistical analysis has been performed. 
           Gene annotation was performed with biomaRt. You can download 
-              the results as well as view them in interactive plots."
+              the results and view them in interactive plots."
           dataset <- paste0(biomart_dataset, " (", searchDatasets(mart = ensembl, pattern = "hsapiens")$version, ")")
           list(annotations, message, dataset)
         },
@@ -1943,7 +1969,7 @@ getStatistics <- function(normMatrix,
           message <- "Statistical analysis has been performed. 
           The Ensembl database was not available.
           So, the gene annotation was performed with the bioconductor annotation package. 
-          You can download the results as well as view them in interactive plots."
+          You can download the results and view them in interactive plots."
           dataset <- paste0(pkg, " (", packageVersion(pkg),")")
           list(annotations, message, dataset)
         })
@@ -3874,7 +3900,7 @@ getStatistics_RNASeq <- function(rawMatrix,
   }
   
   message <- "Statistical analysis has been performed. 
-    You can download the results as well as view them in interactive plots."
+    You can download the results and view them in interactive plots."
   
   # Add annotations to table if this option is selected
   if (addAnnotation == TRUE){
@@ -3916,7 +3942,7 @@ getStatistics_RNASeq <- function(rawMatrix,
         
         message <- "Statistical analysis has been performed. 
           Gene annotation was performed with biomaRt. You can download 
-              the results as well as view them in interactive plots."
+              the results and view them in interactive plots."
         dataset <- paste0(biomart_dataset, " (", searchDatasets(mart = ensembl, pattern = "hsapiens")$version, ")")
         list(annotations, message, dataset)
       },
@@ -3981,7 +4007,7 @@ getStatistics_RNASeq <- function(rawMatrix,
         message <- "Statistical analysis has been performed. 
           The Ensembl database was not available.
           So, the gene annotation was performed with the bioconductor annotation package. 
-          You can download the results as well as view them in interactive plots."
+          You can download the results and view them in interactive plots."
         dataset <- paste0(pkg, " (", packageVersion(pkg),")")
         list(annotations, message, dataset)
       })
@@ -4150,7 +4176,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
                                     "p-value", "adj. p-value")
     }
     message <- "Statistical analysis has been performed. 
-    You can download the results as well as view them in interactive plots."
+    You can download the results and view them in interactive plots."
     
     # Add annotations to table if this option is selected
     if (addAnnotation == TRUE){
@@ -4192,7 +4218,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
           
           message <- "Statistical analysis has been performed. 
           Gene annotation was performed with biomaRt. You can download 
-              the results as well as view them in interactive plots."
+              the results and view them in interactive plots."
           dataset <- paste0(biomart_dataset, " (", searchDatasets(mart = ensembl, pattern = "hsapiens")$version, ")")
           list(annotations, message, dataset)
         },
@@ -4257,7 +4283,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
           message <- "Statistical analysis has been performed. 
           The Ensembl database was not available.
           So, the gene annotation was performed with the bioconductor annotation package. 
-          You can download the results as well as view them in interactive plots."
+          You can download the results and view them in interactive plots."
           dataset <- paste0(pkg, " (", packageVersion(pkg),")")
           list(annotations, message, dataset)
         })

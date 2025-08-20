@@ -39,14 +39,14 @@ ArrayAnalysis and downloading the report again.</p>
 ## Results {.tabset}
 
 ### Top hits
-<h3><b>Top upregulated genesets</b></h3>
+<h3><b>Top upregulated gene sets</b></h3>
 ```{r, echo=FALSE, results = 'asis', message = FALSE, warning = FALSE}
 GSEATable <- params$GSEATable@result
 knitr::kable(head(GSEATable[GSEATable$NES > 0,], 10), row.names = FALSE)
 ```
 
 <hr>
-<h3><b>Top downregulated genesets</b></h3>
+<h3><b>Top downregulated gene sets</b></h3>
 ```{r, echo=FALSE, results = 'asis', message = FALSE, warning = FALSE}
 GSEATable <- params$GSEATable@result
 knitr::kable(head(GSEATable[GSEATable$NES < 0,], 10), row.names = FALSE)

@@ -97,7 +97,7 @@ observe({
     
     # Show modal
     shinybusy::show_modal_spinner(text = "Reading data...",
-                       color="#0dc5c1")
+                                  color="#0dc5c1")
     
     # Read expression data
     if (!is.null(input$uploadExprData_rnaseq_norm)){
@@ -823,32 +823,6 @@ observe({
     # Boxplots
     #********************************************************************#
     
-    # Boxplots of all genes together
-    output$boxplots_rnaseq_norm <- renderImage({
-      req(session$clientData$output_boxplots_rnaseq_norm_width)
-      req(session$clientData$output_boxplots_rnaseq_norm_height)
-      
-      if (length(levels(rv$experimentFactor)) > 5){
-        legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
-      } else{
-        legendColors <- c(input$boxplots_col1_rnaseq_norm,
-                          input$boxplots_col2_rnaseq_norm,
-                          input$boxplots_col3_rnaseq_norm,
-                          input$boxplots_col4_rnaseq_norm,
-                          input$boxplots_col5_rnaseq_norm)
-      }
-      if (length(legendColors) != length(levels(rv$experimentFactor))){
-        legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
-      }
-      names(legendColors) <- levels(rv$experimentFactor)
-      
-      getBoxplots(experimentFactor = rv$experimentFactor,
-                  legendColors = legendColors,
-                  normData = rv$normData,
-                  RNASeq = TRUE,
-                  width = session$clientData$output_boxplots_rnaseq_norm_width,
-                  height = session$clientData$output_boxplots_rnaseq_norm_height)
-    }, deleteFile = TRUE)
     
     # Allow users to set colors
     observe({
@@ -944,6 +918,38 @@ observe({
         })
         
       }
+      
+      observe({
+        if (length(levels(rv$experimentFactor)) > 5){
+          rv$legendColors_boxplots <- colorsByFactor(rv$experimentFactor)$legendColors
+        } else{
+          rv$legendColors_boxplots <- c(input$boxplots_col1_rnaseq_norm,
+                                        input$boxplots_col2_rnaseq_norm,
+                                        input$boxplots_col3_rnaseq_norm,
+                                        input$boxplots_col4_rnaseq_norm,
+                                        input$boxplots_col5_rnaseq_norm)
+        }
+        
+        # Boxplots of all genes together
+        output$boxplots_rnaseq_norm <- renderImage({
+          req(session$clientData$output_boxplots_rnaseq_norm_width)
+          req(session$clientData$output_boxplots_rnaseq_norm_height)
+          req(rv$legendColors_boxplots)
+          
+          legendColors <- rv$legendColors_boxplots
+          if (length(legendColors) != length(levels(rv$experimentFactor))){
+            legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+          }
+          names(legendColors) <- levels(rv$experimentFactor)
+          
+          getBoxplots(experimentFactor = rv$experimentFactor,
+                      legendColors = legendColors,
+                      normData = rv$normData,
+                      RNASeq = TRUE,
+                      width = session$clientData$output_boxplots_rnaseq_norm_width,
+                      height = session$clientData$output_boxplots_rnaseq_norm_height)
+        }, deleteFile = TRUE)
+      })
       
     })
     
@@ -1055,32 +1061,8 @@ observe({
     })
     
     #********************************************************************#
-    # Densityplots
+    # Density plots
     #********************************************************************#
-    
-    # Density plots of all genes together
-    output$densityplots_rnaseq_norm <- plotly::renderPlotly({
-      
-      if (length(levels(rv$experimentFactor)) > 5){
-        legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
-      } else{
-        legendColors <- c(input$density_col1_rnaseq_norm,
-                          input$density_col2_rnaseq_norm,
-                          input$density_col3_rnaseq_norm,
-                          input$density_col4_rnaseq_norm,
-                          input$density_col5_rnaseq_norm)
-      }
-      if (length(legendColors) != length(levels(rv$experimentFactor))){
-        legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
-      }
-      names(legendColors) <- levels(rv$experimentFactor)
-      
-      rv$density <- getDensityplots(experimentFactor = rv$experimentFactor,
-                                    legendColors = legendColors,
-                                    normMatrix = rv$normData,
-                                    RNASeq = TRUE)
-      
-    })
     
     # Allow users to set colors
     observe({
@@ -1176,6 +1158,35 @@ observe({
         })
         
       }
+      
+      observe({
+        if (length(levels(rv$experimentFactor)) > 5){
+          rv$legendColors_density <- colorsByFactor(rv$experimentFactor)$legendColors
+        } else{
+          rv$legendColors_density <- c(input$density_col1_rnaseq_norm,
+                                       input$density_col2_rnaseq_norm,
+                                       input$density_col3_rnaseq_norm,
+                                       input$density_col4_rnaseq_norm,
+                                       input$density_col5_rnaseq_norm)
+        }
+        
+        # Density plots of all genes together
+        output$densityplots_rnaseq_norm <- plotly::renderPlotly({
+          req(rv$legendColors_density)
+          legendColors <- rv$legendColors_density
+          
+          if (length(legendColors) != length(levels(rv$experimentFactor))){
+            legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+          }
+          names(legendColors) <- levels(rv$experimentFactor)
+          
+          rv$density <- getDensityplots(experimentFactor = rv$experimentFactor,
+                                        legendColors = legendColors,
+                                        normMatrix = rv$normData,
+                                        RNASeq = TRUE)
+          
+        })
+      })
       
     })
     
@@ -1287,47 +1298,19 @@ observe({
     # Heatmap
     #********************************************************************#
     
-    output$heatmap_rnaseq_norm  <- plotly::renderPlotly({
-      
-      # Make color factor
-      if(length(input$colorFactor_heatmap_rnaseq_norm) > 1){
-        colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_norm], 1, paste, collapse = "_" ))
-      } else{
-        colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_norm])
-      }
-      
-      # Set colors
-      if (length(levels(colorFactor)) > 5){
-        legendColors <- colorsByFactor(colorFactor)$legendColors
-      } else{
-        legendColors <- c(input$heatmap_col1_rnaseq_norm,
-                          input$heatmap_col2_rnaseq_norm,
-                          input$heatmap_col3_rnaseq_norm,
-                          input$heatmap_col4_rnaseq_norm,
-                          input$heatmap_col5_rnaseq_norm)
-      }
-      if (length(legendColors) != length(levels(colorFactor))){
-        legendColors <- colorsByFactor(colorFactor)$legendColors
-      }
-      names(legendColors) <- levels(colorFactor)
-      
-      # Make heatmap
-      rv$heatmap <- getHeatmap(experimentFactor = colorFactor,
-                               legendColors = legendColors,
-                               normMatrix = rv$normData,
-                               clusterOption1 = input$clusteroption1_rnaseq_norm,
-                               clusterOption2 = input$clusteroption2_rnaseq_norm,
-                               theme = input$heatmaptheme_rnaseq_norm)
-    })
-    
     # Allow users to set colors
     observe({
       req(input$colorFactor_heatmap_rnaseq_norm)
       if(length(input$colorFactor_heatmap_rnaseq_norm) > 1){
-        colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_norm], 1, paste, collapse = "_" ))
+        rv$colorFactor_heatmap <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_norm], 1, paste, collapse = "_" ))
       } else{
-        colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_norm])
+        rv$colorFactor_heatmap <- factor(rv$metaData_fil[,input$colorFactor_heatmap_rnaseq_norm])
       }
+    })
+    
+    observe({
+      req(rv$colorFactor_heatmap)
+      colorFactor <- rv$colorFactor_heatmap
       test <- length(levels(colorFactor))
       
       if (test == 2){
@@ -1458,9 +1441,49 @@ observe({
             )
           )
         })
-        
       }
+    })
+    
+    observe({
+      req(rv$colorFactor_heatmap)
       
+      # Set colors
+      if (length(levels(rv$colorFactor_heatmap)) > 5){
+        rv$legendColors_heatmap <- colorsByFactor(rv$colorFactor_heatmap)$legendColors
+      } else{
+        rv$legendColors_heatmap <- c(input$heatmap_col1_rnaseq_norm,
+                                     input$heatmap_col2_rnaseq_norm,
+                                     input$heatmap_col3_rnaseq_norm,
+                                     input$heatmap_col4_rnaseq_norm,
+                                     input$heatmap_col5_rnaseq_norm)[1:length(levels(rv$colorFactor_heatmap))]
+      }
+    })
+    
+    observe({
+      req(input$heatmaptheme_rnaseq_norm)
+      req(rv$legendColors_heatmap)
+      req(rv$colorFactor_heatmap)
+      req(input$clusteroption1_rnaseq_norm)
+      req(input$clusteroption2_rnaseq_norm)
+      
+      output$heatmap_rnaseq_norm  <- plotly::renderPlotly({
+        
+        colorFactor <- rv$colorFactor_heatmap
+        legendColors <- rv$legendColors_heatmap
+        if (length(legendColors) != length(levels(colorFactor))){
+          legendColors <- colorsByFactor(colorFactor)$legendColors
+        }
+        names(legendColors) <- levels(colorFactor)
+        
+        # Make heatmap
+        rv$heatmap <- getHeatmap(experimentFactor = colorFactor,
+                                 legendColors = legendColors,
+                                 normMatrix = rv$normData,
+                                 clusterOption1 = input$clusteroption1_rnaseq_norm,
+                                 clusterOption2 = input$clusteroption2_rnaseq_norm,
+                                 theme = input$heatmaptheme_rnaseq_norm)
+        return(rv$heatmap)
+      })
     })
     
     #***************************#
@@ -1494,7 +1517,7 @@ observe({
                                 input$heatmap_col2_rnaseq_norm,
                                 input$heatmap_col3_rnaseq_norm,
                                 input$heatmap_col4_rnaseq_norm,
-                                input$heatmap_col5_rnaseq_norm)
+                                input$heatmap_col5_rnaseq_norm)[1:length(levels(colorFactor))]
             }
             if (length(legendColors) != length(levels(colorFactor))){
               legendColors <- colorsByFactor(colorFactor)$legendColors
@@ -1581,57 +1604,26 @@ observe({
     # PCA
     #********************************************************************#
     
-    ##Perform PCA
+    # Perform PCA
     rv$PCA_data <- prcomp(t(rv$normData[apply(rv$normData, 1, var) != 0,]),
                           retx = TRUE, 
                           center = TRUE,
                           scale.= TRUE)
     
     
-    # Make PCA plot
-    output$PCA_rnaseq_norm <- plotly::renderPlotly({
-      
-      # Get factor to color by
-      if(length(input$colorFactor_PCA_rnaseq_norm) > 1){
-        colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm], 1, paste, collapse = "_" ))
-      } else{
-        colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm])
-      }
-      
-      # Set colors
-      if (length(levels(colorFactor)) > 5){
-        legendColors <- colorsByFactor(colorFactor)$legendColors
-      } else{
-        legendColors <- c(input$PCA_col1_rnaseq_norm,
-                          input$PCA_col2_rnaseq_norm,
-                          input$PCA_col3_rnaseq_norm,
-                          input$PCA_col4_rnaseq_norm,
-                          input$PCA_col5_rnaseq_norm)
-      }
-      if (length(legendColors) != length(levels(colorFactor))){
-        legendColors <- colorsByFactor(colorFactor)$legendColors
-      }
-      
-      # Make PCA score plot
-      rv$PCAplot <- plot_PCA(PC_data = rv$PCA_data, 
-                             colorFactor = colorFactor,
-                             legendColors = legendColors, 
-                             xpc = as.numeric(stringr::str_remove(input$xpca_rnaseq_norm,"PC")), 
-                             ypc = as.numeric(stringr::str_remove(input$ypca_rnaseq_norm,"PC")), 
-                             zpc = ifelse(input$xyz_rnaseq_norm,as.numeric(stringr::str_remove(input$zpca_rnaseq_norm,"PC")),3), 
-                             xyz = input$xyz_rnaseq_norm)
-      return(rv$PCAplot)
-    })
-    
-    
     # Allow users to set colors
     observe({
       req(input$colorFactor_PCA_rnaseq_norm)
       if(length(input$colorFactor_PCA_rnaseq_norm) > 1){
-        colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm], 1, paste, collapse = "_" ))
+        rv$colorFactor_PCA <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm], 1, paste, collapse = "_" ))
       } else{
-        colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm])
+        rv$colorFactor_PCA <- factor(rv$metaData_fil[,input$colorFactor_PCA_rnaseq_norm])
       }
+    })
+    
+    observe({
+      req(rv$colorFactor_PCA)
+      colorFactor <- rv$colorFactor_PCA
       test <- length(levels(colorFactor))
       
       if (test == 2){
@@ -1725,8 +1717,48 @@ observe({
         })
         
       }
+      })
       
-    })
+      observe({
+        req(rv$colorFactor_PCA)
+        
+        # Set colors
+        if (length(levels(rv$colorFactor_PCA)) > 5){
+          rv$legendColors_PCA <- colorsByFactor(rv$colorFactor_PCA)$legendColors
+        } else{
+          rv$legendColors_PCA <- c(input$PCA_col1_rnaseq_norm,
+                                   input$PCA_col2_rnaseq_norm,
+                                   input$PCA_col3_rnaseq_norm,
+                                   input$PCA_col4_rnaseq_norm,
+                                   input$PCA_col5_rnaseq_norm)[1:length(levels(rv$colorFactor_PCA))]
+        }
+      })
+      
+      observe({
+        req(rv$legendColors_PCA)
+        req(rv$colorFactor_PCA)
+        
+        # Make PCA plot
+        output$PCA_rnaseq_norm <- plotly::renderPlotly({
+          
+          colorFactor <- rv$colorFactor_PCA
+          legendColors <- rv$legendColors_PCA
+          
+          if (length(legendColors) != length(levels(colorFactor))){
+            legendColors <- colorsByFactor(colorFactor)$legendColors
+          }
+          
+          # Make PCA score plot
+          rv$PCAplot <- plot_PCA(PC_data = rv$PCA_data, 
+                                 colorFactor = colorFactor,
+                                 legendColors = legendColors, 
+                                 xpc = as.numeric(stringr::str_remove(input$xpca_rnaseq_norm,"PC")), 
+                                 ypc = as.numeric(stringr::str_remove(input$ypca_rnaseq_norm,"PC")), 
+                                 zpc = ifelse(input$xyz_rnaseq_norm,as.numeric(stringr::str_remove(input$zpca_rnaseq_norm,"PC")),3), 
+                                 xyz = input$xyz_rnaseq_norm)
+          return(rv$PCAplot)
+        })
+      })
     
     #***************************#
     # Modal to download figure
@@ -1759,7 +1791,7 @@ observe({
                                 input$PCA_col2_rnaseq_norm,
                                 input$PCA_col3_rnaseq_norm,
                                 input$PCA_col4_rnaseq_norm,
-                                input$PCA_col5_rnaseq_norm)
+                                input$PCA_col5_rnaseq_norm)[1:length(levels(colorFactor))]
             }
             if (length(legendColors) != length(levels(colorFactor))){
               legendColors <- colorsByFactor(colorFactor)$legendColors
@@ -3370,8 +3402,8 @@ observe({
                        icon = icon("fas fa-mouse-pointer"),
                        br(),
                        h3(strong("Top table")),
-                       h5("The top table includes the output of the statistical analysis. 
-                                  Click on the table to explore the data!"),
+                       h5("The top table includes the output of the selected statistical comparison. 
+                                Click on the table to explore the data!"),
                        hr(),
                        dataTableOutput(outputId = "top_table_rnaseq_norm") %>% 
                          withSpinner(color="#0dc5c1"),
@@ -4242,7 +4274,7 @@ observe({
             filename = "ORAreport.html",
             content = function(file) {
               shinybusy::show_modal_spinner(text = "Making ORA report...",
-                                           color="#0dc5c1")
+                                            color="#0dc5c1")
               # Copy the report file to a temporary directory before processing it, in
               # case we don't have write permissions to the current working dir (which
               # can happen when deployed).
@@ -4451,6 +4483,7 @@ observe({
                 #--------------------------------------------------------------#
                 tabPanel("Settings overview",
                          icon = icon("fas fa-file"),
+                         br(),
                          h3(strong("ORA settings")),
                          h5("To enhance reproducibility, download the overview of chosen ORA settings."),
                          hr(),
@@ -5123,6 +5156,7 @@ observe({
                 #--------------------------------------------------------------#
                 tabPanel("Settings overview",
                          icon = icon("fas fa-file"),
+                         br(),
                          h3(strong("GSEA settings")),
                          h5("To enhance reproducibility, download the overview of chosen GSEA settings."),
                          hr(),

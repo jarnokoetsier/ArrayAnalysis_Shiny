@@ -889,32 +889,6 @@ observe({
     # Output 2: Boxplots
     #********************************************************************#
     
-    # Boxplots of all genes together
-    output$boxplots_microarray_raw <- renderImage({
-      req(session$clientData$output_boxplots_microarray_raw_width)
-      req(session$clientData$output_boxplots_microarray_raw_height)
-      
-      if (length(levels(rv$experimentFactor)) > 5){
-        legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
-      } else{
-        legendColors <- c(input$boxplots_col1_microarray_raw,
-                          input$boxplots_col2_microarray_raw,
-                          input$boxplots_col3_microarray_raw,
-                          input$boxplots_col4_microarray_raw,
-                          input$boxplots_col5_microarray_raw)
-      }
-      if (length(legendColors) != length(levels(rv$experimentFactor))){
-        legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
-      }
-      names(legendColors) <- levels(rv$experimentFactor)
-      
-      getBoxplots(experimentFactor = rv$experimentFactor,
-                  legendColors = legendColors,
-                  normData = rv$normData,
-                  RNASeq = FALSE,
-                  width = session$clientData$output_boxplots_microarray_raw_width,
-                  height = session$clientData$output_boxplots_microarray_raw_height)
-    }, deleteFile = TRUE)
     
     # Allow users to set colors
     observe({
@@ -1008,6 +982,38 @@ observe({
         })
         
       }
+      
+      observe({
+        if (length(levels(rv$experimentFactor)) > 5){
+          rv$legendColors_boxplots <- colorsByFactor(rv$experimentFactor)$legendColors
+        } else{
+          rv$legendColors_boxplots <- c(input$boxplots_col1_microarray_raw,
+                                        input$boxplots_col2_microarray_raw,
+                                        input$boxplots_col3_microarray_raw,
+                                        input$boxplots_col4_microarray_raw,
+                                        input$boxplots_col5_microarray_raw)
+        }
+        
+        # Boxplots of all genes together
+        output$boxplots_microarray_raw <- renderImage({
+          req(session$clientData$output_boxplots_microarray_raw_width)
+          req(session$clientData$output_boxplots_microarray_raw_height)
+          req(rv$legendColors_boxplots)
+          
+          legendColors <- rv$legendColors_boxplots
+          if (length(legendColors) != length(levels(rv$experimentFactor))){
+            legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+          }
+          names(legendColors) <- levels(rv$experimentFactor)
+          
+          getBoxplots(experimentFactor = rv$experimentFactor,
+                      legendColors = legendColors,
+                      normData = rv$normData,
+                      RNASeq = FALSE,
+                      width = session$clientData$output_boxplots_microarray_raw_width,
+                      height = session$clientData$output_boxplots_microarray_raw_height)
+        }, deleteFile = TRUE)
+      })
       
     })
     
@@ -1119,32 +1125,8 @@ observe({
     })
     
     #********************************************************************#
-    # Output 3: Densityplots
+    # Output 3: Density plots
     #********************************************************************#
-    
-    # Density plots of all genes together
-    output$densityplots_microarray_raw <- plotly::renderPlotly({
-      
-      if (length(levels(rv$experimentFactor)) > 5){
-        legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
-      } else{
-        legendColors <- c(input$density_col1_microarray_raw,
-                          input$density_col2_microarray_raw,
-                          input$density_col3_microarray_raw,
-                          input$density_col4_microarray_raw,
-                          input$density_col5_microarray_raw)
-      }
-      if (length(legendColors) != length(levels(rv$experimentFactor))){
-        legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
-      }
-      names(legendColors) <- levels(rv$experimentFactor)
-      
-      rv$density <- getDensityplots(experimentFactor = rv$experimentFactor,
-                                    legendColors = legendColors,
-                                    normMatrix = rv$normMatrix,
-                                    RNASeq = FALSE)
-      
-    })
     
     # Allow users to set colors
     observe({
@@ -1238,6 +1220,36 @@ observe({
         })
         
       }
+      
+      observe({
+        
+        if (length(levels(rv$experimentFactor)) > 5){
+          rv$legendColors_density <- colorsByFactor(rv$experimentFactor)$legendColors
+        } else{
+          rv$legendColors_density <- c(input$density_col1_microarray_raw,
+                                       input$density_col2_microarray_raw,
+                                       input$density_col3_microarray_raw,
+                                       input$density_col4_microarray_raw,
+                                       input$density_col5_microarray_raw)
+        }
+        
+        # Density plots of all genes together
+        output$densityplots_microarray_raw <- plotly::renderPlotly({
+          req(rv$legendColors_density)
+          legendColors <- rv$legendColors_density
+          
+          if (length(legendColors) != length(levels(rv$experimentFactor))){
+            legendColors <- colorsByFactor(rv$experimentFactor)$legendColors
+          }
+          names(legendColors) <- levels(rv$experimentFactor)
+          
+          rv$density <- getDensityplots(experimentFactor = rv$experimentFactor,
+                                        legendColors = legendColors,
+                                        normMatrix = rv$normMatrix,
+                                        RNASeq = FALSE)
+          
+        })
+      })
       
     })
     
@@ -1349,49 +1361,19 @@ observe({
     # Output 4: Sample-sample correlation heatmap
     #********************************************************************#
     
-    # Heatmap of sample-sample correlations
-    output$heatmap_microarray_raw  <- plotly::renderPlotly({
-      
-      # Make color factor
-      if(length(input$colorFactor_heatmap_microarray_raw) > 1){
-        colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_microarray_raw], 1, paste, collapse = "_" ))
-      } else{
-        colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_microarray_raw])
-      }
-      
-      # Set colors
-      if (length(levels(colorFactor)) > 5){
-        legendColors <- colorsByFactor(colorFactor)$legendColors
-      } else{
-        legendColors <- c(input$heatmap_col1_microarray_raw,
-                          input$heatmap_col2_microarray_raw,
-                          input$heatmap_col3_microarray_raw,
-                          input$heatmap_col4_microarray_raw,
-                          input$heatmap_col5_microarray_raw)
-      }
-      if (length(legendColors) != length(levels(colorFactor))){
-        legendColors <- colorsByFactor(colorFactor)$legendColors
-      }
-      names(legendColors) <- levels(colorFactor)
-      
-      # Make heatmap
-      rv$heatmap <- getHeatmap(experimentFactor = colorFactor,
-                               legendColors = legendColors,
-                               normMatrix = rv$normMatrix,
-                               clusterOption1 = input$clusteroption1_microarray_raw,
-                               clusterOption2 = input$clusteroption2_microarray_raw,
-                               theme = input$heatmaptheme_microarray_raw)
-      return(rv$heatmap)
-    })
-    
     # Allow users to set colors
     observe({
       req(input$colorFactor_heatmap_microarray_raw)
       if(length(input$colorFactor_heatmap_microarray_raw) > 1){
-        colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_microarray_raw], 1, paste, collapse = "_" ))
+        rv$colorFactor_heatmap <- factor(apply(rv$metaData_fil[,input$colorFactor_heatmap_microarray_raw], 1, paste, collapse = "_" ))
       } else{
-        colorFactor <- factor(rv$metaData_fil[,input$colorFactor_heatmap_microarray_raw])
+        rv$colorFactor_heatmap<- factor(rv$metaData_fil[,input$colorFactor_heatmap_microarray_raw])
       }
+    })
+    
+    observe({
+      req(rv$colorFactor_heatmap)
+      colorFactor <- rv$colorFactor_heatmap
       test <- length(levels(colorFactor))
       
       if (test == 2){
@@ -1522,8 +1504,51 @@ observe({
         })
         
       }
-      
     })
+      
+      observe({
+        req(rv$colorFactor_heatmap)
+        
+        # Set colors
+        if (length(levels(rv$colorFactor_heatmap)) > 5){
+          rv$legendColors_heatmap <- colorsByFactor(rv$colorFactor_heatmap)$legendColors
+        } else{
+          rv$legendColors_heatmap <- c(input$heatmap_col1_microarray_raw,
+                                       input$heatmap_col2_microarray_raw,
+                                       input$heatmap_col3_microarray_raw,
+                                       input$heatmap_col4_microarray_raw,
+                                       input$heatmap_col5_microarray_raw)[1:length(levels(rv$colorFactor_heatmap))]
+        }
+      })
+      
+      observe({ 
+        req(input$heatmaptheme_microarray_raw)
+        req(rv$legendColors_heatmap)
+        req(rv$colorFactor_heatmap)
+        req(input$clusteroption1_microarray_raw)
+        req(input$clusteroption2_microarray_raw)
+        
+        # Heatmap of sample-sample correlations
+        output$heatmap_microarray_raw  <- plotly::renderPlotly({
+          
+          colorFactor <- rv$colorFactor_heatmap
+          legendColors <- rv$legendColors_heatmap
+          
+          if (length(legendColors) != length(levels(colorFactor))){
+            legendColors <- colorsByFactor(colorFactor)$legendColors
+          }
+          names(legendColors) <- levels(colorFactor)
+          
+          # Make heatmap
+          rv$heatmap <- getHeatmap(experimentFactor = colorFactor,
+                                   legendColors = legendColors,
+                                   normMatrix = rv$normMatrix,
+                                   clusterOption1 = input$clusteroption1_microarray_raw,
+                                   clusterOption2 = input$clusteroption2_microarray_raw,
+                                   theme = input$heatmaptheme_microarray_raw)
+          return(rv$heatmap)
+        })
+      })
     
     #***************************#
     # Modal to download figure
@@ -1556,7 +1581,7 @@ observe({
                                 input$heatmap_col2_microarray_raw,
                                 input$heatmap_col3_microarray_raw,
                                 input$heatmap_col4_microarray_raw,
-                                input$heatmap_col5_microarray_raw)
+                                input$heatmap_col5_microarray_raw)[1:length(levels(colorFactor))]
             }
             if (length(legendColors) != length(levels(colorFactor))){
               legendColors <- colorsByFactor(colorFactor)$legendColors
@@ -1649,51 +1674,19 @@ observe({
                           center = TRUE,
                           scale.= TRUE)
     
-    
-    # Make PCA plot
-    output$PCA_microarray_raw <- plotly::renderPlotly({
-      
-      # Get factor to color by
-      if(length(input$colorFactor_PCA_microarray_raw) > 1){
-        colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_microarray_raw], 1, paste, collapse = "_" ))
-      } else{
-        colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_microarray_raw])
-      }
-      
-      # Set colors
-      if (length(levels(colorFactor)) > 5){
-        legendColors <- colorsByFactor(colorFactor)$legendColors
-      } else{
-        legendColors <- c(input$PCA_col1_microarray_raw,
-                          input$PCA_col2_microarray_raw,
-                          input$PCA_col3_microarray_raw,
-                          input$PCA_col4_microarray_raw,
-                          input$PCA_col5_microarray_raw)
-      }
-      if (length(legendColors) != length(levels(colorFactor))){
-        legendColors <- colorsByFactor(colorFactor)$legendColors
-      }
-      
-      # Make PCA score plot
-      rv$PCAplot <- plot_PCA(PC_data = rv$PCA_data, 
-                             colorFactor = colorFactor,
-                             legendColors = legendColors, 
-                             xpc = as.numeric(stringr::str_remove(input$xpca_microarray_raw,"PC")), 
-                             ypc = as.numeric(stringr::str_remove(input$ypca_microarray_raw,"PC")), 
-                             zpc = ifelse(input$xyz_microarray_raw,as.numeric(stringr::str_remove(input$zpca_microarray_raw,"PC")),3), 
-                             xyz = input$xyz_microarray_raw)
-      return(rv$PCAplot)
-    })
-    
-    
     # Allow users to set colors
     observe({
       req(input$colorFactor_PCA_microarray_raw)
       if(length(input$colorFactor_PCA_microarray_raw) > 1){
-        colorFactor <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_microarray_raw], 1, paste, collapse = "_" ))
+        rv$colorFactor_PCA <- factor(apply(rv$metaData_fil[,input$colorFactor_PCA_microarray_raw], 1, paste, collapse = "_" ))
       } else{
-        colorFactor <- factor(rv$metaData_fil[,input$colorFactor_PCA_microarray_raw])
+        rv$colorFactor_PCA <- factor(rv$metaData_fil[,input$colorFactor_PCA_microarray_raw])
       }
+      })
+    
+    observe({
+      req(rv$colorFactor_PCA)
+      colorFactor <- rv$colorFactor_PCA
       test <- length(levels(colorFactor))
       
       if (test == 2){
@@ -1785,8 +1778,48 @@ observe({
         })
         
       }
-      
     })
+      
+      observe({
+        req(rv$colorFactor_PCA)
+        
+        # Set colors
+        if (length(levels(rv$colorFactor_PCA)) > 5){
+          rv$legendColors_PCA <- colorsByFactor(rv$colorFactor_PCA)$legendColors
+        } else{
+          rv$legendColors_PCA <- c(input$PCA_col1_microarray_raw,
+                                   input$PCA_col2_microarray_raw,
+                                   input$PCA_col3_microarray_raw,
+                                   input$PCA_col4_microarray_raw,
+                                   input$PCA_col5_microarray_raw)[1:length(levels(rv$colorFactor_PCA))]
+        }
+      })
+        
+      observe({
+        req(rv$legendColors_PCA)
+        req(rv$colorFactor_PCA)
+        
+        # Make PCA plot
+        output$PCA_microarray_raw <- plotly::renderPlotly({
+          
+          colorFactor <- rv$colorFactor_PCA
+          legendColors <- rv$legendColors_PCA
+          
+          if (length(legendColors) != length(levels(colorFactor))){
+            legendColors <- colorsByFactor(colorFactor)$legendColors
+          }
+          
+          # Make PCA score plot
+          rv$PCAplot <- plot_PCA(PC_data = rv$PCA_data, 
+                                 colorFactor = colorFactor,
+                                 legendColors = legendColors, 
+                                 xpc = as.numeric(stringr::str_remove(input$xpca_microarray_raw,"PC")), 
+                                 ypc = as.numeric(stringr::str_remove(input$ypca_microarray_raw,"PC")), 
+                                 zpc = ifelse(input$xyz_microarray_raw,as.numeric(stringr::str_remove(input$zpca_microarray_raw,"PC")),3), 
+                                 xyz = input$xyz_microarray_raw)
+          return(rv$PCAplot)
+        })
+      })
     
     #***************************#
     # Modal to download figure
@@ -1819,7 +1852,7 @@ observe({
                                 input$PCA_col2_microarray_raw,
                                 input$PCA_col3_microarray_raw,
                                 input$PCA_col4_microarray_raw,
-                                input$PCA_col5_microarray_raw)
+                                input$PCA_col5_microarray_raw)[1:length(levels(colorFactor))]
             }
             if (length(legendColors) != length(levels(colorFactor))){
               legendColors <- colorsByFactor(colorFactor)$legendColors
@@ -3475,8 +3508,8 @@ observe({
                        
                        # Title + description
                        h3(strong("Top Table")),
-                       h5("The top table includes the output of the statistical analysis. 
-                                  Click on the table to explore the data!"),
+                       h5("The top table includes the output of the selected statistical comparison. 
+                          Click on the table to explore the data!"),
                        hr(),
                        
                        # Top table
@@ -4353,7 +4386,7 @@ observe({
             filename = "ORAreport.html",
             content = function(file) {
               shinybusy::show_modal_spinner(text = "Making ORA report...",
-                                           color="#0dc5c1")
+                                            color="#0dc5c1")
               # Copy the report file to a temporary directory before processing it, in
               # case we don't have write permissions to the current working dir (which
               # can happen when deployed).
@@ -4562,6 +4595,7 @@ observe({
                 #--------------------------------------------------------------#
                 tabPanel("Settings overview",
                          icon = icon("fas fa-file"),
+                         br(),
                          h3(strong("ORA settings")),
                          h5("To enhance reproducibility, download the overview of chosen ORA settings."),
                          hr(),
@@ -5234,6 +5268,7 @@ observe({
                 #--------------------------------------------------------------#
                 tabPanel("Settings overview",
                          icon = icon("fas fa-file"),
+                         br(),
                          h3(strong("GSEA settings")),
                          h5("To enhance reproducibility, download the overview of chosen GSEA settings."),
                          hr(),

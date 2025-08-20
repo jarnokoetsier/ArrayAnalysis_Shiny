@@ -73,7 +73,8 @@ getDensityplots(experimentFactor = params$experimentFactor,
 ```{r, echo=FALSE, out.width="100%", out.height = "100%", message = FALSE, warning = FALSE}
 getReadCount(experimentFactor = params$experimentFactor,
              legendColors = params$legendColors,
-             gxData_fil = params$gxData_fil)
+             gxData_fil = params$gxData_fil,
+             report = TRUE)
 ```
 
 

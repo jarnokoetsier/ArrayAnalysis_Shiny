@@ -39,7 +39,7 @@ ArrayAnalysis and downloading the report again.</p>
 ## Results {.tabset}
 
 ### Top hits
-<h3><b>Top overrepresented genesets</b></h3>
+<h3><b>Top overrepresented gene sets</b></h3>
 ```{r, echo=FALSE, results = 'asis', message = FALSE, warning = FALSE}
 ORATable <- params$ORATable@result
 knitr::kable(head(ORATable, 15), row.names = FALSE)
