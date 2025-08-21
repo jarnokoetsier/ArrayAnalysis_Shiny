@@ -2953,7 +2953,7 @@ ORA <- function(top_table,
         ORA_data <- clusterProfiler::enricher(
           gene = geneList,
           pvalueCutoff = Inf,
-          pAdjustMethod = "fdr",
+          pAdjustMethod = "BH",
           universe = universe,
           minGSSize = 10,
           maxGSSize = 500,
@@ -3173,6 +3173,11 @@ performGSEA <- function(top_table,
       # KEGG
       if (geneset == "KEGG"){
         
+        gmt_KEGG <- AnnotationDbi::select(BiocGenerics::get(pkg), 
+                                          columns = c(geneID_type, "PATH"), 
+                                          keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
+        gmt_KEGG <- gmt_KEGG[!is.na(gmt_KEGG$PATH),]
+        
         # Get correct organism name
         KEGG_org <- switch(organism,
                            "Homo sapiens" = "hsa",
@@ -3190,9 +3195,10 @@ performGSEA <- function(top_table,
         path2name <- read.table(url(paste0("https://rest.kegg.jp/list/pathway/", KEGG_org)), sep = "\t")
         colnames(path2name) <- c("path", "name")
         
+        
         # Perform GSEA
         set.seed(123)
-        GSEA_data <- GSEA(
+        GSEA_data <- clusterProfiler::GSEA(
           geneList = gsea_input,
           minGSSize = 10,
           maxGSSize = 500,

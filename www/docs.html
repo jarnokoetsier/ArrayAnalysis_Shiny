@@ -1600,14 +1600,14 @@ you can use this option to add gene symbols or Ensembl gene IDs to the statistic
 <p>For each of the selected statistical comparisons, the following output are provided:</p>
 <p><b>1. Top table.</b> A table with the statistics from the differential expression analysis.
 Click <a href = "https://arrayanalysis.org/explain/Toptable" target="_blank">here</a> for more information on this table.</p>
-<p><b>2. p-value and logFC histograms.</b> These plots show the distribution of p-values and logFCs.
+<p><b>2. p-value and log<sub>2</sub>FC histograms.</b> These plots show the distribution of p-values and log<sub>2</sub>FCs.
 Click for more information on the <a href = "https://arrayanalysis.org/explain/Phistogram" target="_blank">p-value histogram</a> 
-and <a href = "https://arrayanalysis.org/explain/logFChistogram" target="_blank">logFC histogram</a> .</p>
-<p><b>3. Volcano plot.</b> Scatter plot of logFC versus -log p-value. 
+and <a href = "https://arrayanalysis.org/explain/logFChistogram" target="_blank">log<sub>2</sub>FC histogram</a> .</p>
+<p><b>3. Volcano plot.</b> Scatter plot of log<sub>2</sub>FC versus -log<sub>10</sub> p-value. 
 Click <a href = "https://arrayanalysis.org/explain/Volcanoplot" target="_blank">here</a> for more information on this figure.</p>
-<p><b>4. MA plot.</b> Scatter plot of mean log expression versus logFC. 
+<p><b>4. MA plot.</b> Scatter plot of mean log<sub>2</sub> expression versus log<sub>2</sub>FC. 
 Click <a href = "https://arrayanalysis.org/explain/MAplot" target="_blank">here</a> for more information on this figure.</p>
-<p><b>5. Summary.</b> Get the number of differentially expressed genes for selected p-value and logFC thresholds.</p>
+<p><b>5. Summary.</b> Get the number of differentially expressed genes for selected p-value and log<sub>2</sub>FC thresholds.</p>
 <p><b>6. Settings.</b> Download the overview of statistical analysis settings and the session info to ensure reproducibility.</p>  
 </div>
 <br>
@@ -1635,7 +1635,7 @@ Gene Ontology-Biological Process (GO-BP), -Cellular Component (GO-CC), and -Mole
 
 <p><b>3. Input genes 🧬</b> Specify whether ORA should be performed on upregulated, downregulated, or both sets of genes. You can define input genes by:
 <ul>
-<li>Applying a p-value and logFC threshold, or</li>
+<li>Applying a p-value and log<sub>2</sub>FC threshold, or</li>
 <li>Selecting the top N most significantly up/downregulated genes.</li>
 </ul>
 <p>👉 The background gene list includes all genes that passed QC.</p>
@@ -1667,7 +1667,7 @@ Click <a href = "https://arrayanalysis.org/explain/Network" target="_blank">here
 <p><b>2. Geneset collection 📋</b> Select one of the following geneset collections: 
 Gene Ontology-Biological Process (GO-BP), -Cellular Component (GO-CC), and -Molecular Function (GO-MF), KEGG, and WikiPathways geneset collections.</p>
 
-<p><b>3. Ranking variable 🔢</b> Specify which variable (logFC, -log P value, or signed -log P value) will be used to rank genes for the GSEA.</p>
+<p><b>3. Ranking variable 🔢</b> Specify which variable (log<sub>2</sub>FC, -log<sub>10</sub> P value, or signed -log<sub>10</sub> P value) will be used to rank genes for the GSEA.</p>
 
 <p><b>4. Gene identifier 🔖</b> Select which column in the statistics table contains the gene identifiers, 
 and specify the identifier type (<i>e.g.</i>, Entrez Gene, Ensembl Gene, or Gene Symbol) and organism.</p>
@@ -1778,14 +1778,14 @@ you can use this option to add gene symbols or Ensembl gene IDs to the statistic
 <p>For each of the selected statistical comparisons, the following output are provided:</p>
 <p><b>1. Top table.</b> A table with the statistics from the differential expression analysis.
 Click <a href = "https://arrayanalysis.org/explain/Toptable" target="_blank">here</a> for more information on this table.</p>
-<p><b>2. p-value and logFC histograms.</b> These plots show the distribution of p-values and logFCs.
+<p><b>2. p-value and log<sub>2</sub>FC histograms.</b> These plots show the distribution of p-values and log<sub>2</sub>FCs.
 Click for more information on the <a href = "https://arrayanalysis.org/explain/Phistogram" target="_blank">p-value histogram</a> 
-and <a href = "https://arrayanalysis.org/explain/logFChistogram" target="_blank">logFC histogram</a> .</p>
-<p><b>3. Volcano plot.</b> Scatter plot of logFC versus -log p-value. 
+and <a href = "https://arrayanalysis.org/explain/logFChistogram" target="_blank">log<sub>2</sub>FC histogram</a> .</p>
+<p><b>3. Volcano plot.</b> Scatter plot of log<sub>2</sub>FC versus -log<sub>10</sub> p-value. 
 Click <a href = "https://arrayanalysis.org/explain/Volcanoplot" target="_blank">here</a> for more information on this figure.</p>
-<p><b>4. MA plot.</b> Scatter plot of mean log expression versus logFC. 
+<p><b>4. MA plot.</b> Scatter plot of mean log<sub>2</sub> expression versus log<sub>2</sub>FC. 
 Click <a href = "https://arrayanalysis.org/explain/MAplot" target="_blank">here</a> for more information on this figure.</p>
-<p><b>5. Summary.</b> Get the number of differentially expressed genes for selected p-value and logFC thresholds.</p>
+<p><b>5. Summary.</b> Get the number of differentially expressed genes for selected p-value and log<sub>2</sub>FC thresholds.</p>
 <p><b>6. Settings.</b> Download the overview of statistical analysis settings and the session info to ensure reproducibility.</p>  
 
 </div>
@@ -1814,7 +1814,7 @@ Gene Ontology-Biological Process (GO-BP), -Cellular Component (GO-CC), and -Mole
 
 <p><b>3. Input genes 🧬</b> Specify whether ORA should be performed on upregulated, downregulated, or both sets of genes. You can define input genes by:
 <ul>
-<li>Applying a p-value and logFC threshold, or</li>
+<li>Applying a p-value and log<sub>2</sub>FC threshold, or</li>
 <li>Selecting the top N most significantly up/downregulated genes.</li>
 </ul>
 <p>👉 The background gene list includes all genes that passed QC.</p>
@@ -1846,7 +1846,7 @@ Click <a href = "https://arrayanalysis.org/explain/Network" target="_blank">here
 <p><b>2. Geneset collection 📋</b> Select one of the following geneset collections: 
 Gene Ontology-Biological Process (GO-BP), -Cellular Component (GO-CC), and -Molecular Function (GO-MF), KEGG, and WikiPathways geneset collections.</p>
 
-<p><b>3. Ranking variable 🔢</b> Specify which variable (logFC, -log P value, or signed -log P value) will be used to rank genes for the GSEA.</p>
+<p><b>3. Ranking variable 🔢</b> Specify which variable (log<sub>2</sub>FC, -log<sub>10</sub> P value, or signed -log<sub>10</sub> P value) will be used to rank genes for the GSEA.</p>
 
 <p><b>4. Gene identifier 🔖</b> Select which column in the statistics table contains the gene identifiers, 
 and specify the identifier type (<i>e.g.</i>, Entrez Gene, Ensembl Gene, or Gene Symbol) and organism.</p>
@@ -1956,8 +1956,8 @@ To run the analysis, you can provide three inputs:</p>
 <p><b>1. Statistical comparison(s) 📊</b> Select one or more statistical comparisons of interest. The direction of the statistical comparison is usually defined 
 as <code>Case - Control</code>.</p>
 <p><b>2. Covariates ⚙️</b> Adjust for continuous (<i>e.g.</i>, age) and categorical (<i>e.g.</i>, sex, tissue) covariates.</p>
-<p><b>3. logFC shrinkage 📉</b> Shrink imprecise logFCs towards 0 with the <a href = "https://doi.org/10.1093/bioinformatics/bty895" target="_blank">apeglm</a> method. 
-This option is recommended to get more accurate logFCs estimates.</p>
+<p><b>3. log<sub>2</sub>FC shrinkage 📉</b> Shrink imprecise log<sub>2</sub>FCs towards 0 with the <a href = "https://doi.org/10.1093/bioinformatics/bty895" target="_blank">apeglm</a> method. 
+This option is recommended to get more accurate log<sub>2</sub>FCs estimates.</p>
 <p><b>4. Gene annotation 🔖</b> Add gene annotations from the Ensembl database using the 
 <a href = "https://bioconductor.org/packages/release/bioc/html/biomaRt.html" target = "_blank">biomaRt package</a>. For example, if your data uses ENTREZ gene IDs, 
 you can use this option to add gene symbols or Ensembl gene IDs to the statistics output. Please note that enabling this option increases the runtime of the analysis</p>
@@ -1966,14 +1966,14 @@ you can use this option to add gene symbols or Ensembl gene IDs to the statistic
 <p>For each of the selected statistical comparisons, the following output are provided:</p>
 <p><b>1. Top table.</b> A table with the statistics from the differential expression analysis.
 Click <a href = "https://arrayanalysis.org/explain/Toptable" target="_blank">here</a> for more information on this table.</p>
-<p><b>2. p-value and logFC histograms.</b> These plots show the distribution of p-values and logFCs.
+<p><b>2. p-value and log<sub>2</sub>FC histograms.</b> These plots show the distribution of p-values and log<sub>2</sub>FCs.
 Click for more information on the <a href = "https://arrayanalysis.org/explain/Phistogram" target="_blank">p-value histogram</a> 
-and <a href = "https://arrayanalysis.org/explain/logFChistogram" target="_blank">logFC histogram</a> .</p>
-<p><b>3. Volcano plot.</b> Scatter plot of logFC versus -log p-value. 
+and <a href = "https://arrayanalysis.org/explain/logFChistogram" target="_blank">log<sub>2</sub>FC histogram</a> .</p>
+<p><b>3. Volcano plot.</b> Scatter plot of log<sub>2</sub>FC versus -log<sub>10</sub> p-value. 
 Click <a href = "https://arrayanalysis.org/explain/Volcanoplot" target="_blank">here</a> for more information on this figure.</p>
-<p><b>4. MA plot.</b> Scatter plot of mean log expression versus logFC. 
+<p><b>4. MA plot.</b> Scatter plot of mean log<sub>2</sub> expression versus log<sub>2</sub>FC. 
 Click <a href = "https://arrayanalysis.org/explain/MAplot" target="_blank">here</a> for more information on this figure.</p>
-<p><b>5. Summary.</b> Get the number of differentially expressed genes for selected p-value and logFC thresholds.</p>
+<p><b>5. Summary.</b> Get the number of differentially expressed genes for selected p-value and log<sub>2</sub>FC thresholds.</p>
 <p><b>6. Settings.</b> Download the overview of statistical analysis settings and the session info to ensure reproducibility.</p> 
 
 </div>
@@ -2002,7 +2002,7 @@ Gene Ontology-Biological Process (GO-BP), -Cellular Component (GO-CC), and -Mole
 
 <p><b>3. Input genes 🧬</b> Specify whether ORA should be performed on upregulated, downregulated, or both sets of genes. You can define input genes by:
 <ul>
-<li>Applying a p-value and logFC threshold, or</li>
+<li>Applying a p-value and log<sub>2</sub>FC threshold, or</li>
 <li>Selecting the top N most significantly up/downregulated genes.</li>
 </ul>
 <p>👉 The background gene list includes all genes that passed QC.</p>
@@ -2034,7 +2034,7 @@ Click <a href = "https://arrayanalysis.org/explain/Network" target="_blank">here
 <p><b>2. Geneset collection 📋</b> Select one of the following geneset collections: 
 Gene Ontology-Biological Process (GO-BP), -Cellular Component (GO-CC), and -Molecular Function (GO-MF), KEGG, and WikiPathways geneset collections.</p>
 
-<p><b>3. Ranking variable 🔢</b> Specify which variable (logFC, -log P value, or signed -log P value) will be used to rank genes for the GSEA.</p>
+<p><b>3. Ranking variable 🔢</b> Specify which variable (log<sub>2</sub>FC, -log<sub>10</sub> P value, or signed -log<sub>10</sub> P value) will be used to rank genes for the GSEA.</p>
 
 <p><b>4. Gene identifier 🔖</b> Select which column in the statistics table contains the gene identifiers, 
 and specify the identifier type (<i>e.g.</i>, Entrez Gene, Ensembl Gene, or Gene Symbol) and organism.</p>
@@ -2147,14 +2147,14 @@ you can use this option to add gene symbols or Ensembl gene IDs to the statistic
 <p>For each of the selected statistical comparisons, the following output are provided:</p>
 <p><b>1. Top table.</b> A table with the statistics from the differential expression analysis.
 Click <a href = "https://arrayanalysis.org/explain/Toptable" target="_blank">here</a> for more information on this table.</p>
-<p><b>2. p-value and logFC histograms.</b> These plots show the distribution of p-values and logFCs.
+<p><b>2. p-value and log<sub>2</sub>FC histograms.</b> These plots show the distribution of p-values and log<sub>2</sub>FCs.
 Click for more information on the <a href = "https://arrayanalysis.org/explain/Phistogram" target="_blank">p-value histogram</a> 
-and <a href = "https://arrayanalysis.org/explain/logFChistogram" target="_blank">logFC histogram</a> .</p>
-<p><b>3. Volcano plot.</b> Scatter plot of logFC versus -log p-value. 
+and <a href = "https://arrayanalysis.org/explain/logFChistogram" target="_blank">log<sub>2</sub>FC histogram</a> .</p>
+<p><b>3. Volcano plot.</b> Scatter plot of log<sub>2</sub>FC versus -log<sub>10</sub> p-value. 
 Click <a href = "https://arrayanalysis.org/explain/Volcanoplot" target="_blank">here</a> for more information on this figure.</p>
-<p><b>4. MA plot.</b> Scatter plot of mean log expression versus logFC. 
+<p><b>4. MA plot.</b> Scatter plot of mean log<sub>2</sub> expression versus log<sub>2</sub>FC. 
 Click <a href = "https://arrayanalysis.org/explain/MAplot" target="_blank">here</a> for more information on this figure.</p>
-<p><b>5. Summary.</b> Get the number of differentially expressed genes for selected p-value and logFC thresholds.</p>
+<p><b>5. Summary.</b> Get the number of differentially expressed genes for selected p-value and log<sub>2</sub>FC thresholds.</p>
 <p><b>6. Settings.</b> Download the overview of statistical analysis settings and the session info to ensure reproducibility.</p>  
 
 </div>
@@ -2183,7 +2183,7 @@ Gene Ontology-Biological Process (GO-BP), -Cellular Component (GO-CC), and -Mole
 
 <p><b>3. Input genes 🧬</b> Specify whether ORA should be performed on upregulated, downregulated, or both sets of genes. You can define input genes by:
 <ul>
-<li>Applying a p-value and logFC threshold, or</li>
+<li>Applying a p-value and log<sub>2</sub>FC threshold, or</li>
 <li>Selecting the top N most significantly up/downregulated genes.</li>
 </ul>
 <p>👉 The background gene list includes all genes that passed QC.</p>
@@ -2215,7 +2215,7 @@ Click <a href = "https://arrayanalysis.org/explain/Network" target="_blank">here
 <p><b>2. Geneset collection 📋</b> Select one of the following geneset collections: 
 Gene Ontology-Biological Process (GO-BP), -Cellular Component (GO-CC), and -Molecular Function (GO-MF), KEGG, and WikiPathways geneset collections.</p>
 
-<p><b>3. Ranking variable 🔢</b> Specify which variable (logFC, -log P value, or signed -log P value) will be used to rank genes for the GSEA.</p>
+<p><b>3. Ranking variable 🔢</b> Specify which variable (log<sub>2</sub>FC, -log<sub>10</sub> P value, or signed -log<sub>10</sub> P value) will be used to rank genes for the GSEA.</p>
 
 <p><b>4. Gene identifier 🔖</b> Select which column in the statistics table contains the gene identifiers, 
 and specify the identifier type (<i>e.g.</i>, Entrez Gene, Ensembl Gene, or Gene Symbol) and organism.</p>

@@ -583,6 +583,10 @@ observe({
     shinybusy::show_modal_spinner(text = "Pre-processing data...",
                                   color="#0dc5c1")
     
+    hideTab("navbar", target = "panel_statistics_rnaseq_norm")
+    hideTab("navbar", target = "panel_ORA_rnaseq_norm")
+    rv$top_table <- NULL
+    
     # Select outlier
     if (!isTRUE(input$outier_rnaseq_norm)){
       rv$outlier <- input$select_outliers_rnaseq_norm
@@ -2181,7 +2185,7 @@ observe({
                             selectInput(inputId = "xpca_rnaseq_norm", 
                                         label = "x-axis",
                                         choices = c("PC1","PC2","PC3", "PC4", "PC5",
-                                                    "PC6", "PC7", "PC8"),
+                                                    "PC6", "PC7", "PC8")[1:min(8,nrow(rv$metaData_fil))],
                                         selected = "PC1")
                      ),
                      column(3,
@@ -2189,7 +2193,7 @@ observe({
                             selectInput(inputId = "ypca_rnaseq_norm", 
                                         label = "y-axis",
                                         choices = c("PC1","PC2","PC3", "PC4", "PC5", 
-                                                    "PC6", "PC7", "PC8"),
+                                                    "PC6", "PC7", "PC8")[1:min(8,nrow(rv$metaData_fil))],
                                         selected = "PC2")
                      ),
                      column(3,
@@ -2199,7 +2203,7 @@ observe({
                               selectInput(inputId = "zpca_rnaseq_norm", 
                                           label = "z-axis",
                                           choices = c("PC1","PC2","PC3", "PC4", "PC5", 
-                                                      "PC6", "PC7", "PC8"),
+                                                      "PC6", "PC7", "PC8")[1:min(8,nrow(rv$metaData_fil))],
                                           selected = "PC3")
                             )
                      )
