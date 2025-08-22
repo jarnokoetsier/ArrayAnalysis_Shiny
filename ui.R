@@ -206,6 +206,7 @@ ui <- tagList(
                                  # Line breaks
                                  br(),
                                  br(),
+                                 uiOutput("versionMessage"),
                                  br()
                                  
                           ) # EO column

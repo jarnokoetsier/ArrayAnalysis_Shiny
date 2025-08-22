@@ -2505,9 +2505,9 @@ observe({
     
     # Select comparison for output
     observe({
-      rv$top_table <- rv$top_table_list[[1]]
       
       if (!is.null(rv$top_table_list)){
+        rv$top_table <- rv$top_table_list[[1]]
         
         # Remove modal
         shinybusy::remove_modal_spinner()
@@ -2531,7 +2531,9 @@ observe({
         # Show microarray gene set analysis tab
         showTab("navbar", target = "panel_ORA_microarray_norm")
         rv$ORA_data <- NULL
+        output$UI_output_ORA_microarray_norm <- renderUI(NULL)
         rv$GSEA_data <- NULL
+        output$UI_output_GSEA_microarray_norm <- renderUI(NULL)
         
       } else{
         
@@ -2556,25 +2558,28 @@ observe({
     #********************************************************************#
     
     # print top table
-    output$top_table_microarray_norm <- DT::renderDataTable({
-      
-      # Required: selected comparison
+    observe({
       req(input$comparisons_view_microarray_norm)
+      req(rv$top_table)
       
-      # Get statistics of selected comparison
-      output <- rv$top_table[[input$comparisons_view_microarray_norm]]
-      return(output)
+      output$top_table_microarray_norm <- DT::renderDataTable({
+        
+        # Get statistics of selected comparison
+        output <- rv$top_table[[input$comparisons_view_microarray_norm]]
+        return(output)
+        
+      },options = list(pageLength = 6),
+      selection = list(mode = "single", selected = 1), escape = FALSE)
       
-    },options = list(pageLength = 6),
-    selection = list(mode = "single", selected = 1), escape = FALSE)
-    
-    # Download button
-    output$download_top_table_microarray_norm <- downloadHandler(
-      filename = paste0("topTable_",input$comparisons_view_microarray_norm,".csv"),
-      content = function(file){
-        write.csv(rv$top_table[[input$comparisons_view_microarray_norm]], file, quote = FALSE, row.names = FALSE)
-      }
-    )
+      # Download button
+      output$download_top_table_microarray_norm <- downloadHandler(
+        filename = paste0("topTable_",input$comparisons_view_microarray_norm,".csv"),
+        content = function(file){
+          write.csv(rv$top_table[[input$comparisons_view_microarray_norm]], file, quote = FALSE, row.names = FALSE)
+        }
+      )
+    })
+
     
     # Change plotting data depending on whether all experimental groups will be plotted  
     observe({

@@ -1509,50 +1509,50 @@ observe({
         
       }
     })
+    
+    observe({
+      req(rv$colorFactor_heatmap)
       
-      observe({
-        req(rv$colorFactor_heatmap)
+      # Set colors
+      if (length(levels(rv$colorFactor_heatmap)) > 5){
+        rv$legendColors_heatmap <- colorsByFactor(rv$colorFactor_heatmap)$legendColors
+      } else{
+        rv$legendColors_heatmap <- c(input$heatmap_col1_microarray_raw,
+                                     input$heatmap_col2_microarray_raw,
+                                     input$heatmap_col3_microarray_raw,
+                                     input$heatmap_col4_microarray_raw,
+                                     input$heatmap_col5_microarray_raw)[1:length(levels(rv$colorFactor_heatmap))]
+      }
+    })
+    
+    observe({ 
+      req(input$heatmaptheme_microarray_raw)
+      req(rv$legendColors_heatmap)
+      req(rv$colorFactor_heatmap)
+      req(input$clusteroption1_microarray_raw)
+      req(input$clusteroption2_microarray_raw)
+      
+      # Heatmap of sample-sample correlations
+      output$heatmap_microarray_raw  <- plotly::renderPlotly({
         
-        # Set colors
-        if (length(levels(rv$colorFactor_heatmap)) > 5){
-          rv$legendColors_heatmap <- colorsByFactor(rv$colorFactor_heatmap)$legendColors
-        } else{
-          rv$legendColors_heatmap <- c(input$heatmap_col1_microarray_raw,
-                                       input$heatmap_col2_microarray_raw,
-                                       input$heatmap_col3_microarray_raw,
-                                       input$heatmap_col4_microarray_raw,
-                                       input$heatmap_col5_microarray_raw)[1:length(levels(rv$colorFactor_heatmap))]
+        colorFactor <- rv$colorFactor_heatmap
+        legendColors <- rv$legendColors_heatmap
+        
+        if (length(legendColors) != length(levels(colorFactor))){
+          legendColors <- colorsByFactor(colorFactor)$legendColors
         }
-      })
-      
-      observe({ 
-        req(input$heatmaptheme_microarray_raw)
-        req(rv$legendColors_heatmap)
-        req(rv$colorFactor_heatmap)
-        req(input$clusteroption1_microarray_raw)
-        req(input$clusteroption2_microarray_raw)
+        names(legendColors) <- levels(colorFactor)
         
-        # Heatmap of sample-sample correlations
-        output$heatmap_microarray_raw  <- plotly::renderPlotly({
-          
-          colorFactor <- rv$colorFactor_heatmap
-          legendColors <- rv$legendColors_heatmap
-          
-          if (length(legendColors) != length(levels(colorFactor))){
-            legendColors <- colorsByFactor(colorFactor)$legendColors
-          }
-          names(legendColors) <- levels(colorFactor)
-          
-          # Make heatmap
-          rv$heatmap <- getHeatmap(experimentFactor = colorFactor,
-                                   legendColors = legendColors,
-                                   normMatrix = rv$normMatrix,
-                                   clusterOption1 = input$clusteroption1_microarray_raw,
-                                   clusterOption2 = input$clusteroption2_microarray_raw,
-                                   theme = input$heatmaptheme_microarray_raw)
-          return(rv$heatmap)
-        })
+        # Make heatmap
+        rv$heatmap <- getHeatmap(experimentFactor = colorFactor,
+                                 legendColors = legendColors,
+                                 normMatrix = rv$normMatrix,
+                                 clusterOption1 = input$clusteroption1_microarray_raw,
+                                 clusterOption2 = input$clusteroption2_microarray_raw,
+                                 theme = input$heatmaptheme_microarray_raw)
+        return(rv$heatmap)
       })
+    })
     
     #***************************#
     # Modal to download figure
@@ -1686,7 +1686,7 @@ observe({
       } else{
         rv$colorFactor_PCA <- factor(rv$metaData_fil[,input$colorFactor_PCA_microarray_raw])
       }
-      })
+    })
     
     observe({
       req(rv$colorFactor_PCA)
@@ -1783,47 +1783,47 @@ observe({
         
       }
     })
+    
+    observe({
+      req(rv$colorFactor_PCA)
       
-      observe({
-        req(rv$colorFactor_PCA)
+      # Set colors
+      if (length(levels(rv$colorFactor_PCA)) > 5){
+        rv$legendColors_PCA <- colorsByFactor(rv$colorFactor_PCA)$legendColors
+      } else{
+        rv$legendColors_PCA <- c(input$PCA_col1_microarray_raw,
+                                 input$PCA_col2_microarray_raw,
+                                 input$PCA_col3_microarray_raw,
+                                 input$PCA_col4_microarray_raw,
+                                 input$PCA_col5_microarray_raw)[1:length(levels(rv$colorFactor_PCA))]
+      }
+    })
+    
+    observe({
+      req(rv$legendColors_PCA)
+      req(rv$colorFactor_PCA)
+      
+      # Make PCA plot
+      output$PCA_microarray_raw <- plotly::renderPlotly({
         
-        # Set colors
-        if (length(levels(rv$colorFactor_PCA)) > 5){
-          rv$legendColors_PCA <- colorsByFactor(rv$colorFactor_PCA)$legendColors
-        } else{
-          rv$legendColors_PCA <- c(input$PCA_col1_microarray_raw,
-                                   input$PCA_col2_microarray_raw,
-                                   input$PCA_col3_microarray_raw,
-                                   input$PCA_col4_microarray_raw,
-                                   input$PCA_col5_microarray_raw)[1:length(levels(rv$colorFactor_PCA))]
+        colorFactor <- rv$colorFactor_PCA
+        legendColors <- rv$legendColors_PCA
+        
+        if (length(legendColors) != length(levels(colorFactor))){
+          legendColors <- colorsByFactor(colorFactor)$legendColors
         }
-      })
         
-      observe({
-        req(rv$legendColors_PCA)
-        req(rv$colorFactor_PCA)
-        
-        # Make PCA plot
-        output$PCA_microarray_raw <- plotly::renderPlotly({
-          
-          colorFactor <- rv$colorFactor_PCA
-          legendColors <- rv$legendColors_PCA
-          
-          if (length(legendColors) != length(levels(colorFactor))){
-            legendColors <- colorsByFactor(colorFactor)$legendColors
-          }
-          
-          # Make PCA score plot
-          rv$PCAplot <- plot_PCA(PC_data = rv$PCA_data, 
-                                 colorFactor = colorFactor,
-                                 legendColors = legendColors, 
-                                 xpc = as.numeric(stringr::str_remove(input$xpca_microarray_raw,"PC")), 
-                                 ypc = as.numeric(stringr::str_remove(input$ypca_microarray_raw,"PC")), 
-                                 zpc = ifelse(input$xyz_microarray_raw,as.numeric(stringr::str_remove(input$zpca_microarray_raw,"PC")),3), 
-                                 xyz = input$xyz_microarray_raw)
-          return(rv$PCAplot)
-        })
+        # Make PCA score plot
+        rv$PCAplot <- plot_PCA(PC_data = rv$PCA_data, 
+                               colorFactor = colorFactor,
+                               legendColors = legendColors, 
+                               xpc = as.numeric(stringr::str_remove(input$xpca_microarray_raw,"PC")), 
+                               ypc = as.numeric(stringr::str_remove(input$ypca_microarray_raw,"PC")), 
+                               zpc = ifelse(input$xyz_microarray_raw,as.numeric(stringr::str_remove(input$zpca_microarray_raw,"PC")),3), 
+                               xyz = input$xyz_microarray_raw)
+        return(rv$PCAplot)
       })
+    })
     
     #***************************#
     # Modal to download figure
@@ -2561,8 +2561,8 @@ observe({
     
     # Select comparison for output
     observe({
-      req(rv$normMatrix)
-      req(rv$experimentFactor)
+      # req(rv$normMatrix)
+      # req(rv$experimentFactor)
       
       if (!is.null(rv$top_table_list)){
         rv$top_table <- rv$top_table_list[[1]]
@@ -2589,7 +2589,9 @@ observe({
         # Show microarray gene set analysis tab
         showTab("navbar", target = "panel_ORA_microarray_raw")
         rv$ORA_data <- NULL
+        output$UI_output_ORA_microarray_raw <- renderUI(NULL)
         rv$GSEA_data <- NULL
+        output$UI_output_GSEA_microarray_raw <- renderUI(NULL)
         
       } else{
         
@@ -2615,64 +2617,65 @@ observe({
     #********************************************************************#
     
     # print top table
-    output$top_table_microarray_raw <- DT::renderDataTable({
-      
-      # Required: selected comparison
+    observe({
       req(input$comparisons_view_microarray_raw)
+      req(rv$top_table)
       
-      # Get statistics of selected comparison
-      output <- rv$top_table[[input$comparisons_view_microarray_raw]]
-      
-      # Add link to ENSEMBL or NCBI website if custom annotations is selected
-      if (!is.null(rv$ProbeAnnotation)){
+      output$top_table_microarray_raw <- DT::renderDataTable({
         
-        # If custom annotation = ENTREZ, link to NCBI website
-        if(rv$ProbeAnnotation == "ENTREZG"){
-          output$GeneID <- paste0(
-            '<a ',
-            'href=',
-            paste(
-              "https://www.ncbi.nlm.nih.gov/gene/",
-              output$GeneID,
-              sep = ''
-            ),
-            ' target="_blank"',
-            '>',
-            output$GeneID,
-            '</a>'
-          )
-        }
+        # Get statistics of selected comparison
+        output <- rv$top_table[[input$comparisons_view_microarray_raw]]
         
-        # If custom annotation = ENSG, link to ENSEMBL website
-        if(rv$ProbeAnnotation == "ENSG"){
-          output$GeneID <- paste0(
-            '<a ',
-            'href=',
-            paste(
-              "http://www.ensembl.org/id/",
+        # Add link to ENSEMBL or NCBI website if custom annotations is selected
+        if (!is.null(rv$ProbeAnnotation)){
+          
+          # If custom annotation = ENTREZ, link to NCBI website
+          if(rv$ProbeAnnotation == "ENTREZG"){
+            output$GeneID <- paste0(
+              '<a ',
+              'href=',
+              paste(
+                "https://www.ncbi.nlm.nih.gov/gene/",
+                output$GeneID,
+                sep = ''
+              ),
+              ' target="_blank"',
+              '>',
               output$GeneID,
-              sep = ''
-            ),
-            ' target="_blank"',
-            '>',
-            output$GeneID,
-            '</a>'
-          )
+              '</a>'
+            )
+          }
+          
+          # If custom annotation = ENSG, link to ENSEMBL website
+          if(rv$ProbeAnnotation == "ENSG"){
+            output$GeneID <- paste0(
+              '<a ',
+              'href=',
+              paste(
+                "http://www.ensembl.org/id/",
+                output$GeneID,
+                sep = ''
+              ),
+              ' target="_blank"',
+              '>',
+              output$GeneID,
+              '</a>'
+            )
+          }
         }
-      }
-      return(output)
+        return(output)
+        
+      },options = list(pageLength = 6),
+      selection = list(mode = "single", selected = 1), escape = FALSE)
       
-    },options = list(pageLength = 6),
-    selection = list(mode = "single", selected = 1), escape = FALSE)
-    
-    # Download button
-    output$download_top_table_microarray_raw <- downloadHandler(
-      filename = paste0("topTable_",input$comparisons_view_microarray_raw,".csv"),
-      content = function(file){
-        write.csv(rv$top_table[[input$comparisons_view_microarray_raw]], file, quote = FALSE, row.names = FALSE)
-      }
-    )
-    
+      # Download button
+      output$download_top_table_microarray_raw <- downloadHandler(
+        filename = paste0("topTable_",input$comparisons_view_microarray_raw,".csv"),
+        content = function(file){
+          write.csv(rv$top_table[[input$comparisons_view_microarray_raw]], file, quote = FALSE, row.names = FALSE)
+        }
+      )
+    })
     # Change plotting data depending on whether all experimental groups will be plotted  
     observe({
       req(input$comparisons_view_microarray_raw)
@@ -3928,7 +3931,6 @@ observe({
     })
   })
   
-  
   observeEvent(input$calculate_ORA_microarray_raw,{
     
     #==========================================================================#
@@ -4064,100 +4066,103 @@ observe({
           #--------------------------------------------------------------#
           # ORA statistics table
           #--------------------------------------------------------------#
-          
-          output$ORA_table_microarray_raw <- DT::renderDataTable({
+          observe({
             req(input$geneset_ORA_microarray_raw)
             req(rv$ORA_data)
-            output <- rv$ORA_data@result
             
-            # Link to wikipathways website if gene set ID is from WikiPathways
-            if (input$geneset_ORA_microarray_raw == "WikiPathways"){
-              output$ID <- paste0(
-                '<a ',
-                'href=',
-                paste0(
-                  "https://www.wikipathways.org/pathways/",
-                  output$ID, ".html"
-                ),
-                ' target="_blank"',
-                '>',
-                output$ID,
-                '</a>'
-              )
-            }
+            output$ORA_table_microarray_raw <- DT::renderDataTable({
+              output <- rv$ORA_data@result
+              
+              # Link to wikipathways website if gene set ID is from WikiPathways
+              if (input$geneset_ORA_microarray_raw == "WikiPathways"){
+                output$ID <- paste0(
+                  '<a ',
+                  'href=',
+                  paste0(
+                    "https://www.wikipathways.org/pathways/",
+                    output$ID, ".html"
+                  ),
+                  ' target="_blank"',
+                  '>',
+                  output$ID,
+                  '</a>'
+                )
+              }
+              
+              # Link to QuickGO website if gene set ID is a GO term
+              if (input$geneset_ORA_microarray_raw == "KEGG"){
+                output$ID <- paste0(
+                  '<a ',
+                  'href=',
+                  paste0(
+                    "https://www.genome.jp/pathway/",
+                    output$ID, ".html"
+                  ),
+                  ' target="_blank"',
+                  '>',
+                  output$ID,
+                  '</a>'
+                )
+              }
+              
+              if (input$geneset_ORA_microarray_raw %in% c("GO-BP", "GO-MF", "GO-CC")){
+                output$ID <- paste0(
+                  '<a ',
+                  'href=',
+                  paste0(
+                    "https://www.ebi.ac.uk/QuickGO/term/",
+                    output$ID
+                  ),
+                  ' target="_blank"',
+                  '>',
+                  output$ID,
+                  '</a>'
+                )
+              }
+              output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
+              output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
+              
+              return(output)
+            },options = list(pageLength = 6),
+            selection = list(mode = "single", selected = 1), escape = FALSE)
             
-            # Link to QuickGO website if gene set ID is a GO term
-            if (input$geneset_ORA_microarray_raw == "KEGG"){
-              output$ID <- paste0(
-                '<a ',
-                'href=',
-                paste0(
-                  "https://www.genome.jp/pathway/",
-                  output$ID, ".html"
-                ),
-                ' target="_blank"',
-                '>',
-                output$ID,
-                '</a>'
-              )
-            }
+            # Download button
+            output$download_ORA_table_microarray_raw <- downloadHandler(
+              filename = paste0("ORATable_",input$comparisons_view_ORA_microarray_raw,"_",input$geneset_ORA_microarray_raw,".csv"),
+              content = function(file){
+                write.csv(rv$ORA_data@result, file, quote = FALSE, row.names = FALSE)
+              }
+            )
             
-            if (input$geneset_ORA_microarray_raw %in% c("GO-BP", "GO-MF", "GO-CC")){
-              output$ID <- paste0(
-                '<a ',
-                'href=',
-                paste0(
-                  "https://www.ebi.ac.uk/QuickGO/term/",
-                  output$ID
-                ),
-                ' target="_blank"',
-                '>',
-                output$ID,
-                '</a>'
-              )
-            }
-            output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
-            output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
+            # Print statistics of genes in selected Term
+            output$ORAgene_table_microarray_raw <- DT::renderDataTable({
+              req(input$ORA_table_microarray_raw_rows_selected)
+              req(rv$ORA_data)
+              
+              # Make ORA gene table
+              output <- make_ORAgene_table(ORA_data = rv$ORA_data,
+                                           top_table = rv$top_table[[input$comparisons_view_ORA_microarray_raw]],
+                                           geneID_col = input$geneID_ORA_microarray_raw,
+                                           sel_row_ORA = input$ORA_table_microarray_raw_rows_selected)
+              
+              output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
+              output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
+              output$meanExpr <- round(output$meanExpr,3)
+              output$log2FC <- round(output$log2FC,3)
+              output$`log2FC SE` <- round(output$`log2FC SE`,3)
+              
+              return(output)
+            }, options = list(pageLength = 6), escape = FALSE)
             
-            return(output)
-          },options = list(pageLength = 6),
-          selection = list(mode = "single", selected = 1), escape = FALSE)
-          
-          # Download button
-          output$download_ORA_table_microarray_raw <- downloadHandler(
-            filename = paste0("ORATable_",input$comparisons_view_ORA_microarray_raw,"_",input$geneset_ORA_microarray_raw,".csv"),
-            content = function(file){
-              write.csv(rv$ORA_data@result, file, quote = FALSE, row.names = FALSE)
-            }
-          )
-          
-          # Print statistics of genes in selected Term
-          output$ORAgene_table_microarray_raw <- DT::renderDataTable({
-            req(input$ORA_table_microarray_raw_rows_selected)
-            req(rv$ORA_data)
-            
-            # Make ORA gene table
-            output <- make_ORAgene_table(ORA_data = rv$ORA_data,
-                                         top_table = rv$top_table[[input$comparisons_view_ORA_microarray_raw]],
-                                         geneID_col = input$geneID_ORA_microarray_raw,
-                                         sel_row_ORA = input$ORA_table_microarray_raw_rows_selected)
-            
-            output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
-            output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
-            output$meanExpr <- round(output$meanExpr,3)
-            output$log2FC <- round(output$log2FC,3)
-            output$`log2FC SE` <- round(output$`log2FC SE`,3)
-            
-            return(output)
-          }, options = list(pageLength = 6), escape = FALSE)
-          
-          # Text for gene table
-          output$text_ORAgene_table_microarray_raw <- renderText({
-            req(rv$ORA_data)
-            text <- paste0("<h3><b>Gene table: ",rv$ORA_data@result[input$ORA_table_microarray_raw_rows_selected,"ID"],
-                           "</b></h3>")
-            return(text)
+            # Text for gene table
+            output$text_ORAgene_table_microarray_raw <- renderText({
+              req(rv$ORA_data)
+              text <- paste0("<h3><b>Gene table: ",rv$ORA_data@result[input$ORA_table_microarray_raw_rows_selected,"ID"],
+                             "</b></h3>")
+              return(text)
+            })
           })
+          
           
           #--------------------------------------------------------------#
           # ORA barchart
@@ -4166,6 +4171,7 @@ observe({
           observe({
             req(input$nSets_ORAplot_microarray_raw)
             req(rv$ORA_data)
+            
             rv$ORAplot <- makeORAplot(rv$ORA_data,
                                       nSets = input$nSets_ORAplot_microarray_raw,
                                       color = input$color_ORAplot_microarray_raw)

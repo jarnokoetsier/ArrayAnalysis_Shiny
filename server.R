@@ -48,6 +48,29 @@ server <- function(input, output, session){
   hideTab("navbar", target = "panel_statistics_microarray_norm")
   hideTab("navbar", target = "panel_ORA_microarray_norm")
   
+  # Checck version
+  observe({
+    versionMessage <- reactive({tryCatch({
+      indexFile <- readLines("https://raw.githubusercontent.com/jarnokoetsier/ArrayAnalysis/refs/heads/main/docs/index.html")
+      latest_version <- substr((str_remove(indexFile[str_detect(indexFile,"Version")],".*Version ")),1,5)
+      this_version <- substr(ArrayAnalysis_version, nchar(ArrayAnalysis_version)-4, nchar(ArrayAnalysis_version))
+      
+      if ((!online) & (this_version < latest_version)){
+        message <- paste0("<b style='color:red;'>There is a new ArrayAnalysis version available (v",
+                          latest_version,
+                          "). Click <a href = 'https://arrayanalysis.org/installation', target = '_blank'>here</a> to install the latest version.</b>")
+      } else{
+        message <- " "
+      }
+      return(message)
+    }, error = function(cond){
+      return(" ")
+    })})
+    
+    output$versionMessage <- renderUI({HTML(versionMessage())})
+  })
+
+  
   observe({
     
     # Advanced settings

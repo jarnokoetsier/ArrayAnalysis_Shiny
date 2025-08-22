@@ -2521,7 +2521,9 @@ observe({
         # Show microarray gene set analysis tab
         showTab("navbar", target = "panel_ORA_rnaseq_norm")
         rv$ORA_data <- NULL
+        output$UI_output_ORA_rnaseq_norm <- renderUI(NULL)
         rv$GSEA_data <- NULL
+        output$UI_output_GSEA_rnaseq_norm <- renderUI(NULL)
         
       } else{
         shinybusy::remove_modal_spinner()

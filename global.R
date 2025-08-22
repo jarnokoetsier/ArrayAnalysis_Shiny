@@ -5,6 +5,7 @@
 
 # ArrayAnalysis version:
 ArrayAnalysis_version <- "ArrayAnalysis version 0.1.1"
+online = FALSE
 
 #******************************************************************************#
 # Load functions

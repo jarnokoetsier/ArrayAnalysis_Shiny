@@ -2680,6 +2680,7 @@ observe({
       
       if (!is.null(rv$top_table_list)){
         rv$top_table <- rv$top_table_list[[1]]
+        
         # Remove modal
         shinybusy::remove_modal_spinner()
         
@@ -2702,7 +2703,9 @@ observe({
         # Show RNA-seq GSA tab
         showTab("navbar", target = "panel_ORA_rnaseq_raw")
         rv$ORA_data <- NULL
+        output$UI_output_ORA_rnaseq_raw <- renderUI(NULL)
         rv$GSEA_data <- NULL
+        output$UI_output_GSEA_rnaseq_raw <- renderUI(NULL)
         
       } else{
         shinybusy::remove_modal_spinner()
