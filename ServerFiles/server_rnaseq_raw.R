@@ -2807,8 +2807,6 @@ observe({
         
         gene <- rv$top_table[[input$comparisons_view_rnaseq_raw]]$GeneID[input$top_table_rnaseq_raw_rows_selected]
         sel_row <- which(as.character(rownames(rv$normData)) %in% as.character(gene))
-        #print(gene)
-        #print(sel_row)
         
         # Make boxplot
         rv$temp <- geneBoxplot(experimentFactor = rv$newFactor, 

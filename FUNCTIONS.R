@@ -2904,12 +2904,10 @@ ORA <- function(top_table,
         # load GMT file
         load("Objects/gmt_WP_all.RData")
         gmt_all <- gmt_all[[organism]]
-        print(head(gmt_all))
         
         # Prepare GMT for analysis
         gmt <- unique(gmt_all[,c("name", "version", "wpid",
                                  "species", geneID_type)])
-        print(head(gmt))
         path2gene <- gmt[,c("wpid", geneID_type)]
         path2name <- gmt[,c("wpid", "name")]
         

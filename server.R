@@ -52,7 +52,7 @@ server <- function(input, output, session){
   observe({
     versionMessage <- reactive({tryCatch({
       indexFile <- readLines("https://raw.githubusercontent.com/jarnokoetsier/ArrayAnalysis/refs/heads/main/docs/index.html")
-      latest_version <- substr((str_remove(indexFile[str_detect(indexFile,"Version")],".*Version ")),1,5)
+      latest_version <- substr((stringr::str_remove(indexFile[stringr::str_detect(indexFile,"Version")][1],".*Version ")),1,5)
       this_version <- substr(ArrayAnalysis_version, nchar(ArrayAnalysis_version)-4, nchar(ArrayAnalysis_version))
       
       if ((!online) & (this_version < latest_version)){
