@@ -3994,7 +3994,26 @@ observe({
         selectInput(inputId = "geneID_ORA_rnaseq_raw",
                     label = "Which column of the top table contains the gene IDs?",
                     choices = colnames(rv$top_table[[1]])[col_choice],
-                    selected = colnames(rv$top_table[[1]])[1])
+                    selected = colnames(rv$top_table[[1]])[1]),
+        
+        # Which gene IDs do they column contain?
+        selectInput(inputId = "selID_ORA_rnaseq_raw",
+                    label =  tags$span(
+                      "Which gene ID to use?", 
+                      tags$span(
+                        icon(
+                          name = "question-circle",
+                        ) 
+                      ) |>
+                        prompter::add_prompt(message = "Select which gene ID is 
+                                               used in the top table.", 
+                                             position = "right",
+                                             size = "large")
+                    ),
+                    choices = c("Ensembl Gene ID" = "ENSEMBL", 
+                                "Entrez Gene ID" = "ENTREZID", 
+                                "Gene Symbol/Name" = "SYMBOL"),
+                    selected = whichID(rv$top_table[[1]][,1]))
       )
     })
   })
@@ -5280,7 +5299,7 @@ observe({
                          
                          # Title + description of the network diagram
                          h3(strong("Network diagram")),
-                         h5("The network diagram visualize the similarity between the most significant gene sets."),
+                         h5("The network diagram visualizes the similarity between the most significant gene sets."),
                          hr(),
                          actionButton("download_GSEAnetwork_rnaseq_raw", 
                                       "Download figure",

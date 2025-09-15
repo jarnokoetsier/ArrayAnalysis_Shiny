@@ -4,8 +4,8 @@
 #==============================================================================#
 
 # ArrayAnalysis version:
-ArrayAnalysis_version <- "ArrayAnalysis version 0.1.1"
-online = FALSE
+ArrayAnalysis_version <- "ArrayAnalysis version 0.1.2"
+online <- FALSE
 
 #******************************************************************************#
 # Load functions

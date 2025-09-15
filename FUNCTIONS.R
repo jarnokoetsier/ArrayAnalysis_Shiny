@@ -16,8 +16,29 @@
 
 firstup <- function(x) {
   substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-  x <- str_replace(str_replace(str_replace(x,"MRNA", "mRNA"), "NcRNA", "ncRNA"), "RRNA", "rRNA")
+  x <- stringr::str_replace(stringr::str_replace(stringr::str_replace(x,"MRNA", "mRNA"), "NcRNA", "ncRNA"), "RRNA", "rRNA")
   return(x)
+}
+
+#==============================================================================#
+# whichID()
+#==============================================================================#
+
+# DESCRIPTION:
+# Find the ID type
+
+# VARIABLES:
+# x: vector of gene IDs
+
+whichID <- function(x){
+  IDtype <- "SYMBOL"
+  if (sum(substr(x,1,3) == "ENS") > 0.5*length(x)){
+    IDtype <- "ENSEMBL"
+  }
+  if (sum(!is.na(as.numeric(x))) > 0.5*length(x)){
+    IDtype <- "ENTREZID"
+  }
+  return(IDtype)
 }
 
 #==============================================================================#

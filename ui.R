@@ -860,24 +860,6 @@ ui <- tagList(
                           # Which columns of the top table contains the gene ids?
                           uiOutput("UI_geneID_ORA_microarray_raw"),
                           
-                          # Which gene IDs do they column contain?
-                          selectInput(inputId = "selID_ORA_microarray_raw",
-                                      label = tags$span(
-                                        "Which gene ID to use?", 
-                                        tags$span(
-                                          icon(
-                                            name = "question-circle",
-                                          ) 
-                                        ) |>
-                                          prompter::add_prompt(message = "Select which gene ID is 
-                                               used in the top table.", 
-                                                               position = "right",
-                                                               size = "large")
-                                      ),
-                                      choices = c("Ensembl Gene ID" = "ENSEMBL", 
-                                                  "Entrez Gene ID" = "ENTREZID", 
-                                                  "Gene Symbol/Name" = "SYMBOL"),
-                                      selected = "ENTREZID"),
                           br(),
                           # Calculate!
                           h4(strong(tags$span(
@@ -1522,25 +1504,8 @@ ui <- tagList(
                           # Which columns of the top table contains the gene ids?
                           uiOutput("UI_geneID_ORA_microarray_norm"),
                           
-                          # Which gene IDs do they column contain?
-                          selectInput(inputId = "selID_ORA_microarray_norm",
-                                      label = tags$span(
-                                        "Which gene ID to use?", 
-                                        tags$span(
-                                          icon(
-                                            name = "question-circle",
-                                          ) 
-                                        ) |>
-                                          prompter::add_prompt(message = "Select which gene ID is 
-                                               used in the top table.", 
-                                                               position = "right",
-                                                               size = "large")
-                                      ),
-                                      choices = c("Ensembl Gene ID" = "ENSEMBL", 
-                                                  "Entrez Gene ID" = "ENTREZID", 
-                                                  "Gene Symbol/Name" = "SYMBOL"),
-                                      selected = "ENTREZID"),
                           br(),
+                          
                           # Calculate!
                           h4(strong(tags$span(
                             "5. Perform analysis",
@@ -2131,27 +2096,8 @@ ui <- tagList(
                           # Which columns of the top table contains the gene ids?
                           uiOutput("UI_geneID_ORA_rnaseq_raw"),
                           
-                          # Which gene IDs do they column contain?
-                          selectInput(inputId = "selID_ORA_rnaseq_raw",
-                                      label = tags$span(
-                                        "Which gene ID to use?", 
-                                        tags$span(
-                                          icon(
-                                            name = "question-circle",
-                                          ) 
-                                        ) |>
-                                          prompter::add_prompt(message = "Select which gene ID is 
-                                               used in the top table.", 
-                                                               position = "right",
-                                                               size = "large")
-                                      ),
-                                      choices = c("Ensembl Gene ID" = "ENSEMBL", 
-                                                  "Entrez Gene ID" = "ENTREZID", 
-                                                  "Gene Symbol/Name" = "SYMBOL"),
-                                      selected = "ENTREZID"),
-                          
-                          
                           br(),
+                          
                           # Calculate!
                           h4(strong(tags$span(
                             "5. Perform analysis",
@@ -2773,27 +2719,10 @@ ui <- tagList(
                                       selected = "Homo sapiens"),
                           
                           uiOutput("UI_geneID_ORA_rnaseq_norm"),
-                          
-                          # Which gene IDs do they column contain?
-                          selectInput(inputId = "selID_ORA_rnaseq_norm",
-                                      label =  tags$span(
-                                        "Which gene ID to use?", 
-                                        tags$span(
-                                          icon(
-                                            name = "question-circle",
-                                          ) 
-                                        ) |>
-                                          prompter::add_prompt(message = "Select which gene ID is 
-                                               used in the top table.", 
-                                                               position = "right",
-                                                               size = "large")
-                                      ),
-                                      choices = c("Ensembl Gene ID" = "ENSEMBL", 
-                                                  "Entrez Gene ID" = "ENTREZID", 
-                                                  "Gene Symbol/Name" = "SYMBOL"),
-                                      selected = "ENTREZID"),
+                      
                           br(),
-                          # Calculate!
+                         
+                           # Calculate!
                           h4(strong(tags$span(
                             "5. Perform analysis",
                             tags$span(
