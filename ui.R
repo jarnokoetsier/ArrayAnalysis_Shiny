@@ -537,9 +537,10 @@ ui <- tagList(
                         sidebarPanel(
                           h2(strong("Statistical analysis")),
                           h5("In the statistical analysis step, 
-                        you can find differentially expressed genes by selecting 
-                        which groups to compare to each other and 
-                           which covariates to add to the statistical model."),
+                        you can select which groups to compare to each other and 
+                           which covariates to add to the statistical model. 
+                             Moreover, you have to option to add additional gene IDs 
+                             (Ensembl IDs, Entrez IDs, and Gene symbols) to the output."),
                           hr(),
                           
                           #******************************************************#
@@ -1199,7 +1200,9 @@ ui <- tagList(
                           
                           h5("In the statistical analysis step, 
                         you can select which groups to compare to each other and 
-                           which covariates to add to the statistical model."),
+                           which covariates to add to the statistical model. 
+                             Moreover, you have to option to add additional gene IDs 
+                             (Ensembl IDs, Entrez IDs, and Gene symbols) to the output."),
                           
                           hr(),
                           h4(strong(tags$span(
@@ -1694,7 +1697,7 @@ ui <- tagList(
                             ) |>
                               prompter::add_prompt(message = "The experimental groups are the 
                                        groups that you would like to compare to each other 
-                                       in the statistical analysis (e.g., disease or treatment status). ", 
+                                       in the statistical analysis (e.g., disease or treatment status).", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -1775,7 +1778,9 @@ ui <- tagList(
                           
                           h5("In the statistical analysis step, 
                         you can select which groups to compare to each other and 
-                           which covariates to add to the statistical model."),
+                           which covariates to add to the statistical model. 
+                             Moreover, you have to option to add additional gene IDs 
+                             (Ensembl IDs, Entrez IDs, and Gene symbols) to the output."),
                           
                           hr(),
                           h4(strong(tags$span(
@@ -2417,7 +2422,9 @@ ui <- tagList(
                           
                           h5("In the statistical analysis step, 
                         you can select which groups to compare to each other and 
-                           which covariates to add to the statistical model."),
+                           which covariates to add to the statistical model. 
+                             Moreover, you have to option to add additional gene IDs 
+                             (Ensembl IDs, Entrez IDs, and Gene symbols) to the output."),
                           
                           hr(),
                           h4(strong(tags$span(

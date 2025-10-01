@@ -69,7 +69,7 @@ server <- function(input, output, session){
     
     output$versionMessage <- renderUI({HTML(versionMessage())})
   })
-
+  
   
   observe({
     
@@ -85,30 +85,34 @@ server <- function(input, output, session){
           fluidRow(
             column(12, align = "left",
                    h1(strong("About"), "ArrayAnalysis"),
-                   h4(style="text-align: justify;",
-                   "ArrayAnalysis is designed to make transcriptomic data analysis 
-                      accessible to everyone. With its user-friendly interface, it empowers 
+                   h4(style="text-align: justify; line-height:25px;",
+                      "ArrayAnalysis is designed to make transcriptomic data analysis 
+                      accessible to everyone. By providing a user-friendly interface, ArrayAnalysis aims to empower
                       scientists, regardless of their expertise in high-throughput data analysis, 
-                      to analyze and interpret transcriptomic experiments with ease."),
-                   br(),
+                      to analyze and interpret transcriptomic experiments."),
+                   hr(),
                    h4("You can run four analysis workflows in ArrayAnalysis: "),
-                   h4(
-                   HTML('<ol>
-                   <li><b>Microarray CEL files:</b> 
-                   Select <code>Microarray analysis</code> and <code>CEL files</code>.</li>
-                        <li><b>Microarray intensity table:</b>
-                        Select <code>Microarray analysis</code> and <code>Processed intensities</code>.</li>
-                         <li><b>Raw RNA-seq count table:</b>
-                         Select <code>RNA-Seq analysis</code> and <code>Raw counts</code>.</li>
-                         <li><b>Processed RNA-seq count table:</b>
-                         Select <code>RNA-Seq analysis</code> and <code>Processed counts</code>.</li>
-                        </ol>')),
                    br(),
-                   h4(style="text-align: justify;",
-                     "Click on", code("Start Analysis"), "to upload your own dataset or run explore the app with an example dataset. Please visit our", a("help page",
-                                            href = "https://arrayanalysis.org/help",
-                                            target = "_blank"),"for more information."),
-                   )
+                   h4(
+                     HTML('<ol>
+                                            <li><b>Raw RNA-seq count table (.tsv/.csv):</b>
+                         Select <ins>RNA-Seq analysis</ins> and <ins>Raw counts</ins>.</li>
+                         <br>
+                         <li><b>Processed RNA-seq count table (.tsv/.csv):</b>
+                         Select <ins>RNA-Seq analysis</ins> and <ins>Processed counts</ins>.</li>
+                         <br>
+                   <li><b>Microarray CEL files (.CEL.gz):</b> 
+                   Select <ins>Microarray analysis</ins> and <ins>CEL files</ins>.</li>
+                   <br>
+                        <li><b>Microarray intensity table (.tsv/.csv):</b>
+                        Select <ins>Microarray analysis</ins> and <ins>Processed intensities</ins>.</li>
+                        </ol>')),
+                   hr(),
+                   h4(style="text-align: justify; line-height:25px;",
+                      "Click on", HTML("<ins>Start Analysis</ins>"), "to upload your own dataset or to explore the app with an example dataset. Please visit our", a("help page",
+                                                                                                                                                          href = "https://arrayanalysis.org/help",
+                                                                                                                                                          target = "_blank"),"for more information."),
+            )
             
           ) # EO fluidRow
         ) # EO tagList

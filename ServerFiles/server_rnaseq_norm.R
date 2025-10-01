@@ -238,8 +238,8 @@ observe({
           shinyWidgets::sendSweetAlert(
             session = session,
             title = "Info",
-            text = "The data has been uploaded. Please check the tables on this 
-                page to see whether the data has been correctly uploaded.",
+            text = "Great! Your data is uploaded. 
+            Take a look at the tables on this page to make sure everything uploaded correctly.",
             type = "info")
         }
         
@@ -393,8 +393,8 @@ observe({
           shinyWidgets::sendSweetAlert(
             session = session,
             title = "Info",
-            text = "The data has been uploaded. Please check the tables on this 
-                page to see whether the data has been correctly uploaded.",
+            text = "Great! Your data is uploaded. 
+            Take a look at the tables on this page to make sure everything uploaded correctly.",
             type = "info")
         }
         
@@ -1946,8 +1946,8 @@ observe({
           tabPanel("Expression values",
                    icon = icon("fas fa-mouse-pointer"),
                    h3(strong("Normalized expression values")),
-                   h5("Here you can view the normalized and log-transformed counts. 
-                              Click on the table to explore the data!"),
+                   h5(HTML("Here you can view and download the normalized and log<sub>2</sub>-transformed counts. 
+                              Click on the table explore the data!")),
                    hr(),
                    dataTableOutput(outputId = "exprTable_rnaseq_norm") %>% 
                      withSpinner(color="#0dc5c1"),
