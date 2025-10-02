@@ -336,7 +336,7 @@ ui <- tagList(
                           
                           h2(strong("Pre-processing")),
                           
-                          h5("In this pre-processing step, you can remove samples 
+                          h5("In the pre-processing step, you can remove samples 
                            (e.g., outliers), perform normalization, 
                            and choose your desired probeset annotation."),
                           
@@ -540,7 +540,7 @@ ui <- tagList(
                         you can select which groups to compare to each other and 
                            which covariates to add to the statistical model. 
                              Moreover, you have to option to add additional gene IDs 
-                             (Ensembl IDs, Entrez IDs, and Gene symbols) to the output."),
+                             (Ensembl IDs, Entrez IDs, and Gene Symbols) to the output."),
                           hr(),
                           
                           #******************************************************#
@@ -599,8 +599,11 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Add gene annotations to 
-                                       the output.", 
+                              prompter::add_prompt(message = "Select to add gene annotations to 
+                                       the output. For instance, if your data uses Ensembl IDs, 
+                                                   you can add an extra column with 
+                                                   gene symbols to the statistics table 
+                                                   to aid with the interpretation of your findings.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -1046,7 +1049,7 @@ ui <- tagList(
                           
                           h2(strong("Pre-processing")),
                           
-                          h5("In this pre-processing step, you can remove samples 
+                          h5("In the pre-processing step, you can remove samples 
                            (e.g., outliers) and perform transformation and normalization."),
                           
                           hr(),
@@ -1202,7 +1205,7 @@ ui <- tagList(
                         you can select which groups to compare to each other and 
                            which covariates to add to the statistical model. 
                              Moreover, you have to option to add additional gene IDs 
-                             (Ensembl IDs, Entrez IDs, and Gene symbols) to the output."),
+                             (Ensembl IDs, Entrez IDs, and Gene Symbols) to the output."),
                           
                           hr(),
                           h4(strong(tags$span(
@@ -1224,7 +1227,7 @@ ui <- tagList(
                           br(),
                           
                           h4(strong(tags$span(
-                            "2. Add covariated",
+                            "2. Add covariates",
                             tags$span(
                               icon(
                                 name = "question-circle",
@@ -1246,8 +1249,11 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Add gene annotations to 
-                                       the output.", 
+                              prompter::add_prompt(message = "Select to add gene annotations to 
+                                       the output. For instance, if your data uses Ensembl IDs, 
+                                                   you can add an extra column with 
+                                                   gene symbols to the statistics table 
+                                                   to aid with the interpretation of your findings.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -1657,7 +1663,7 @@ ui <- tagList(
                           
                           h2(strong("Pre-processing")),
                           
-                          h5("In this pre-processing step, you can remove samples 
+                          h5("In the pre-processing step, you can remove samples 
                            (e.g., outliers) and perform gene filtering and normalization."),
                           
                           hr(),
@@ -1780,7 +1786,7 @@ ui <- tagList(
                         you can select which groups to compare to each other and 
                            which covariates to add to the statistical model. 
                              Moreover, you have to option to add additional gene IDs 
-                             (Ensembl IDs, Entrez IDs, and Gene symbols) to the output."),
+                             (Ensembl IDs, Entrez IDs, and Gene Symbols) to the output."),
                           
                           hr(),
                           h4(strong(tags$span(
@@ -1839,9 +1845,11 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Add gene annotations 
-                              (e.g., Ensembl gene IDs, Entrez gene IDs, and/or HGNC symbols) to 
-                                       the output.", 
+                              prompter::add_prompt(message = "Select to add gene annotations to 
+                                       the output. For instance, if your data uses Ensembl IDs, 
+                                                   you can add an extra column with 
+                                                   gene symbols to the statistics table 
+                                                   to aid with the interpretation of your findings.", 
                                                    position = "right",
                                                    size = "large")
                           ))),
@@ -2249,7 +2257,7 @@ ui <- tagList(
                           
                           h2(strong("Pre-processing")),
                           
-                          h5("In this pre-processing step, you can remove samples 
+                          h5("In the pre-processing step, you can remove samples 
                            (e.g., outliers) and perform gene filtering and normalization."),
                           
                           hr(),
@@ -2424,7 +2432,7 @@ ui <- tagList(
                         you can select which groups to compare to each other and 
                            which covariates to add to the statistical model. 
                              Moreover, you have to option to add additional gene IDs 
-                             (Ensembl IDs, Entrez IDs, and Gene symbols) to the output."),
+                             (Ensembl IDs, Entrez IDs, and Gene Symbols) to the output."),
                           
                           hr(),
                           h4(strong(tags$span(
@@ -2466,8 +2474,11 @@ ui <- tagList(
                                 name = "question-circle",
                               ) 
                             ) |>
-                              prompter::add_prompt(message = "Add gene annotations to 
-                                       the output.", 
+                              prompter::add_prompt(message = "Select to add gene annotations to 
+                                       the output. For instance, if your data uses Ensembl IDs, 
+                                                   you can add an extra column with 
+                                                   gene symbols to the statistics table 
+                                                   to aid with the interpretation of your findings.", 
                                                    position = "right",
                                                    size = "large")
                           ))),

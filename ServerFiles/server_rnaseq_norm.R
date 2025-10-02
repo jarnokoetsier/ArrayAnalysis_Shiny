@@ -673,8 +673,8 @@ observe({
         shinyWidgets::sendSweetAlert(
           session = session,
           title = "Info",
-          text = "The data has been pre-processed. Please check the different 
-              QC plots on this page to assess the pre-processing quality.",
+          text = "Perfect! The data has been pre-processed. Please check the different 
+              QC plots on this page to assess pre-processing quality.",
           type = "info")
       } else{
         shinyWidgets::sendSweetAlert(
@@ -682,7 +682,7 @@ observe({
           title = "Warning",
           text = HTML(paste0("<p>The data has been pre-processed, but the following sample(s) 
           might be outliers:</p><br><p><b>", paste(rv$suggestedOutliers, collapse = ", "),
-                             "</b></p><br><p>Please review the QC plots on this page to assess the pre-processing quality 
+                             "</b></p><br><p>Please review the QC plots on this page to assess pre-processing quality 
           and determine whether these outliers should be removed.</p>")),
           type = "warning",
           html = TRUE)
@@ -3967,7 +3967,7 @@ observe({
           shinyWidgets::sendSweetAlert(
             session = session,
             title = "Info",
-            text = "Overrepresentation analysis has been performed. You can download 
+            text = "Great! Overrepresentation Analysis has been performed. You can now download 
               the results as well as view them in interactive plots.",
             type = "info")
           
@@ -4636,7 +4636,7 @@ observe({
           shinyWidgets::sendSweetAlert(
             session = session,
             title = "Info",
-            text = "Gene Set Enrichment Analysis has been performed. You can download 
+            text = "Great! Gene Set Enrichment Analysis has been performed. You can now download 
               the results as well as view them in interactive plots.",
             type = "info")
           

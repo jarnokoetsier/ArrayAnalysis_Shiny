@@ -1882,8 +1882,8 @@ getStatistics <- function(normMatrix,
       colnames(top_table[[i]]) <- c("GeneID", "meanExpr", "log2FC", "log2FC SE",
                                     "p-value", "adj. p-value")
     }
-    message <- "Statistical analysis has been performed. 
-    You can download the results and view them in interactive plots."
+    message <- "Nice! Statistical analysis has been performed. 
+    You can now download the results and view them in interactive plots."
     
     # Add annotations to table if this option is selected
     if (addAnnotation == TRUE){
@@ -1923,8 +1923,8 @@ getStatistics <- function(normMatrix,
                                         values = top_table[[t]]$GeneID,
                                         mart = ensembl)
           
-          message <- "Statistical analysis has been performed. 
-          Gene annotation was performed with biomaRt. You can download 
+          message <- "Nice! Statistical analysis has been performed. 
+          Gene annotation was performed with biomaRt. You can now download 
               the results and view them in interactive plots."
           dataset <- paste0(biomart_dataset, " (", searchDatasets(mart = ensembl, pattern = "hsapiens")$version, ")")
           list(annotations, message, dataset)
@@ -1987,10 +1987,10 @@ getStatistics <- function(normMatrix,
           temp_col[temp_col == "ENTREZID"] <- "entrezgene_id"
           temp_col[temp_col == "ENSEMBL"] <- "ensembl_gene_id"
           colnames(annotations) <- temp_col
-          message <- "Statistical analysis has been performed. 
+          message <- "Nice! Statistical analysis has been performed. 
           The Ensembl database was not available.
-          So, the gene annotation was performed with the bioconductor annotation package. 
-          You can download the results and view them in interactive plots."
+          So, the gene annotation was performed with the Bioconductor annotation package (Org.Xx.eg.db). 
+          You can now download the results and view them in interactive plots."
           dataset <- paste0(pkg, " (", packageVersion(pkg),")")
           list(annotations, message, dataset)
         })
@@ -3924,8 +3924,8 @@ getStatistics_RNASeq <- function(rawMatrix,
                                   "p-value", "adj. p-value")
   }
   
-  message <- "Statistical analysis has been performed. 
-    You can download the results and view them in interactive plots."
+  message <- "Nice! Statistical analysis has been performed. 
+    You can now download the results and view them in interactive plots."
   
   # Add annotations to table if this option is selected
   if (addAnnotation == TRUE){
@@ -3965,8 +3965,8 @@ getStatistics_RNASeq <- function(rawMatrix,
                                       values = top_table[[t]]$GeneID,
                                       mart = ensembl)
         
-        message <- "Statistical analysis has been performed. 
-          Gene annotation was performed with biomaRt. You can download 
+        message <- "Nice! Statistical analysis has been performed. 
+          Gene annotation was performed with biomaRt. You can now download 
               the results and view them in interactive plots."
         dataset <- paste0(biomart_dataset, " (", searchDatasets(mart = ensembl, pattern = "hsapiens")$version, ")")
         list(annotations, message, dataset)
@@ -4029,10 +4029,10 @@ getStatistics_RNASeq <- function(rawMatrix,
         temp_col[temp_col == "ENTREZID"] <- "entrezgene_id"
         temp_col[temp_col == "ENSEMBL"] <- "ensembl_gene_id"
         colnames(annotations) <- temp_col
-        message <- "Statistical analysis has been performed. 
+        message <- "Nice! Statistical analysis has been performed. 
           The Ensembl database was not available.
-          So, the gene annotation was performed with the bioconductor annotation package. 
-          You can download the results and view them in interactive plots."
+          So, the gene annotation was performed with the bioconductor annotation package (Org.Xs.eg.db). 
+          You can now download the results and view them in interactive plots."
         dataset <- paste0(pkg, " (", packageVersion(pkg),")")
         list(annotations, message, dataset)
       })
@@ -4200,8 +4200,8 @@ getStatistics_RNASeq_processed <- function(normMatrix,
       colnames(top_table[[i]]) <- c("GeneID", "meanExpr", "log2FC", "log2FC SE",
                                     "p-value", "adj. p-value")
     }
-    message <- "Statistical analysis has been performed. 
-    You can download the results and view them in interactive plots."
+    message <- "Nice! Statistical analysis has been performed. 
+    You can now download the results and view them in interactive plots."
     
     # Add annotations to table if this option is selected
     if (addAnnotation == TRUE){
@@ -4241,8 +4241,8 @@ getStatistics_RNASeq_processed <- function(normMatrix,
                                         values = top_table[[t]]$GeneID,
                                         mart = ensembl)
           
-          message <- "Statistical analysis has been performed. 
-          Gene annotation was performed with biomaRt. You can download 
+          message <- "Nice! Statistical analysis has been performed. 
+          Gene annotation was performed with biomaRt. You can now download 
               the results and view them in interactive plots."
           dataset <- paste0(biomart_dataset, " (", searchDatasets(mart = ensembl, pattern = "hsapiens")$version, ")")
           list(annotations, message, dataset)
@@ -4305,10 +4305,10 @@ getStatistics_RNASeq_processed <- function(normMatrix,
           temp_col[temp_col == "ENTREZID"] <- "entrezgene_id"
           temp_col[temp_col == "ENSEMBL"] <- "ensembl_gene_id"
           colnames(annotations) <- temp_col
-          message <- "Statistical analysis has been performed. 
+          message <- "Nice! Statistical analysis has been performed. 
           The Ensembl database was not available.
-          So, the gene annotation was performed with the bioconductor annotation package. 
-          You can download the results and view them in interactive plots."
+          So, the gene annotation was performed with the bioconductor annotation package (Org.Xx.eg.db). 
+          You can now download the results and view them in interactive plots."
           dataset <- paste0(pkg, " (", packageVersion(pkg),")")
           list(annotations, message, dataset)
         })
