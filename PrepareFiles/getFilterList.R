@@ -4,7 +4,7 @@ cat("\014")
 gc()
 
 # Source global file
-source("D:/ArrayAnalysis_Shiny/global.R")
+source("global.R")
 
 # Get filter sets for each organism
 sets <- c("hsapiens_gene_ensembl" ,
@@ -17,8 +17,8 @@ filterList <- list()
 for (i in 1:length(sets)){
   ensembl1 <- useDataset(sets[i], mart=ensembl)
   all_filters <- biomaRt::listFilters(ensembl1)
-  filterList[[i]] <- c("Ensembl Gene ID",
-                       "Entrez Gene ID",
+  filterList[[i]] <- c("Ensembl Gene ID" = "ENSEMBL",
+                       "Entrez Gene ID" = "ENTREZID",
                        setdiff(all_filters$name[str_detect(all_filters$name,"affy")],
                                all_filters$name[str_detect(all_filters$name,"with")]))
 }
@@ -27,9 +27,3 @@ names(filterList) <- sets
 
 # Save file
 save(filterList, file = "filterList_biomaRt.RData")
-
-
-for (i in 1:length(filterList)){
-  filterList[[i]][1:2] <- c("Ensembl Gene ID",
-                            "Entrez Gene ID")
-}

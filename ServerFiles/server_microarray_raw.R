@@ -2468,10 +2468,10 @@ observe({
                                            position = "right",
                                            size = "large")
                   ),
-                  choices = c("Ensembl Gene ID",
-                              "Entrez Gene ID",
-                              "Gene Symbol/Name"),
-                  selected = "Gene Symbol/Name",
+                  choices = c("Ensembl Gene ID" = "ENSEMBL",
+                              "Entrez Gene ID" = "ENTREZID",
+                              "Gene Symbol/Name" = "SYMBOL"),
+                  selected = "SYMBOL",
                   multiple = TRUE)
     )
     
@@ -2727,7 +2727,7 @@ observe({
                             input$statboxplot_col6_microarray_raw)
         }
         
-        gene <- rv$top_table[[input$comparisons_view_microarray_raw]]$GeneID[input$top_table_microarray_raw_rows_selected]
+        gene <- rv$top_table[[input$comparisons_view_microarray_raw]]$`Gene ID`[input$top_table_microarray_raw_rows_selected]
         sel_row <- which(as.character(rownames(rv$normMatrix)) %in% as.character(gene))
         
         # Make boxplot
@@ -4166,7 +4166,7 @@ observe({
               
               output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
               output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
-              output$meanExpr <- round(output$meanExpr,3)
+              output$`Mean Expr` <- round(output$`Mean Expr`,3)
               output$log2FC <- round(output$log2FC,3)
               output$`log2FC SE` <- round(output$`log2FC SE`,3)
               
@@ -4839,7 +4839,7 @@ observe({
             
             output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
             output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
-            output$meanExpr <- round(output$meanExpr,3)
+            output$`Mean Expr` <- round(output$`Mean Expr`,3)
             output$log2FC <- round(output$log2FC,3)
             output$`log2FC SE` <- round(output$`log2FC SE`,3)
             

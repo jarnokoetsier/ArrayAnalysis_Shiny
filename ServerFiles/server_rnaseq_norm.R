@@ -1721,48 +1721,48 @@ observe({
         })
         
       }
-      })
+    })
+    
+    observe({
+      req(rv$colorFactor_PCA)
       
-      observe({
-        req(rv$colorFactor_PCA)
+      # Set colors
+      if (length(levels(rv$colorFactor_PCA)) > 5){
+        rv$legendColors_PCA <- colorsByFactor(rv$colorFactor_PCA)$legendColors
+      } else{
+        rv$legendColors_PCA <- c(input$PCA_col1_rnaseq_norm,
+                                 input$PCA_col2_rnaseq_norm,
+                                 input$PCA_col3_rnaseq_norm,
+                                 input$PCA_col4_rnaseq_norm,
+                                 input$PCA_col5_rnaseq_norm)[1:length(levels(rv$colorFactor_PCA))]
+      }
+    })
+    
+    observe({
+      req(rv$legendColors_PCA)
+      req(rv$colorFactor_PCA)
+      
+      # Make PCA plot
+      output$PCA_rnaseq_norm <- plotly::renderPlotly({
         
-        # Set colors
-        if (length(levels(rv$colorFactor_PCA)) > 5){
-          rv$legendColors_PCA <- colorsByFactor(rv$colorFactor_PCA)$legendColors
-        } else{
-          rv$legendColors_PCA <- c(input$PCA_col1_rnaseq_norm,
-                                   input$PCA_col2_rnaseq_norm,
-                                   input$PCA_col3_rnaseq_norm,
-                                   input$PCA_col4_rnaseq_norm,
-                                   input$PCA_col5_rnaseq_norm)[1:length(levels(rv$colorFactor_PCA))]
+        colorFactor <- rv$colorFactor_PCA
+        legendColors <- rv$legendColors_PCA
+        
+        if (length(legendColors) != length(levels(colorFactor))){
+          legendColors <- colorsByFactor(colorFactor)$legendColors
         }
-      })
-      
-      observe({
-        req(rv$legendColors_PCA)
-        req(rv$colorFactor_PCA)
         
-        # Make PCA plot
-        output$PCA_rnaseq_norm <- plotly::renderPlotly({
-          
-          colorFactor <- rv$colorFactor_PCA
-          legendColors <- rv$legendColors_PCA
-          
-          if (length(legendColors) != length(levels(colorFactor))){
-            legendColors <- colorsByFactor(colorFactor)$legendColors
-          }
-          
-          # Make PCA score plot
-          rv$PCAplot <- plot_PCA(PC_data = rv$PCA_data, 
-                                 colorFactor = colorFactor,
-                                 legendColors = legendColors, 
-                                 xpc = as.numeric(stringr::str_remove(input$xpca_rnaseq_norm,"PC")), 
-                                 ypc = as.numeric(stringr::str_remove(input$ypca_rnaseq_norm,"PC")), 
-                                 zpc = ifelse(input$xyz_rnaseq_norm,as.numeric(stringr::str_remove(input$zpca_rnaseq_norm,"PC")),3), 
-                                 xyz = input$xyz_rnaseq_norm)
-          return(rv$PCAplot)
-        })
+        # Make PCA score plot
+        rv$PCAplot <- plot_PCA(PC_data = rv$PCA_data, 
+                               colorFactor = colorFactor,
+                               legendColors = legendColors, 
+                               xpc = as.numeric(stringr::str_remove(input$xpca_rnaseq_norm,"PC")), 
+                               ypc = as.numeric(stringr::str_remove(input$ypca_rnaseq_norm,"PC")), 
+                               zpc = ifelse(input$xyz_rnaseq_norm,as.numeric(stringr::str_remove(input$zpca_rnaseq_norm,"PC")),3), 
+                               xyz = input$xyz_rnaseq_norm)
+        return(rv$PCAplot)
       })
+    })
     
     #***************************#
     # Modal to download figure
@@ -2382,10 +2382,10 @@ observe({
                                            position = "right",
                                            size = "large")
                   ),
-                  choices = c("Ensembl Gene ID",
-                              "Entrez Gene ID",
-                              "Gene Symbol/Name"),
-                  selected = "Entrez Gene ID",
+                  choices = c("Ensembl Gene ID" = "ENSEMBL",
+                              "Entrez Gene ID" = "ENTREZID",
+                              "Gene Symbol/Name" = "SYMBOL"),
+                  selected = whichID(rownames(rv$normData)),
                   multiple = FALSE),
       
       selectInput(inputId = "biomart_attributes_rnaseq_norm",
@@ -2401,10 +2401,11 @@ observe({
                                            position = "right",
                                            size = "large")
                   ),
-                  choices = c("Ensembl Gene ID",
-                              "Entrez Gene ID",
-                              "Gene Symbol/Name"),
-                  selected = "Gene Symbol/Name",
+                  choices = c("Ensembl Gene ID" = "ENSEMBL",
+                              "Entrez Gene ID" = "ENTREZID",
+                              "Gene Symbol/Name" = "SYMBOL"),
+                  selected = ifelse(whichID(rownames(rv$normData)) == "SYMBOL",
+                                    "ENSEMBL", "SYMBOL"),
                   multiple = TRUE)
     )
     
@@ -2622,7 +2623,7 @@ observe({
                             input$statboxplot_col6_rnaseq_norm)
         }
         
-        gene <- rv$top_table[[input$comparisons_view_rnaseq_norm]]$GeneID[input$top_table_rnaseq_norm_rows_selected]
+        gene <- rv$top_table[[input$comparisons_view_rnaseq_norm]]$`Gene ID`[input$top_table_rnaseq_norm_rows_selected]
         sel_row <- which(as.character(rownames(rv$normData)) %in% as.character(gene))
         
         # Make boxplot
@@ -4054,7 +4055,7 @@ observe({
             
             output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
             output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
-            output$meanExpr <- round(output$meanExpr,3)
+            output$`Mean Expr` <- round(output$`Mean Expr`,3)
             output$log2FC <- round(output$log2FC,3)
             output$`log2FC SE` <- round(output$`log2FC SE`,3)
             
@@ -4723,7 +4724,7 @@ observe({
             
             output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
             output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
-            output$meanExpr <- round(output$meanExpr,3)
+            output$`Mean Expr` <- round(output$`Mean Expr`,3)
             output$log2FC <- round(output$log2FC,3)
             output$`log2FC SE` <- round(output$`log2FC SE`,3)
             

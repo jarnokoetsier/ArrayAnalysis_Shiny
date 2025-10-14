@@ -1747,10 +1747,10 @@ makeComparisons <- function(ExpLevels){
 
 selFilter <- function(ProbeAnnotation){
   
-  selFilter <- "Entrez Gene ID"
+  selFilter <- "ENTREZID"
   if (!is.null(ProbeAnnotation)){
     if (ProbeAnnotation == "ENSG"){
-      selFilter <- "Ensembl Gene ID"
+      selFilter <- "ENSEMBL"
     }
   }
   return(selFilter)
@@ -1782,22 +1782,22 @@ getStatistics <- function(normMatrix,
                           comparisons,
                           addAnnotation = TRUE,
                           biomart_dataset = "hsapiens_gene_ensembl",
-                          biomart_attributes = c("Ensembl Gene ID",
-                                                 "Entrez Gene ID",
-                                                 "Gene Symbol/Name"),
-                          biomart_filters = "Entrez Gene ID"){
+                          biomart_attributes = c("ENSEMBL",
+                                                 "ENTREZID",
+                                                 "SYMBOL"),
+                          biomart_filters = "ENTREZID"){
   tryCatch({
     dataset <- NULL
     if (!is.null(biomart_dataset)){
       # Replace name of biomaRt filter
-      if (biomart_filters %in% c("Ensembl Gene ID",
-                                 "Entrez Gene ID",
-                                 "Gene Symbol/Name")){
+      if (biomart_filters %in% c("ENSEMBL",
+                                 "ENTREZID",
+                                 "SYMBOL")){
         biomart_filters <- tryCatch({
           switch(biomart_filters,
-                 "Gene Symbol/Name" = "gene_name",
-                 "Entrez Gene ID" = "entrezgene_id",
-                 "Ensembl Gene ID" = "ensembl_gene_id",
+                 "SYMBOL" = "gene_name",
+                 "ENTREZID" = "entrezgene_id",
+                 "ENSEMBL" = "ensembl_gene_id",
           )
         }, error = function(cond){
           return(biomart_filters)
@@ -1806,13 +1806,13 @@ getStatistics <- function(normMatrix,
       
       # Replace name(s) of biomaRt attributes
       for (a in 1:length(biomart_attributes)){
-        if (biomart_attributes[a] %in% c("Ensembl Gene ID",
-                                         "Entrez Gene ID",
-                                         "Gene Symbol/Name")){
+        if (biomart_attributes[a] %in% c("ENSEMBL",
+                                         "ENTREZID",
+                                         "SYMBOL")){
           biomart_attributes[a] <- switch(biomart_attributes[a],
-                                          "Gene Symbol/Name" = "gene_name",
-                                          "Entrez Gene ID" = "entrezgene_id",
-                                          "Ensembl Gene ID" = "ensembl_gene_id",
+                                          "SYMBOL" = "gene_name",
+                                          "ENTREZID" = "entrezgene_id",
+                                          "ENSEMBL" = "ensembl_gene_id",
           )
         }
       }
@@ -1879,7 +1879,7 @@ getStatistics <- function(normMatrix,
                                          "adj.P.Val")]
       top_table[[i]] <- cbind(rownames(top_table[[i]]), top_table[[i]])
       rownames(top_table[[i]]) <- NULL
-      colnames(top_table[[i]]) <- c("GeneID", "meanExpr", "log2FC", "log2FC SE",
+      colnames(top_table[[i]]) <- c("Gene ID", "Mean Expr", "log2FC", "log2FC SE",
                                     "p-value", "adj. p-value")
     }
     message <- "Nice! Statistical analysis has been performed. 
@@ -1920,7 +1920,7 @@ getStatistics <- function(normMatrix,
           ensembl <- biomaRt::useDataset(biomart_dataset, mart=ensembl)
           annotations <- biomaRt::getBM(attributes=biomart_attributes1,
                                         filters = biomart_filters1,
-                                        values = top_table[[t]]$GeneID,
+                                        values = top_table[[t]]$`Gene ID`,
                                         mart = ensembl)
           
           message <- "Nice! Statistical analysis has been performed. 
@@ -1972,20 +1972,20 @@ getStatistics <- function(normMatrix,
                                                keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
           
           # Join with geneIDs
-          annotations <- left_join(data.frame(GeneID = top_table[[t]]$GeneID),
+          annotations <- left_join(data.frame(`Gene ID` = top_table[[t]]$`Gene ID`),
                                    annotations,
-                                   by = c("GeneID" = biomart_filters2))
+                                   by = c("Gene ID" = biomart_filters2))
           
           # Change column names back
           temp_col <- colnames(annotations)
-          temp_col[temp_col == "GeneID"] <- biomart_filters1
+          temp_col[temp_col == "Gene ID"] <- biomart_filters1
           if (biomart_dataset == "hsapiens_gene_ensembl"){
-            temp_col[temp_col == "SYMBOL"] <- "hgnc_symbol"
+            temp_col[temp_col == "SYMBOL"] <- "Gene Symbol"
           } else{
-            temp_col[temp_col == "SYMBOL"] <- "external_gene_name"
+            temp_col[temp_col == "SYMBOL"] <- "Gene Name"
           }
-          temp_col[temp_col == "ENTREZID"] <- "entrezgene_id"
-          temp_col[temp_col == "ENSEMBL"] <- "ensembl_gene_id"
+          temp_col[temp_col == "ENTREZID"] <- "Entrez Gene ID"
+          temp_col[temp_col == "ENSEMBL"] <- "Ensembl Gene ID"
           colnames(annotations) <- temp_col
           message <- "Nice! Statistical analysis has been performed. 
           The Ensembl database was not available.
@@ -2008,21 +2008,23 @@ getStatistics <- function(normMatrix,
         # Combine annotations with top table
         #annotations[,biomart_filters] <- as.character(annotations[,biomart_filters1])
         top_table_ann <- dplyr::left_join(top_table[[t]], annotations,
-                                          by = c("GeneID" = biomart_filters1))
+                                          by = c("Gene ID" = biomart_filters1))
         
-        colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "gene_name"
-        colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "gene_name"
+        colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "Gene Symbol"
+        colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "Gene Name"
+        colnames(top_table_ann)[colnames(top_table_ann) == "ensembl_gene_id"] <- "Ensembl Gene ID"
+        colnames(top_table_ann)[colnames(top_table_ann) == "entrezgene_id"] <- "Entrez Gene ID"
         
         # Make sure that there are no duplicate gene ids
         for (a in 1:(ncol(top_table_ann)-6)){
           temp1 <- unique(top_table_ann[,c(1,6+a)])
           temp1 <- temp1[!is.na(temp1[,2]),]
           temp_ann <- temp1 %>%
-            dplyr::group_by(GeneID) %>%
+            dplyr::group_by(`Gene ID`) %>%
             dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = "; "))
           
           top_table[[t]] <- dplyr::left_join(top_table[[t]], temp_ann,
-                                             by = c("GeneID" = "GeneID"))
+                                             by = c("Gene ID" = "Gene ID"))
         }
         
       }
@@ -2185,7 +2187,7 @@ makeVolcano <- function(top_table,
                        logP = -log10(top_table[,"p-value"]),
                        adjPvalue = top_table[,"adj. p-value"],
                        logadjP = -log10(top_table[,"adj. p-value"]),
-                       GeneID = top_table[,"GeneID"])
+                       GeneID = top_table[,"Gene ID"])
   
   # Format pop-up text
   if (ncol(top_table) == 7){
@@ -2351,7 +2353,7 @@ makeVolcano_static <- function(top_table,
                        logP = -log10(top_table[,"p-value"]),
                        adjPvalue = top_table[,"adj. p-value"],
                        logAdjP = -log10(top_table[,"p-value"]),
-                       GeneID = top_table[,"GeneID"])
+                       GeneID = top_table[,"Gene ID"])
   
   
   if (p == "raw"){
@@ -2446,8 +2448,8 @@ makeMAplot <- function(top_table,
                        Pvalue = top_table[,"p-value"],
                        logP = -log10(top_table[,"p-value"]),
                        adjPvalue = top_table[,"adj. p-value"],
-                       meanExpr = top_table[,"meanExpr"],
-                       GeneID = top_table[,"GeneID"])
+                       meanExpr = top_table[,"Mean Expr"],
+                       GeneID = top_table[,"Gene ID"])
   
   if (isTRUE(RNAseq)){
     plotDF$meanExpr <- log2(plotDF$meanExpr +1)
@@ -2610,8 +2612,8 @@ makeMAplot_static <- function(top_table,
                        Pvalue = top_table[,"p-value"],
                        logP = -log10(top_table[,"p-value"]),
                        adjPvalue = top_table[,"adj. p-value"],
-                       meanExpr = top_table[,"meanExpr"],
-                       GeneID = top_table[,"GeneID"])
+                       meanExpr = top_table[,"Mean Expr"],
+                       GeneID = top_table[,"Gene ID"])
   
   if (isTRUE(RNAseq)){
     plotDF$meanExpr <- log2(plotDF$meanExpr +1)
@@ -3825,19 +3827,19 @@ getStatistics_RNASeq <- function(rawMatrix,
                                  shrinkage = TRUE,
                                  addAnnotation = TRUE,
                                  biomart_dataset = "hsapiens_gene_ensembl",
-                                 biomart_attributes = c("Ensembl Gene ID",
-                                                        "Entrez Gene ID",
-                                                        "Gene Symbol/Name"),
-                                 biomart_filters = "Entrez Gene ID"){
+                                 biomart_attributes = c("ENSEMBL",
+                                                        "ENTREZID",
+                                                        "SYMBOL"),
+                                 biomart_filters = "ENTREZID"){
   tryCatch({
   dataset <- NULL
   
   # Replace name of biomaRt filter
   biomart_filters <- tryCatch({
     switch(biomart_filters,
-           "Gene Symbol/Name" = "gene_name",
-           "Entrez Gene ID" = "entrezgene_id",
-           "Ensembl Gene ID" = "ensembl_gene_id",
+           "SYMBOL" = "gene_name",
+           "ENTREZID" = "entrezgene_id",
+           "ENSEMBL" = "ensembl_gene_id",
     )
   }, error = function(cond){
     return(biomart_filters)
@@ -3847,9 +3849,9 @@ getStatistics_RNASeq <- function(rawMatrix,
   for (a in 1:length(biomart_attributes)){
     biomart_attributes[a] <- tryCatch({
       switch(biomart_attributes[a],
-             "Gene Symbol/Name" = "gene_name",
-             "Entrez Gene ID" = "entrezgene_id",
-             "Ensembl Gene ID" = "ensembl_gene_id",
+             "SYMBOL" = "gene_name",
+             "ENTREZID" = "entrezgene_id",
+             "ENSEMBL" = "ensembl_gene_id",
       )
     }, error = function(cond){
       return(biomart_attributes[a])
@@ -3920,7 +3922,7 @@ getStatistics_RNASeq <- function(rawMatrix,
                                 "padj")]
     top_table[[i]] <- cbind(rownames(top_table[[i]]), top_table[[i]])
     rownames(top_table[[i]]) <- NULL
-    colnames(top_table[[i]]) <- c("GeneID", "meanExpr", "log2FC", "log2FC SE",
+    colnames(top_table[[i]]) <- c("Gene ID", "Mean Expr", "log2FC", "log2FC SE",
                                   "p-value", "adj. p-value")
   }
   
@@ -3962,7 +3964,7 @@ getStatistics_RNASeq <- function(rawMatrix,
         ensembl <- biomaRt::useDataset(biomart_dataset, mart=ensembl)
         annotations <- biomaRt::getBM(attributes=biomart_attributes1,
                                       filters = biomart_filters1,
-                                      values = top_table[[t]]$GeneID,
+                                      values = top_table[[t]]$`Gene ID`,
                                       mart = ensembl)
         
         message <- "Nice! Statistical analysis has been performed. 
@@ -4014,20 +4016,20 @@ getStatistics_RNASeq <- function(rawMatrix,
                                              keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
         
         # Join with geneIDs
-        annotations <- left_join(data.frame(GeneID = top_table[[t]]$GeneID),
+        annotations <- left_join(data.frame(`Gene ID` = top_table[[t]]$`Gene ID`),
                                  annotations,
-                                 by = c("GeneID" = biomart_filters2))
+                                 by = c("Gene ID" = biomart_filters2))
         
         # Change column names back
         temp_col <- colnames(annotations)
-        temp_col[temp_col == "GeneID"] <- biomart_filters1
+        temp_col[temp_col == "Gene ID"] <- biomart_filters1
         if (biomart_dataset == "hsapiens_gene_ensembl"){
-          temp_col[temp_col == "SYMBOL"] <- "hgnc_symbol"
+          temp_col[temp_col == "SYMBOL"] <- "Gene Symbol"
         } else{
-          temp_col[temp_col == "SYMBOL"] <- "external_gene_name"
+          temp_col[temp_col == "SYMBOL"] <- "Gene Name"
         }
-        temp_col[temp_col == "ENTREZID"] <- "entrezgene_id"
-        temp_col[temp_col == "ENSEMBL"] <- "ensembl_gene_id"
+        temp_col[temp_col == "ENTREZID"] <- "Entrez Gene ID"
+        temp_col[temp_col == "ENSEMBL"] <- "Ensembl Gene ID"
         colnames(annotations) <- temp_col
         message <- "Nice! Statistical analysis has been performed. 
           The Ensembl database was not available.
@@ -4050,21 +4052,23 @@ getStatistics_RNASeq <- function(rawMatrix,
       # Combine annotations with top table
       #annotations[,biomart_filters] <- as.character(annotations[,biomart_filters1])
       top_table_ann <- dplyr::left_join(top_table[[t]], annotations,
-                                        by = c("GeneID" = biomart_filters1))
+                                        by = c("Gene ID" = biomart_filters1))
       
-      colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "gene_name"
-      colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "gene_name"
+      colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "Gene Symbol"
+      colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "Gene Name"
+      colnames(top_table_ann)[colnames(top_table_ann) == "entrezgene_id"] <- "Entrez Gene ID"
+      colnames(top_table_ann)[colnames(top_table_ann) == "ensembl_gene_id"] <- "Ensembl Gene ID"
       
       # Make sure that there are no duplicate gene ids
       for (a in 1:(ncol(top_table_ann)-6)){
         temp1 <- unique(top_table_ann[,c(1,6+a)])
         temp1 <- temp1[!is.na(temp1[,2]),]
         temp_ann <- temp1 %>%
-          dplyr::group_by(GeneID) %>%
+          dplyr::group_by(`Gene ID`) %>%
           dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = "; "))
         
         top_table[[t]] <- dplyr::left_join(top_table[[t]], temp_ann,
-                                           by = c("GeneID" = "GeneID"))
+                                           by = c("Gene ID" = "Gene ID"))
       }
       
     }
@@ -4105,19 +4109,19 @@ getStatistics_RNASeq_processed <- function(normMatrix,
                                            comparisons,
                                            addAnnotation = TRUE,
                                            biomart_dataset = "hsapiens_gene_ensembl",
-                                           biomart_attributes = c("Ensembl Gene ID",
-                                                                  "Entrez Gene ID",
-                                                                  "Gene Symbol/Name"),
-                                           biomart_filters = "Entrez Gene ID"){
+                                           biomart_attributes = c("ENSEMBL",
+                                                                  "ENTREZID",
+                                                                  "SYMBOL"),
+                                           biomart_filters = "ENTREZID"){
   tryCatch({
     dataset <- NULL
     
     # Replace name of biomaRt filter
     biomart_filters <- tryCatch({
       switch(biomart_filters,
-             "Gene Symbol/Name" = "gene_name",
-             "Entrez Gene ID" = "entrezgene_id",
-             "Ensembl Gene ID" = "ensembl_gene_id",
+             "SYMBOL" = "gene_name",
+             "ENTREZID" = "entrezgene_id",
+             "ENSEMBL" = "ensembl_gene_id",
       )
     }, error = function(cond){
       return(biomart_filters)
@@ -4127,9 +4131,9 @@ getStatistics_RNASeq_processed <- function(normMatrix,
     for (a in 1:length(biomart_attributes)){
       biomart_attributes[a] <- tryCatch({
         switch(biomart_attributes[a],
-               "Gene Symbol/Name" = "gene_name",
-               "Entrez Gene ID" = "entrezgene_id",
-               "Ensembl Gene ID" = "ensembl_gene_id",
+               "SYMBOL" = "gene_name",
+               "ENTREZID" = "entrezgene_id",
+               "ENSEMBL" = "ensembl_gene_id",
         )
       }, error = function(cond){
         return(biomart_attributes[a])
@@ -4197,7 +4201,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
                                          "adj.P.Val")]
       top_table[[i]] <- cbind(rownames(top_table[[i]]), top_table[[i]])
       rownames(top_table[[i]]) <- NULL
-      colnames(top_table[[i]]) <- c("GeneID", "meanExpr", "log2FC", "log2FC SE",
+      colnames(top_table[[i]]) <- c("Gene ID", "Mean Expr", "log2FC", "log2FC SE",
                                     "p-value", "adj. p-value")
     }
     message <- "Nice! Statistical analysis has been performed. 
@@ -4238,7 +4242,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
           ensembl <- biomaRt::useDataset(biomart_dataset, mart=ensembl)
           annotations <- biomaRt::getBM(attributes=biomart_attributes1,
                                         filters = biomart_filters1,
-                                        values = top_table[[t]]$GeneID,
+                                        values = top_table[[t]]$`Gene ID`,
                                         mart = ensembl)
           
           message <- "Nice! Statistical analysis has been performed. 
@@ -4290,20 +4294,20 @@ getStatistics_RNASeq_processed <- function(normMatrix,
                                             keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
           
           # Join with geneIDs
-          annotations <- left_join(data.frame(GeneID = top_table[[t]]$GeneID),
+          annotations <- left_join(data.frame(`Gene ID` = top_table[[t]]$`Gene ID`),
                                    annotations,
-                                   by = c("GeneID" = biomart_filters2))
+                                   by = c("Gene ID" = biomart_filters2))
           
           # Change column names back
           temp_col <- colnames(annotations)
-          temp_col[temp_col == "GeneID"] <- biomart_filters1
+          temp_col[temp_col == "Gene ID"] <- biomart_filters1
           if (biomart_dataset == "hsapiens_gene_ensembl"){
-          temp_col[temp_col == "SYMBOL"] <- "hgnc_symbol"
+          temp_col[temp_col == "SYMBOL"] <- "Gene Symbol"
           } else{
-            temp_col[temp_col == "SYMBOL"] <- "external_gene_name"
+            temp_col[temp_col == "SYMBOL"] <- "Gene Name"
           }
-          temp_col[temp_col == "ENTREZID"] <- "entrezgene_id"
-          temp_col[temp_col == "ENSEMBL"] <- "ensembl_gene_id"
+          temp_col[temp_col == "ENTREZID"] <- "Entrez Gene ID"
+          temp_col[temp_col == "ENSEMBL"] <- "Ensembl Gene ID"
           colnames(annotations) <- temp_col
           message <- "Nice! Statistical analysis has been performed. 
           The Ensembl database was not available.
@@ -4326,21 +4330,23 @@ getStatistics_RNASeq_processed <- function(normMatrix,
         # Combine annotations with top table
         #annotations[,biomart_filters] <- as.character(annotations[,biomart_filters1])
         top_table_ann <- dplyr::left_join(top_table[[t]], annotations,
-                                          by = c("GeneID" = biomart_filters1))
+                                          by = c("Gene ID" = biomart_filters1))
         
-        colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "gene_name"
-        colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "gene_name"
+        colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "Gene Symbol"
+        colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "Gene Name"
+        colnames(top_table_ann)[colnames(top_table_ann) == "entrezgene_id"] <- "Entrez Gene ID"
+        colnames(top_table_ann)[colnames(top_table_ann) == "ensembl_gene_id"] <- "Ensembl Gene ID"
         
         # Make sure that there are no duplicate gene ids
         for (a in 1:(ncol(top_table_ann)-6)){
           temp1 <- unique(top_table_ann[,c(1,6+a)])
           temp1 <- temp1[!is.na(temp1[,2]),]
           temp_ann <- temp1 %>%
-            dplyr::group_by(GeneID) %>%
+            dplyr::group_by(`Gene ID`) %>%
             dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = "; "))
           
           top_table[[t]] <- dplyr::left_join(top_table[[t]], temp_ann,
-                                             by = c("GeneID" = "GeneID"))
+                                             by = c("Gene ID" = "Gene ID"))
         }
         
       }
