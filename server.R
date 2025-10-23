@@ -20,9 +20,12 @@ server <- function(input, output, session){
   # Preparations
   
   ##############################################################################
-  
+
   # Set options for data upload
   options(shiny.maxRequestSize=125*1024^10)
+  
+  # Remove loading screen
+  hideTab("navbar", target = "loading_panel")
   
   # Hide the RNA-seq (raw) tabs
   hideTab("navbar", target = "panel_upload_rnaseq_raw")
@@ -48,7 +51,7 @@ server <- function(input, output, session){
   hideTab("navbar", target = "panel_statistics_microarray_norm")
   hideTab("navbar", target = "panel_ORA_microarray_norm")
   
-  # Checck version
+  # Check version
   observe({
     versionMessage <- reactive({tryCatch({
       indexFile <- readLines("https://raw.githubusercontent.com/jarnokoetsier/ArrayAnalysis/refs/heads/main/docs/index.html")

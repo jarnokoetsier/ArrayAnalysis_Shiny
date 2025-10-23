@@ -183,13 +183,10 @@ observe({
     if(nrow(rv$metaData)>0){
       
       # check if some samples are removed
-      if (nrow(rv$metaData) != ncol(Biobase::exprs(rv$gxData))){
-        shinyWidgets::sendSweetAlert(
-          session = session,
-          title = "Warning!",
-          text = "One or more sample(s) in the expression data file do(es) not have metadata available. 
-          These samples are excluded from the analysis.",
-          type = "warning")
+      if (nrow(rv$metaData) < ncol(Biobase::exprs(rv$gxData))){
+        rv$removeSamplesWarning <- TRUE
+      } else{
+        rv$removeSamplesWarning <- FALSE
       }
       
       # Filter expression data for samples with metadata
@@ -214,11 +211,6 @@ observe({
       }, options = list(pageLength = 6))
       
       # Print meta table
-      # output$metaTable_microarray_norm <- DT::renderDataTable({
-      #   req(rv$metaData)
-      #   return(rv$metaData)
-      # }, options = list(pageLength = 6))
-      
       output$metaTable_microarray_norm <- DT::renderDT({
         DT::datatable(rv$metaData, editable = TRUE)
       })
@@ -288,12 +280,21 @@ observe({
         
         # Show message
         if (nrow(rv$metaData) >= ncol(exprs(rv$gxData))){
-          shinyWidgets::sendSweetAlert(
-            session = session,
-            title = "Info",
-            text = "Great! Your data is uploaded. 
+          if (rv$removeSamplesWarning){
+            shinyWidgets::sendSweetAlert(
+              session = session,
+              title = "Warning!",
+              text = "One or more samples in the expression data file do not have a matching
+                  metadata entry. These samples are excluded from the expression matrix.",
+              type = "warning")
+          } else{
+            shinyWidgets::sendSweetAlert(
+              session = session,
+              title = "Info",
+              text = "Great! Your data is uploaded. 
             Take a look at the tables on this page to make sure everything uploaded correctly.",
-            type = "info")
+              type = "info")
+          }
         }
         
         # Show "next" button
@@ -565,7 +566,7 @@ observe({
           status = "danger",
           fill = TRUE,
           selected = "Log2-transformation"),
-        h5(strong("NOTE: "),"Data seems not to be log-transformed. So, 
+        h5(strong("NOTE: "),"Data do not seem to be log-transformed. So, 
                  log-transformation is needed.")
         
       )
@@ -581,7 +582,7 @@ observe({
           status = "danger",
           fill = TRUE,
           selected = "None"),
-        h5(strong("NOTE: "),"Data seems to be already log-transformed. So, 
+        h5(strong("NOTE: "),"Data seem to be already log-transformed. So, 
                    no additional transformation is needed.")
       )
     }

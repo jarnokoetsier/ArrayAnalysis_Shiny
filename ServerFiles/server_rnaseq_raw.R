@@ -147,13 +147,10 @@ observe({
     if(nrow(rv$metaData)>0){
       
       # check if some samples are removed
-      if (nrow(rv$metaData) != ncol(rv$gxData)){
-        shinyWidgets::sendSweetAlert(
-          session = session,
-          title = "Warning!",
-          text = "One or more samples in the expression data file do not have meta
-                  data available. These samples are excluded from the analysis.",
-          type = "warning")
+      if (nrow(rv$metaData) < ncol(rv$gxData)){
+        rv$removeSamplesWarning <- TRUE
+      } else{
+        rv$removeSamplesWarning <- FALSE
       }
       
       # Filter expression data for samples with metadata
@@ -245,12 +242,22 @@ observe({
         
         # Show message
         if (nrow(rv$metaData) >= ncol(rv$gxData)){
-          shinyWidgets::sendSweetAlert(
-            session = session,
-            title = "Info",
-            text = "Great! Your data is uploaded. 
+          
+          if (rv$removeSamplesWarning){
+            shinyWidgets::sendSweetAlert(
+              session = session,
+              title = "Warning!",
+              text = "One or more samples in the expression data file do not have a matching
+                  metadata entry. These samples are excluded from the expression matrix.",
+              type = "warning")
+          } else{
+            shinyWidgets::sendSweetAlert(
+              session = session,
+              title = "Info",
+              text = "Great! Your data is uploaded. 
             Take a look at the tables on this page to make sure everything uploaded correctly.",
-            type = "info")
+              type = "info")
+          }
         }
         
         # Show "next" button

@@ -14,7 +14,7 @@ ui <- tagList(
                            margin: 0;
                            padding: 0;
                            }
-                            .navbar-nav > li:nth-child(18) {
+                            .navbar-nav > li:nth-child(19) {
                            float: right;
                             }
                            
@@ -105,6 +105,39 @@ ui <- tagList(
                #  Home panel                        
                
                ###################################################################
+               tabPanel("Loading", 
+                        value = "loading_panel", 
+                        icon = icon("sync"), 
+                        class = "my_style_1",
+                        
+                        # Set spacing between top of page and text box
+                        br(),
+                        br(),
+                        br(),
+                        br(),
+                        br(),
+                        br(),
+                        
+                        fluidRow(
+                          column(6, offset = 3, 
+                                 align = "center", 
+                                 style = "background-color:rgba(255, 255, 255, 0.95); border-radius: 15px;",
+                                 
+                                 # Line break
+                                 br(),
+                                 
+                                 # ArrayAnalysis logo
+                                 img(src = "logo_main.PNG", width = "100%"),
+                                 h5(ArrayAnalysis_version, align = "center"),
+                                 
+                                 # Welcome message
+                                 h1(strong(span(style = "color:#000000", 
+                                                "Loading..."))),
+                                 # Line break
+                                 br()
+                          )
+                        )
+               ),
                
                tabPanel("Home", 
                         value = "home_panel", 
@@ -416,7 +449,7 @@ ui <- tagList(
                             inputId = "normMeth_microarray_raw",
                             label = NULL,
                             choices = c("RMA","GCRMA","PLIER")),
-
+                          
                           shinyWidgets::prettyRadioButtons(
                             inputId = "perGroup_microarray_raw", 
                             label = NULL, 
@@ -539,7 +572,7 @@ ui <- tagList(
                           h5("In the statistical analysis step, 
                         you can select which groups to compare to each other and 
                            which covariates to add to the statistical model. 
-                             Moreover, you have to option to add additional gene IDs 
+                             Moreover, you have the option to add additional gene IDs 
                              (Ensembl IDs, Entrez IDs, and Gene Symbols) to the output."),
                           hr(),
                           
@@ -671,7 +704,7 @@ ui <- tagList(
                           conditionalPanel(
                             condition = "input.ORA_or_GSEA_microarray_raw == 'ORA'",
                             h5("With",strong("Overrepresentation Analysis (ORA),"),"dysregulated 
-                          processes and pathways can be idenified. These processes/pathways 
+                          processes and pathways can be identified. These processes/pathways 
                           are identified by testing whether their genes are overrepresented among the (most) significant genes."),
                           ),
                           
@@ -878,10 +911,10 @@ ui <- tagList(
                                                    size = "large")
                           ))),
                           shinyWidgets::actionBttn(inputId = "calculate_ORA_microarray_raw",
-                                     label = "Calculate",
-                                     style = "simple",
-                                     color = "warning",
-                                     icon = icon("sync")),
+                                                   label = "Calculate",
+                                                   style = "simple",
+                                                   color = "warning",
+                                                   icon = icon("sync")),
                           br(),
                           hr(),
                           uiOutput("UI_ORAreport_microarray_raw"),
@@ -928,7 +961,7 @@ ui <- tagList(
                           h5("The expression data should be supplied as a .tsv/.csv file or as a Series 
                            Matrix File.", "Click ", 
                              downloadLink('downloadexpr_example_microarray_norm', 
-                                                    'here'),
+                                          'here'),
                              "for an example expression matrix in csv format.",
                              "A Series Matrix File can be downloaded from the ",
                              a("GEO website.", 
@@ -1204,7 +1237,7 @@ ui <- tagList(
                           h5("In the statistical analysis step, 
                         you can select which groups to compare to each other and 
                            which covariates to add to the statistical model. 
-                             Moreover, you have to option to add additional gene IDs 
+                             Moreover, you have the option to add additional gene IDs 
                              (Ensembl IDs, Entrez IDs, and Gene Symbols) to the output."),
                           
                           hr(),
@@ -1280,10 +1313,10 @@ ui <- tagList(
                                                    size = "large")
                           ))),
                           shinyWidgets::actionBttn(inputId = "calculate_statistics_microarray_norm",
-                                     label = "Calculate",
-                                     style = "simple",
-                                     color = "warning",
-                                     icon = icon("sync")),
+                                                   label = "Calculate",
+                                                   style = "simple",
+                                                   color = "warning",
+                                                   icon = icon("sync")),
                           
                           br(),
                           
@@ -1321,7 +1354,7 @@ ui <- tagList(
                           conditionalPanel(
                             condition = "input.ORA_or_GSEA_microarray_norm == 'ORA'",
                             h5("With",strong("Overrepresentation Analysis (ORA),"),"dysregulated 
-                          processes and pathways can be idenified. These processes/pathways 
+                          processes and pathways can be identified. These processes/pathways 
                           are identified by testing whether their genes are overrepresented among the (most) significant genes."),
                           ),
                           
@@ -1331,7 +1364,7 @@ ui <- tagList(
                           processes and pathways. These processes/pathways are identified by testing whether 
                                their genes show concordant changes in the data."),
                           ),
-                        
+                          
                           hr(),
                           
                           h4(strong(tags$span(
@@ -1528,10 +1561,10 @@ ui <- tagList(
                                                    size = "large")
                           ))),
                           shinyWidgets::actionBttn(inputId = "calculate_ORA_microarray_norm",
-                                     label = "Calculate",
-                                     style = "simple",
-                                     color = "warning",
-                                     icon = icon("sync")),
+                                                   label = "Calculate",
+                                                   style = "simple",
+                                                   color = "warning",
+                                                   icon = icon("sync")),
                           br(),
                           hr(),
                           uiOutput("UI_ORAreport_microarray_norm"),
@@ -1628,15 +1661,15 @@ ui <- tagList(
                           
                           # Confirm upload
                           shinyWidgets::actionBttn(inputId = "upload_rnaseq_raw",
-                                     label = "Read data",
-                                     style = "simple",
-                                     color = "primary",
-                                     icon = icon("fas fa-upload")),
+                                                   label = "Read data",
+                                                   style = "simple",
+                                                   color = "primary",
+                                                   icon = icon("fas fa-upload")),
                           shinyWidgets::actionBttn(inputId = "example_rnaseq_raw",
-                                     label = "Run example",
-                                     style = "simple",
-                                     color = "warning",
-                                     icon = icon("cloud-arrow-up")),
+                                                   label = "Run example",
+                                                   style = "simple",
+                                                   color = "warning",
+                                                   icon = icon("cloud-arrow-up")),
                           
                           
                           uiOutput("next_upload_rnaseq_raw")
@@ -1686,9 +1719,9 @@ ui <- tagList(
                           ))),
                           
                           shinyWidgets::awesomeCheckbox(inputId = "outlier_rnaseq_raw",
-                                          label = "Keep all samples", 
-                                          value = TRUE,
-                                          status = "danger"),
+                                                        label = "Keep all samples", 
+                                                        value = TRUE,
+                                                        status = "danger"),
                           
                           uiOutput("UI_outlier_rnaseq_raw"),
                           br(),
@@ -1750,10 +1783,10 @@ ui <- tagList(
                           
                           
                           shinyWidgets::actionBttn(inputId = "start_preprocessing_rnaseq_raw",
-                                     label = "Calculate",
-                                     style = "simple",
-                                     color = "warning",
-                                     icon = icon("sync")),
+                                                   label = "Calculate",
+                                                   style = "simple",
+                                                   color = "warning",
+                                                   icon = icon("sync")),
                           
                           br(),
                           
@@ -1785,7 +1818,7 @@ ui <- tagList(
                           h5("In the statistical analysis step, 
                         you can select which groups to compare to each other and 
                            which covariates to add to the statistical model. 
-                             Moreover, you have to option to add additional gene IDs 
+                             Moreover, you have the option to add additional gene IDs 
                              (Ensembl IDs, Entrez IDs, and Gene Symbols) to the output."),
                           
                           hr(),
@@ -1876,10 +1909,10 @@ ui <- tagList(
                                                    size = "large")
                           ))),
                           shinyWidgets::actionBttn(inputId = "calculate_statistics_rnaseq_raw",
-                                     label = "Calculate",
-                                     style = "simple",
-                                     color = "warning",
-                                     icon = icon("sync")),
+                                                   label = "Calculate",
+                                                   style = "simple",
+                                                   color = "warning",
+                                                   icon = icon("sync")),
                           
                           br(),
                           
@@ -1917,7 +1950,7 @@ ui <- tagList(
                           conditionalPanel(
                             condition = "input.ORA_or_GSEA_rnaseq_raw == 'ORA'",
                             h5("With",strong("Overrepresentation Analysis (ORA),"),"dysregulated 
-                          processes and pathways can be idenified. These processes/pathways 
+                          processes and pathways can be identified. These processes/pathways 
                           are identified by testing whether their genes are overrepresented among the (most) significant genes."),
                           ),
                           
@@ -2280,9 +2313,9 @@ ui <- tagList(
                           ))),
                           
                           shinyWidgets::awesomeCheckbox(inputId = "outlier_rnaseq_norm",
-                                          label = "Keep all samples", 
-                                          value = TRUE,
-                                          status = "danger"),
+                                                        label = "Keep all samples", 
+                                                        value = TRUE,
+                                                        status = "danger"),
                           
                           uiOutput("UI_outlier_rnaseq_norm"),
                           br(),
@@ -2431,7 +2464,7 @@ ui <- tagList(
                           h5("In the statistical analysis step, 
                         you can select which groups to compare to each other and 
                            which covariates to add to the statistical model. 
-                             Moreover, you have to option to add additional gene IDs 
+                             Moreover, you have the option to add additional gene IDs 
                              (Ensembl IDs, Entrez IDs, and Gene Symbols) to the output."),
                           
                           hr(),
@@ -2546,7 +2579,7 @@ ui <- tagList(
                           conditionalPanel(
                             condition = "input.ORA_or_GSEA_rnaseq_norm == 'ORA'",
                             h5("With",strong("Overrepresentation Analysis (ORA),"),"dysregulated 
-                          processes and pathways can be idenified. These processes/pathways 
+                          processes and pathways can be identified. These processes/pathways 
                           are identified by testing whether their genes are overrepresented among the (most) significant genes."),
                           ),
                           
@@ -2737,10 +2770,10 @@ ui <- tagList(
                                       selected = "Homo sapiens"),
                           
                           uiOutput("UI_geneID_ORA_rnaseq_norm"),
-                      
+                          
                           br(),
-                         
-                           # Calculate!
+                          
+                          # Calculate!
                           h4(strong(tags$span(
                             "5. Perform analysis",
                             tags$span(
