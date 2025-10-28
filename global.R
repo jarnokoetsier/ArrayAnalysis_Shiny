@@ -4,7 +4,7 @@
 #==============================================================================#
 
 # ArrayAnalysis version:
-ArrayAnalysis_version <- "ArrayAnalysis version 0.1.2"
+ArrayAnalysis_version <- "ArrayAnalysis version 0.1.3"
 online <- FALSE
 
 #******************************************************************************#

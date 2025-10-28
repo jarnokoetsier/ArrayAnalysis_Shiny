@@ -313,7 +313,7 @@ ui <- tagList(
                             condition = "input.MetaFileType_microarray_raw=='.tsv/.csv file'",
                             fileInput(inputId = "uploadMeta_microarray_raw_tsv",
                                       label = NULL,
-                                      accept = c(".tsv",".csv"),
+                                      accept = c(".tsv",".csv", ".txt"),
                                       placeholder = "Select .tsv or .csv data file"),
                             
                           ),
@@ -328,19 +328,19 @@ ui <- tagList(
                             
                           ),
                           
-                          # Confirm upload
-                          shinyWidgets::actionBttn(inputId = "upload_microarray_raw",
-                                                   label = "Read data",
-                                                   style = "simple",
-                                                   color = "primary",
-                                                   icon = icon("fas fa-upload")),
-                          
                           # Run example
                           shinyWidgets::actionBttn(inputId = "example_microarray_raw",
                                                    label = "Run example",
                                                    style = "simple",
-                                                   color = "warning",
+                                                   color = "primary",
                                                    icon = icon("cloud-arrow-up")),
+                          
+                          # Confirm upload
+                          shinyWidgets::actionBttn(inputId = "upload_microarray_raw",
+                                                   label = "Read data",
+                                                   style = "simple",
+                                                   color = "warning",
+                                                   icon = icon("fas fa-upload")),
                           
                           # Button to go to next tab
                           uiOutput("next_upload_microarray_raw")
@@ -983,7 +983,7 @@ ui <- tagList(
                             # File input for .tsv/.csv file
                             fileInput(inputId = "uploadExprData_microarray_norm_tsv",
                                       label = NULL,
-                                      accept = c(".tsv", ".csv"),
+                                      accept = c(".tsv", ".csv", ".txt"),
                                       placeholder = "Select .tsv or .csv data file"),
                             
                           ),
@@ -1026,7 +1026,7 @@ ui <- tagList(
                             condition = "input.MetaFileType_microarray_norm=='.tsv/.csv file'",
                             fileInput(inputId = "uploadMeta_microarray_norm_tsv",
                                       label = NULL,
-                                      accept = c(".tsv",".csv"),
+                                      accept = c(".tsv",".csv", ".txt"),
                                       placeholder = "Select .tsv or .csv data file")
                             
                           ),
@@ -1041,19 +1041,20 @@ ui <- tagList(
                             
                           ),
                           
-                          # Confirm upload
-                          shinyWidgets::actionBttn(inputId = "upload_microarray_norm",
-                                                   label = "Read data",
-                                                   style = "simple",
-                                                   color = "primary",
-                                                   icon = icon("fas fa-upload")),
-                          
                           # Run example
                           shinyWidgets::actionBttn(inputId = "example_microarray_norm",
                                                    label = "Run example",
                                                    style = "simple",
-                                                   color = "warning",
+                                                   color = "primary",
                                                    icon = icon("cloud-arrow-up")),
+                          
+                          # Confirm upload
+                          shinyWidgets::actionBttn(inputId = "upload_microarray_norm",
+                                                   label = "Read data",
+                                                   style = "simple",
+                                                   color = "warning",
+                                                   icon = icon("fas fa-upload")),
+                          
                           
                           # Button to go to next tab
                           uiOutput("next_upload_microarray_norm")
@@ -1617,7 +1618,7 @@ ui <- tagList(
                              "for an example expression matrix."),
                           fileInput(inputId = "uploadExprData_rnaseq_raw",
                                     label = NULL,
-                                    accept = c(".tsv",".csv"),
+                                    accept = c(".tsv",".csv", ".txt"),
                                     placeholder = "Select .tsv/.csv file"),
                           
                           h4(strong("2. Upload metadata")),
@@ -1645,7 +1646,7 @@ ui <- tagList(
                             condition = "input.MetaFileType_rnaseq_raw=='.tsv/.csv file'",
                             fileInput(inputId = "uploadMeta_rnaseq_raw_tsv",
                                       label = NULL,
-                                      accept = c(".tsv",".csv"),
+                                      accept = c(".tsv",".csv", ".txt"),
                                       placeholder = "Select .tsv or .csv data file")
                             
                           ),
@@ -1659,17 +1660,20 @@ ui <- tagList(
                             
                           ),
                           
+                          
+                          # Run example
+                          shinyWidgets::actionBttn(inputId = "example_rnaseq_raw",
+                                                   label = "Run example",
+                                                   style = "simple",
+                                                   color = "primary",
+                                                   icon = icon("cloud-arrow-up")),
+                          
                           # Confirm upload
                           shinyWidgets::actionBttn(inputId = "upload_rnaseq_raw",
                                                    label = "Read data",
                                                    style = "simple",
-                                                   color = "primary",
-                                                   icon = icon("fas fa-upload")),
-                          shinyWidgets::actionBttn(inputId = "example_rnaseq_raw",
-                                                   label = "Run example",
-                                                   style = "simple",
                                                    color = "warning",
-                                                   icon = icon("cloud-arrow-up")),
+                                                   icon = icon("fas fa-upload")),
                           
                           
                           uiOutput("next_upload_rnaseq_raw")
@@ -2213,7 +2217,7 @@ ui <- tagList(
                              "for an example expression matrix."),
                           fileInput(inputId = "uploadExprData_rnaseq_norm",
                                     label = NULL,
-                                    accept = c(".tsv",".csv"),
+                                    accept = c(".tsv",".csv", ".txt"),
                                     placeholder = "Select .tsv/.csv file"),
                           
                           h4(strong("2. Upload metadata")),
@@ -2241,7 +2245,7 @@ ui <- tagList(
                             condition = "input.MetaFileType_rnaseq_norm=='.tsv/.csv file'",
                             fileInput(inputId = "uploadMeta_rnaseq_norm_tsv",
                                       label = NULL,
-                                      accept = c(".tsv",".csv"),
+                                      accept = c(".tsv",".csv", ".txt"),
                                       placeholder = "Select .tsv or .csv data file")
                             
                           ),
@@ -2255,17 +2259,19 @@ ui <- tagList(
                             
                           ),
                           
+                          # Run example
+                          shinyWidgets::actionBttn(inputId = "example_rnaseq_norm",
+                                                   label = "Run example",
+                                                   style = "simple",
+                                                   color = "primary",
+                                                   icon = icon("cloud-arrow-up")),
+                          
                           # Confirm upload
                           shinyWidgets::actionBttn(inputId = "upload_rnaseq_norm",
                                                    label = "Read data",
                                                    style = "simple",
-                                                   color = "primary",
-                                                   icon = icon("fas fa-upload")),
-                          shinyWidgets::actionBttn(inputId = "example_rnaseq_norm",
-                                                   label = "Run example",
-                                                   style = "simple",
                                                    color = "warning",
-                                                   icon = icon("cloud-arrow-up")),
+                                                   icon = icon("fas fa-upload")),
                           
                           
                           uiOutput("next_upload_rnaseq_norm")
