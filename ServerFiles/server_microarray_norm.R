@@ -3875,6 +3875,10 @@ observe({
                       "Mus musculus" = "org.Mm.eg.db",
                       "Rattus norvegicus" = "org.Rn.eg.db"
         )
+        if (!requireNamespace(pkg, quietly = TRUE))
+          BiocManager::install(pkg, ask = FALSE)
+        require(as.character(pkg), character.only = TRUE)
+        
         rv$GeneSetVersion <- paste0(pkg, " v", packageVersion(pkg))
       }
       
@@ -4581,6 +4585,10 @@ observe({
                       "Mus musculus" = "org.Mm.eg.db",
                       "Rattus norvegicus" = "org.Rn.eg.db"
         )
+        if (!requireNamespace(pkg, quietly = TRUE))
+          BiocManager::install(pkg, ask = FALSE)
+        require(as.character(pkg), character.only = TRUE)
+        
         rv$GeneSetVersion <- paste0(pkg, " v", packageVersion(pkg))
       }
       
