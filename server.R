@@ -20,7 +20,7 @@ server <- function(input, output, session){
   # Preparations
   
   ##############################################################################
-
+  
   # Set options for data upload
   options(shiny.maxRequestSize=125*1024^10)
   
@@ -113,8 +113,8 @@ server <- function(input, output, session){
                    hr(),
                    h4(style="text-align: justify; line-height:25px;",
                       "Click on", HTML("<ins>Start Analysis</ins>"), "to upload your own dataset or to explore the app with an example dataset. Please visit our", a("help page",
-                                                                                                                                                          href = "https://arrayanalysis.org/help",
-                                                                                                                                                          target = "_blank"),"for more information."),
+                                                                                                                                                                     href = "https://arrayanalysis.org/help",
+                                                                                                                                                                     target = "_blank"),"for more information."),
             )
             
           ) # EO fluidRow
@@ -132,75 +132,81 @@ server <- function(input, output, session){
     # Save input values as a reactive value
     observeEvent(input$startAnalysis,{
       
-      # Analyse microarray data or RNA-seq data (or go to documentation)
-      microarray_or_rnaseq <- reactive({
-        req(input$microarray_or_rnaseq)
-        return(input$microarray_or_rnaseq)
-      })
-      
-      # Analyse raw or pre-processed data
-      raw_or_norm <- reactive({
-        if (input$microarray_or_rnaseq == "Microarray"){
-          return(input$raw_or_norm_microarray)
-        }
-        if (input$microarray_or_rnaseq == "RNA-Seq"){
-          return(input$raw_or_norm_rnaseq)
-        }
-      })
-      
-      
-      ############################################################################
-      
-      # RNA-seq Analysis
-      
-      ############################################################################
-      
-      if (microarray_or_rnaseq() == "RNA-Seq"){
+      # Reset session if start analysis is clicked
+      if (input$startAnalysis > 1){
+        session$reload()
+      } else{
+        
+        # Analyse microarray data or RNA-seq data (or go to documentation)
+        microarray_or_rnaseq <- reactive({
+          req(input$microarray_or_rnaseq)
+          return(input$microarray_or_rnaseq)
+        })
+        
+        # Analyse raw or pre-processed data
+        raw_or_norm <- reactive({
+          if (input$microarray_or_rnaseq == "Microarray"){
+            return(input$raw_or_norm_microarray)
+          }
+          if (input$microarray_or_rnaseq == "RNA-Seq"){
+            return(input$raw_or_norm_rnaseq)
+          }
+        })
         
         
-        #************************************************************************#
-        # Raw RNA-seq data
-        #************************************************************************#
-        if (raw_or_norm() == "Raw data"){
-          source("ServerFiles/server_rnaseq_raw.R", local = TRUE)
-        }
+        ############################################################################
         
-        #************************************************************************#
-        # Preprocessed RNA-seq data
-        #************************************************************************#
-        if (raw_or_norm() == "Processed data"){
-          source("ServerFiles/server_rnaseq_norm.R", local = TRUE)
-        }
+        # RNA-seq Analysis
         
-      } # EO Microarray or RNA-seq
-      
-      
-      
-      ############################################################################
-      
-      # Microarray Analysis
-      
-      ############################################################################
-      
-      if (microarray_or_rnaseq() == "Microarray"){
+        ############################################################################
         
-        
-        #************************************************************************#
-        # Raw microarray data
-        #************************************************************************#
-        if (raw_or_norm() == "Raw data"){
-          source("ServerFiles/server_microarray_raw.R", local = TRUE)
-        } # raw or norm
+        if (microarray_or_rnaseq() == "RNA-Seq"){
+          
+          
+          #************************************************************************#
+          # Raw RNA-seq data
+          #************************************************************************#
+          if (raw_or_norm() == "Raw data"){
+            source("ServerFiles/server_rnaseq_raw.R", local = TRUE)
+          }
+          
+          #************************************************************************#
+          # Preprocessed RNA-seq data
+          #************************************************************************#
+          if (raw_or_norm() == "Processed data"){
+            source("ServerFiles/server_rnaseq_norm.R", local = TRUE)
+          }
+          
+        } # EO Microarray or RNA-seq
         
         
-        #************************************************************************#
-        # Preprocessed microarray data
-        #************************************************************************#
-        if (raw_or_norm() == "Processed data"){
-          source("ServerFiles/server_microarray_norm.R", local = TRUE)
-        } 
         
-      } # EO Microarray or RNA-seq
+        ############################################################################
+        
+        # Microarray Analysis
+        
+        ############################################################################
+        
+        if (microarray_or_rnaseq() == "Microarray"){
+          
+          
+          #************************************************************************#
+          # Raw microarray data
+          #************************************************************************#
+          if (raw_or_norm() == "Raw data"){
+            source("ServerFiles/server_microarray_raw.R", local = TRUE)
+          } # raw or norm
+          
+          
+          #************************************************************************#
+          # Preprocessed microarray data
+          #************************************************************************#
+          if (raw_or_norm() == "Processed data"){
+            source("ServerFiles/server_microarray_norm.R", local = TRUE)
+          } 
+          
+        } # EO Microarray or RNA-seq
+      }
     }) # EO observeEvent
   }) # EO Observe
 } # server

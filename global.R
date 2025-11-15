@@ -90,17 +90,15 @@ BiocPackages <- read.table("Objects/Bioconductorpackages.txt", header = TRUE)
 
 # Downgrade Bioconductor version if necessary
 if (BiocManager::version() == "3.22"){
-  BiocManager::install(version = "3.21", ask = FALSE, force = TRUE) 
+  BiocManager::install(version = "3.21", ask = FALSE, force = TRUE)
 }
 
 for (pkg in 1:nrow(BiocPackages)) {
   if (!requireNamespace(BiocPackages$name[pkg], quietly = TRUE)){
-    BiocManager::install(BiocPackages$name[pkg], ask = FALSE,
-                         version = "3.21")
+    BiocManager::install(BiocPackages$name[pkg], ask = FALSE)
   } else{
     if (packageVersion(BiocPackages$name[pkg]) < BiocPackages$version[pkg]){
-      BiocManager::install(BiocPackages$name[pkg], ask = FALSE,
-                           version = "3.21")
+      BiocManager::install(BiocPackages$name[pkg], ask = FALSE)
     }
   }
   require(as.character(BiocPackages$name[pkg]), character.only = TRUE)

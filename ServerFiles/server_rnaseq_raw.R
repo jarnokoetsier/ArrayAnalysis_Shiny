@@ -45,7 +45,7 @@ observe({
   #----------------------------------------------------------------------#
   
   observeEvent(input$startAnalysis,{
-    
+
     # Show RNA-seq (raw) upload tab
     showTab("navbar", target = "panel_upload_rnaseq_raw")
     
@@ -75,6 +75,7 @@ observe({
     # Go to microarray tab
     updateNavbarPage(session, "navbar",
                      selected = "panel_upload_rnaseq_raw")
+    
     
     # Example metadata file
     output$downloadmeta_example_rnaseq_raw <- downloadHandler(
