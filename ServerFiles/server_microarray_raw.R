@@ -4125,7 +4125,7 @@ observe({
                   '<a ',
                   'href=',
                   paste0(
-                    "https://www.genome.jp/pathway/",
+                    "https://www.kegg.jp/pathway/",
                     output$ID, ".html"
                   ),
                   ' target="_blank"',
@@ -4803,7 +4803,7 @@ observe({
                 '<a ',
                 'href=',
                 paste0(
-                  "https://www.genome.jp/pathway/",
+                  "https://www.kegg.jp/pathway/",
                   output$ID, ".html"
                 ),
                 ' target="_blank"',
