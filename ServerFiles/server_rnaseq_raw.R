@@ -4198,7 +4198,7 @@ observe({
                 'href=',
                 paste0(
                   "https://www.kegg.jp/pathway/",
-                  output$ID, ".html"
+                  output$ID
                 ),
                 ' target="_blank"',
                 '>',
@@ -4872,7 +4872,7 @@ observe({
                 'href=',
                 paste0(
                   "https://www.kegg.jp/pathway/",
-                  output$ID, ".html"
+                  output$ID
                 ),
                 ' target="_blank"',
                 '>',
