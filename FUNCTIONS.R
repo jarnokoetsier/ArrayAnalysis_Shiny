@@ -2401,7 +2401,7 @@ makeVolcano_static <- function(top_table,
       ggplot2::scale_color_manual(values = setNames(c(unchanged_color, down_color, up_color),
                                                     c("Unchanged", "Downregulated", "Upregulated"))) +
       ggplot2::xlab(expression(log[2]~"FC")) +
-      ggplot2::ylab(expression(-log[10]~"p-value")) +
+      ggplot2::ylab(expression(-log[10]~"adj. p-value")) +
       ggplot2::labs(color = NULL) +
       ggplot2::theme_minimal()
     
