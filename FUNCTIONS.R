@@ -96,7 +96,7 @@ getCELs <- function(zippath, shiny_upload = TRUE){
 
 readCELs <- function(celfiles, zippath, rm = FALSE){
   tryCatch({
-
+    
     # List CEL files
     celfiles <- list.files(tail(list.dirs(paste0(tempdir(), "/CELfiles")),1),
                            pattern = "CEL", 
@@ -185,23 +185,26 @@ getMetaData <- function(path, celfiles, filetype){
   if(max(sumIDs) == 0){
     CELsamples_alt <- stringr::str_remove(CELsamples, "_.*")
     
-    # get column with samples IDs
-    sumIDs <- rep(0, ncol(metaData))
-    for (i in 1:ncol(metaData)){
-      if (length(unique(metaData[,i])) == nrow(metaData)){
-        sumIDs[i] <- sum(metaData[,i] %in% CELsamples_alt)
-      }
-    }
+    # # get column with samples IDs
+    # sumIDs <- rep(0, ncol(metaData))
+    # for (i in 1:ncol(metaData)){
+    #   if (length(unique(metaData[,i])) == nrow(metaData)){
+    #     sumIDs[i] <- sum(metaData[,i] %in% CELsamples_alt)
+    #   }
+    # }
     
     # Add additional column with CEL names
     combineCELs <- data.frame(AltName = CELsamples_alt,
                               CELName = CELsamples)
     
     metaData_copy <- metaData
+    metaData_copy[,which.max(sumIDs)] <- stringr::str_remove(as.character(metaData_copy[,which.max(sumIDs)]),"\\.CEL.*")
     colnames(metaData_copy)[which.max(sumIDs)] <- "y"
-    metaData <- inner_join(metaData_copy,
-                           combineCELs,
-                           by = c("y" = "AltName"))
+    
+    # Fuzzy join
+    metaData <- fuzzyjoin::stringdist_inner_join(metaData_copy,
+                                                 combineCELs,
+                                                 by = c("y" = "AltName"))
     metaSamples <- metaData[,ncol(metaData)]
     
     # Get common samples
@@ -217,6 +220,7 @@ getMetaData <- function(path, celfiles, filetype){
     rownames(metaData_fil) <- metaData_fil[,ncol(metaData)]
     
   } else {
+    metaData[,which.max(sumIDs)] <- stringr::str_remove(as.character(metaData[,which.max(sumIDs)]),"\\.CEL.*")
     metaSamples <- metaData[,which.max(sumIDs)]
     
     # Get common samples
@@ -710,7 +714,7 @@ geneBoxplot <- function(experimentFactor,
                             outlier.alpha = 0) +
       ggplot2::geom_point(aes(x = Grouping, y = logExpr, fill = Grouping),
                           position = ggplot2::position_jitter(width = jitter, seed = seed),
-                           size = 4, shape = 21, color = "white") +
+                          size = 4, shape = 21, color = "white") +
       ggplot2::xlab(NULL) +
       ggplot2::ylab(expression(log[2] ~" intensity")) +
       ggplot2::ggtitle(geneName) +
@@ -729,8 +733,8 @@ geneBoxplot <- function(experimentFactor,
                                 fill = Grouping), alpha = 0.1,
                             outlier.alpha = 0) +
       ggplot2::geom_point(aes(x = Grouping, y = logExpr, fill = Grouping), 
-                           position = ggplot2::position_jitter(width = jitter, seed = seed),
-                           size = 4, shape = 21, color = "white") +
+                          position = ggplot2::position_jitter(width = jitter, seed = seed),
+                          size = 4, shape = 21, color = "white") +
       ggplot2::xlab(NULL) +
       ggplot2::ylab(expression(log[2] ~" expression")) +
       ggplot2::ggtitle(geneName) +
@@ -774,9 +778,9 @@ getBoxplots <- function(experimentFactor,
   for (i in 1:length(legendColors)){
     group_length <- sum(experimentFactor == levels(experimentFactor)[i])
     if (group_length > 1){
-    colors <-  c(colorspace::lighten(legendColors[i], amount = rev(seq(0,0.5,length.out = round(group_length/2)))),
-                 colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)+1)[-1])
-    )
+      colors <-  c(colorspace::lighten(legendColors[i], amount = rev(seq(0,0.5,length.out = round(group_length/2)))),
+                   colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)+1)[-1])
+      )
     } else{
       colors <- legendColors[i]
     }
@@ -963,37 +967,37 @@ getBoxplots_download <- function(experimentFactor,
     description <- "Distributions should be comparable between samples\n"
     samples <- colnames(normData)
   }
-    #DataBoxplot<- tempfile(fileext='.png')
-    #png(file = DataBoxplot,width=WIDTH,height=HEIGHT,pointsize=POINTSIZE)
-    par(mar=c(5.1,4.1,4.1,2.1))
-    par(oma=c(17,0,0,0), cex.axis=1)
-    if (class(normData)[[1]] != "GeneFeatureSet"){
-      suppressWarnings(boxplot(normData, col=plotColors ,main=tmain,
-                               axes=FALSE, pch = 20, cex=0.7))
-    }
-    if (class(normData)[[1]] == "GeneFeatureSet"){
-      suppressWarnings(boxplot(normData, target = "core", col=plotColors,
-                               main=tmain, 
-                               axes=FALSE, pch = 20, cex=0.7))
-    }
-    if(length(levels(experimentFactor))>1){
-      legend("topright", levels(experimentFactor),
-             col=legendColors,fill=legendColors, cex = 0.7, bg = "white",
-             bty = "o")
-    }
-    if(length(samples)<MAXARRAY){
-      cexval <- 0.65
-    }else{
-      cexval <- 0.45
-    }
-    axis(1,at=1:length(samples),las=2,
-         labels=samples, cex.axis=cexval)
-    axis(2, cex.axis=0.7)
-    #mtext(tmtext2, side=2, cex=0.8)
-    mtext(tmtext2, side = 2, cex=0.8, line = 2)
-    mtext(description, side=3,
-          font=1, cex=0.7)
-    #dev.off()
+  #DataBoxplot<- tempfile(fileext='.png')
+  #png(file = DataBoxplot,width=WIDTH,height=HEIGHT,pointsize=POINTSIZE)
+  par(mar=c(5.1,4.1,4.1,2.1))
+  par(oma=c(17,0,0,0), cex.axis=1)
+  if (class(normData)[[1]] != "GeneFeatureSet"){
+    suppressWarnings(boxplot(normData, col=plotColors ,main=tmain,
+                             axes=FALSE, pch = 20, cex=0.7))
+  }
+  if (class(normData)[[1]] == "GeneFeatureSet"){
+    suppressWarnings(boxplot(normData, target = "core", col=plotColors,
+                             main=tmain, 
+                             axes=FALSE, pch = 20, cex=0.7))
+  }
+  if(length(levels(experimentFactor))>1){
+    legend("topright", levels(experimentFactor),
+           col=legendColors,fill=legendColors, cex = 0.7, bg = "white",
+           bty = "o")
+  }
+  if(length(samples)<MAXARRAY){
+    cexval <- 0.65
+  }else{
+    cexval <- 0.45
+  }
+  axis(1,at=1:length(samples),las=2,
+       labels=samples, cex.axis=cexval)
+  axis(2, cex.axis=0.7)
+  #mtext(tmtext2, side=2, cex=0.8)
+  mtext(tmtext2, side = 2, cex=0.8, line = 2)
+  mtext(description, side=3,
+        font=1, cex=0.7)
+  #dev.off()
 }
 
 #==============================================================================#
@@ -1024,12 +1028,12 @@ getDensityplots <- function(experimentFactor,
     group_length <- sum(experimentFactor == levels(experimentFactor)[i])
     colors <-  c(colorspace::lighten(legendColors[i], amount = rev(seq(0,0.5,length.out = round(group_length/2)))),
                  colorspace::darken(legendColors[i], amount = seq(0,0.5,length.out = group_length - round(group_length/2)+1)[-1])
-                 )
+    )
     
     plotColors[experimentFactor == levels(experimentFactor)[i]] <- colors
   }
   names(plotColors) <- colnames(normMatrix)
-
+  
   
   if (!isTRUE(RNASeq)){
     xaxis_name <- "Normalized log<sub>2</sub> intensity"
@@ -1063,16 +1067,16 @@ getDensityplots <- function(experimentFactor,
   
   p <-  plotly::ggplotly(densityPlot) %>% 
     layout(xaxis = list(   
-             title=xaxis_name),   
-           yaxis = list(   
-             title='Density')) %>%
+      title=xaxis_name),   
+      yaxis = list(   
+        title='Density')) %>%
     config(
       toImageButtonOptions = list(
         format = "png",
         filename = "DensityPlot"
       )
     )
-
+  
   return(p)
   
 }
@@ -1137,8 +1141,8 @@ getDensityplots_static <- function(experimentFactor, legendColors,
                    axis.ticks.y = ggplot2::element_blank(),
                    legend.title = ggplot2::element_blank()) +
     ggplot2::guides(shape=ggplot2::guide_legend(title="Group",
-                                       override.aes = list(
-                                         colour = legendColors)),
+                                                override.aes = list(
+                                                  colour = legendColors)),
                     colour = "none")
   
   return(densityPlot)
@@ -1158,9 +1162,9 @@ getDensityplots_static <- function(experimentFactor, legendColors,
 # normData: normalized expression data (ExpressionSet)
 
 getReadCount <- function(experimentFactor, 
-                        legendColors,
-                        gxData_fil, 
-                        report = FALSE){
+                         legendColors,
+                         gxData_fil, 
+                         report = FALSE){
   
   plotColors <- colorsByFactor(experimentFactor)$plotColors
   names(legendColors) <- levels(experimentFactor)
@@ -1178,58 +1182,58 @@ getReadCount <- function(experimentFactor,
     plotColors[experimentFactor == levels(experimentFactor)[i]] <- colors
   }
   
-    names(plotColors) <- colnames(gxData_fil)
+  names(plotColors) <- colnames(gxData_fil)
   
-    
-    plotDF <- data.frame(SampleID = colnames(gxData_fil),
-                         ExperimentFactor = experimentFactor,
-                         Count = colSums(gxData_fil))
-    
-    if (report){
-      p <- ggplot2::ggplot() +
-        ggplot2::geom_bar(data = plotDF, ggplot2::aes(x = SampleID, y = Count/1000000, fill = SampleID),
-                          stat = "identity", position = ggplot2::position_dodge()) +
-        ggplot2::geom_point(data = plotDF, ggplot2::aes(x = SampleID, y = -1*Count/1000000, color = ExperimentFactor),
-                            shape = 15, size = 8) +
-        ggplot2::labs(x = NULL, y = "# raw counts (millions)") +
-        ggplot2::theme_minimal() +
-        ggplot2::scale_fill_manual(values = plotColors) +
-        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1,
-                                                           size = 10),
-                       axis.text.y = element_text(size = 10),
-                       axis.title.y = element_text(size = 11.5),
-                       legend.title = ggplot2::element_text(size = 11.5),
-                       legend.text = ggplot2::element_text(size = 10)) +
-        ggplot2::coord_cartesian(ylim = c(0, max(plotDF$Count)/1000000)) +
-        ggplot2::guides(color=ggplot2::guide_legend(title=" ",
-                                                    override.aes = list(
-                                                      colour = legendColors)),
-                        alpha = "none",
-                        fill = "none")
-    }else{
-      p <- ggplot2::ggplot() +
-        ggplot2::geom_bar(data = plotDF, ggplot2::aes(x = SampleID, y = Count/1000000, fill = SampleID),
-                          stat = "identity", position = ggplot2::position_dodge()) +
-        ggplot2::geom_point(data = plotDF, ggplot2::aes(x = SampleID, y = -1*Count/1000000, color = ExperimentFactor),
-                            shape = 15, size = 8) +
-        ggplot2::labs(x = NULL, y = "# raw counts (millions)") +
-        ggplot2::theme_minimal() +
-        ggplot2::scale_fill_manual(values = plotColors) +
-        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1,
-                                                           size = 20),
-                       axis.text.y = element_text(size = 20),
-                       axis.title.y = element_text(size = 23),
-                       legend.title = ggplot2::element_text(size = 23),
-                       legend.text = ggplot2::element_text(size = 20)) +
-        ggplot2::coord_cartesian(ylim = c(0, max(plotDF$Count)/1000000)) +
-        ggplot2::guides(color=ggplot2::guide_legend(title=" ",
-                                                    override.aes = list(
-                                                      colour = legendColors)),
-                        alpha = "none",
-                        fill = "none")
-    }
-
-
+  
+  plotDF <- data.frame(SampleID = colnames(gxData_fil),
+                       ExperimentFactor = experimentFactor,
+                       Count = colSums(gxData_fil))
+  
+  if (report){
+    p <- ggplot2::ggplot() +
+      ggplot2::geom_bar(data = plotDF, ggplot2::aes(x = SampleID, y = Count/1000000, fill = SampleID),
+                        stat = "identity", position = ggplot2::position_dodge()) +
+      ggplot2::geom_point(data = plotDF, ggplot2::aes(x = SampleID, y = -1*Count/1000000, color = ExperimentFactor),
+                          shape = 15, size = 8) +
+      ggplot2::labs(x = NULL, y = "# raw counts (millions)") +
+      ggplot2::theme_minimal() +
+      ggplot2::scale_fill_manual(values = plotColors) +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1,
+                                                         size = 10),
+                     axis.text.y = element_text(size = 10),
+                     axis.title.y = element_text(size = 11.5),
+                     legend.title = ggplot2::element_text(size = 11.5),
+                     legend.text = ggplot2::element_text(size = 10)) +
+      ggplot2::coord_cartesian(ylim = c(0, max(plotDF$Count)/1000000)) +
+      ggplot2::guides(color=ggplot2::guide_legend(title=" ",
+                                                  override.aes = list(
+                                                    colour = legendColors)),
+                      alpha = "none",
+                      fill = "none")
+  }else{
+    p <- ggplot2::ggplot() +
+      ggplot2::geom_bar(data = plotDF, ggplot2::aes(x = SampleID, y = Count/1000000, fill = SampleID),
+                        stat = "identity", position = ggplot2::position_dodge()) +
+      ggplot2::geom_point(data = plotDF, ggplot2::aes(x = SampleID, y = -1*Count/1000000, color = ExperimentFactor),
+                          shape = 15, size = 8) +
+      ggplot2::labs(x = NULL, y = "# raw counts (millions)") +
+      ggplot2::theme_minimal() +
+      ggplot2::scale_fill_manual(values = plotColors) +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1,
+                                                         size = 20),
+                     axis.text.y = element_text(size = 20),
+                     axis.title.y = element_text(size = 23),
+                     legend.title = ggplot2::element_text(size = 23),
+                     legend.text = ggplot2::element_text(size = 20)) +
+      ggplot2::coord_cartesian(ylim = c(0, max(plotDF$Count)/1000000)) +
+      ggplot2::guides(color=ggplot2::guide_legend(title=" ",
+                                                  override.aes = list(
+                                                    colour = legendColors)),
+                      alpha = "none",
+                      fill = "none")
+  }
+  
+  
   return(p)
 }
 
@@ -1303,17 +1307,17 @@ getHeatmap <- function(experimentFactor,
     }
   } else{
     gradient = viridis(n = 256, alpha = 1, begin = 0, end = 1,
-                      option = "viridis")
+                       option = "viridis")
   }
   
   
   # Make heatmap
   p <- heatmaply::heatmaply(crp, plot_method = "plotly", distfun = my.dist,
-                 hclustfun = my.hclust, symm = TRUE, seriate = "mean",
-                 titleX = FALSE, titleY = FALSE, key.title = NULL,
-                 show_dendrogram = c(TRUE, FALSE), col_side_colors = sidecolors,
-                 col_side_palette = legendColors, column_text_angle = 90,
-                 colors = gradient)
+                            hclustfun = my.hclust, symm = TRUE, seriate = "mean",
+                            titleX = FALSE, titleY = FALSE, key.title = NULL,
+                            show_dendrogram = c(TRUE, FALSE), col_side_colors = sidecolors,
+                            col_side_palette = legendColors, column_text_angle = 90,
+                            colors = gradient)
   
   return(p)
 }
@@ -1333,15 +1337,15 @@ getHeatmap <- function(experimentFactor,
 # clusterOption2: linkage method (e.g. ward.D2)
 # theme: color theme of heatmap
 getHeatmap_static <- function(experimentFactor,
-                       legendColors,
-                       normMatrix,
-                       clusterOption1,
-                       clusterOption2,
-                       theme,
-                       width,
-                       height,
-                       filetype,
-                       file){
+                              legendColors,
+                              normMatrix,
+                              clusterOption1,
+                              clusterOption2,
+                              theme,
+                              width,
+                              height,
+                              filetype,
+                              file){
   
   reate_dend <- function(x, seriate, distfun, hclustfun, na.rm) {
     switch(seriate,
@@ -1423,7 +1427,7 @@ getHeatmap_static <- function(experimentFactor,
   # Make dendrogram
   row_dend <- reorder(as.dendrogram(my.hclust(my.dist(crp))), rowMeans(crp, na.rm = TRUE))
   #row_dend <- as.dendrogram(my.hclust(my.dist(crp)))
-
+  
   # Create annotation for columns (top)
   ha <- ComplexHeatmap::HeatmapAnnotation(
     `Experimental group` = experimentFactor,
@@ -1471,10 +1475,10 @@ getHeatmap_static <- function(experimentFactor,
   }
   if (filetype == "TIF"){
     tiff(file,
-        width = width * 3 + 3000,
-        height = height * 3,
-        pointsize = 24,
-        res = 300)
+         width = width * 3 + 3000,
+         height = height * 3,
+         pointsize = 24,
+         res = 300)
   }
   
   # Create a layout with 2 columns: one for the heatmap, one for the legend
@@ -1580,7 +1584,7 @@ plot_PCA <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2, zpc =
       
       p <- plotly::ggplotly(pca2d, tooltip = c("x", "y", "colour", "text"))
     }
-
+    
     
     return(p)
   }
@@ -1599,7 +1603,7 @@ plot_PCA <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2, zpc =
                                                    yaxis = list(title = paste0('PC', ypc, " (", perc_expl[ypc], "%)")),
                                                    zaxis = list(title = paste0('PC', zpc, " (", perc_expl[zpc], "%)"))))
     p <- pca3d #%>% 
-      #plotly::layout(height = 600, width = 800)
+    #plotly::layout(height = 600, width = 800)
     
     return(p)
   }
@@ -1644,8 +1648,8 @@ plot_PCA_static <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2
   
   if (length(unique(PCA_df$Group)) < 4){
     p <- ggplot2::ggplot(data = PCA_df, 
-                             ggplot2::aes(x = x, y = y, colour = Group, shape = Group, 
-                                          text = paste("Sample:", sampleID))) +
+                         ggplot2::aes(x = x, y = y, colour = Group, shape = Group, 
+                                      text = paste("Sample:", sampleID))) +
       ggplot2::geom_point(size = 2) +
       ggplot2::scale_colour_manual(values = legendColors) +
       ggplot2::xlab(paste0("PC",xpc, " (", perc_expl[xpc], "%)")) +
@@ -1658,8 +1662,8 @@ plot_PCA_static <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2
     
   } else{
     p <- ggplot2::ggplot(data = PCA_df, 
-                             ggplot2::aes(x = x, y = y, colour = Group, 
-                                          text = paste("Sample:", sampleID))) +
+                         ggplot2::aes(x = x, y = y, colour = Group, 
+                                      text = paste("Sample:", sampleID))) +
       ggplot2::geom_point(size = 2) +
       ggplot2::scale_colour_manual(values = legendColors) +
       ggplot2::xlab(paste0("PC",xpc, " (", perc_expl[xpc], "%)")) +
@@ -1671,7 +1675,7 @@ plot_PCA_static <- function(PC_data, colorFactor, legendColors, xpc = 1, ypc = 2
                      legend.title = ggplot2::element_blank())
     
   }
-
+  
   return(p)
 }
 
@@ -2048,7 +2052,7 @@ getStatistics <- function(normMatrix,
 # logFC: vector of log2FCs
 
 makelogFCHistogram <- function(logFC, color = "#d3d3d3", bins = 100, static = FALSE){
-
+  
   if (is.null(color)){
     color <- "#d3d3d3"
   }
@@ -2331,12 +2335,12 @@ makeVolcano <- function(top_table,
 # logFC_threshold: log2FC threshold
 
 makeVolcano_static <- function(top_table, 
-                        p = "raw", 
-                        p_threshold = 0.05, 
-                        logFC_threshold = 1,
-                        unchanged_color = "darkgrey",
-                        down_color = "blue",
-                        up_color = "red"){
+                               p = "raw", 
+                               p_threshold = 0.05, 
+                               logFC_threshold = 1,
+                               unchanged_color = "darkgrey",
+                               down_color = "blue",
+                               up_color = "red"){
   
   if (is.null(unchanged_color)){
     color <- "darkgrey"
@@ -2373,13 +2377,13 @@ makeVolcano_static <- function(top_table,
       ggplot2::geom_vline(xintercept = -1*logFC_threshold, linetype = "dashed", color = "lightgrey") +
       ggplot2::geom_vline(xintercept = logFC_threshold, linetype = "dashed", color = "lightgrey") +
       ggplot2::scale_color_manual(values = setNames(c(unchanged_color, down_color, up_color),
-                                           c("Unchanged", "Downregulated", "Upregulated"))) +
+                                                    c("Unchanged", "Downregulated", "Upregulated"))) +
       ggplot2::xlab(expression(log[2]~"FC")) +
       ggplot2::ylab(expression(-log[10]~"p-value")) +
       ggplot2::labs(color = NULL) +
       ggplot2::theme_minimal()
     
-   
+    
   }
   
   if (p == "adj"){
@@ -2590,13 +2594,13 @@ makeMAplot <- function(top_table,
 # logFC_threshold: log2FC threshold
 
 makeMAplot_static <- function(top_table, 
-                       p = "raw", 
-                       p_threshold = 0.05, 
-                       logFC_threshold = 1,
-                       unchanged_color = "darkgrey",
-                       down_color = "blue",
-                       up_color = "red",
-                       RNAseq = TRUE){
+                              p = "raw", 
+                              p_threshold = 0.05, 
+                              logFC_threshold = 1,
+                              unchanged_color = "darkgrey",
+                              down_color = "blue",
+                              up_color = "red",
+                              RNAseq = TRUE){
   
   if (is.null(unchanged_color)){
     color <- "darkgrey"
@@ -2955,11 +2959,11 @@ ORA <- function(top_table,
         
         # Get correct organism name
         KEGG_org <- switch(organism,
-                      "Homo sapiens" = "hsa",
-                      "Bos taurus" = "bta",
-                      "Caenorhabditis elegans" = "cel",
-                      "Mus musculus" = "mmu",
-                      "Rattus norvegicus" = "rno"
+                           "Homo sapiens" = "hsa",
+                           "Bos taurus" = "bta",
+                           "Caenorhabditis elegans" = "cel",
+                           "Mus musculus" = "mmu",
+                           "Rattus norvegicus" = "rno"
         )
         
         # Prepare GMT for analysis
@@ -3035,11 +3039,11 @@ ORA <- function(top_table,
 # logFC_thres: logFC threshold
 
 performGSEA <- function(top_table,
-                geneset = "GO-BP",
-                geneID_col = colnames(top_table)[1],
-                geneID_type = "ENTREZID",
-                organism = "Homo sapiens",
-                rankingVar = "logFC"){
+                        geneset = "GO-BP",
+                        geneID_col = colnames(top_table)[1],
+                        geneID_type = "ENTREZID",
+                        organism = "Homo sapiens",
+                        rankingVar = "logFC"){
   
   tryCatch({
     
@@ -3246,7 +3250,7 @@ performGSEA <- function(top_table,
     
     # make term names shorter
     output$Description[nchar(output$Description)>50] <- paste0(substring(output$Description[nchar(output$Description)>50],1,47),"...")
-  
+    
     # Order results
     GSEA_data@result <- arrange(output, by = `p-value`)
     
@@ -3475,7 +3479,7 @@ makeGSEAplot <- function(GSEA_data, nSets, color, static = FALSE){
       layout(xaxis = list(title = '-log<sub>10</sub> p-value'))
     return(p1)
   }
-
+  
 }
 
 #==============================================================================#
@@ -3566,8 +3570,8 @@ makeORAnetwork <- function(ORA_data, layout, nSets, color, size = 5){
     ggplot2::theme_void() +
     ggplot2::labs(color = expression(-log[10] ~ "p-value")) +
     gradient
-    #ggplot2::scale_color_manual(values = gradient) 
-    #ggplot2::scale_color_gradient(low = "#6BAED6", high = "#FB6A4A")
+  #ggplot2::scale_color_manual(values = gradient) 
+  #ggplot2::scale_color_gradient(low = "#6BAED6", high = "#FB6A4A")
   
   return(p)
 }
@@ -3832,250 +3836,250 @@ getStatistics_RNASeq <- function(rawMatrix,
                                                         "SYMBOL"),
                                  biomart_filters = "ENTREZID"){
   tryCatch({
-  dataset <- NULL
-  
-  # Replace name of biomaRt filter
-  biomart_filters <- tryCatch({
-    switch(biomart_filters,
-           "SYMBOL" = "gene_name",
-           "ENTREZID" = "entrezgene_id",
-           "ENSEMBL" = "ensembl_gene_id",
-    )
-  }, error = function(cond){
-    return(biomart_filters)
-  })
-  
-  # Replace name(s) of biomaRt attributes
-  for (a in 1:length(biomart_attributes)){
-    biomart_attributes[a] <- tryCatch({
-      switch(biomart_attributes[a],
+    dataset <- NULL
+    
+    # Replace name of biomaRt filter
+    biomart_filters <- tryCatch({
+      switch(biomart_filters,
              "SYMBOL" = "gene_name",
              "ENTREZID" = "entrezgene_id",
              "ENSEMBL" = "ensembl_gene_id",
       )
     }, error = function(cond){
-      return(biomart_attributes[a])
+      return(biomart_filters)
     })
-  }
-  
-  # Get experiment factor
-  if(length(expFactor) > 1){
-    experimentFactor <- factor(make.names(apply(metaData[,expFactor], 1, paste, collapse = "_" )))
-  } else{
-    experimentFactor <- factor(make.names(metaData[,expFactor]))
-  }
-  
-  # Get covariates
-  for (n in covGroups_num){
-    metaData[,n] <- as.numeric(metaData[,n])
-  }
-  for (c in covGroups_char){
-    metaData[,c] <- factor(metaData[,c])
-  }
-  covariates <- c(covGroups_num, covGroups_char)
-  
-  # Make formula
-  if (!is.null(covariates)){
-    formula <- paste0("~ ", "experimentFactor + ", paste0(covariates, collapse = " + "))
-  } else {
-    formula <- paste0("~ ", "experimentFactor")
-  }
-  
-  # make DESeqDataSet object
-  sampleInfo <- cbind.data.frame(experimentFactor, metaData[,covariates])
-  colnames(sampleInfo) <- c("experimentFactor", covariates)
-  rownames(sampleInfo) <- rownames(metaData)
-  dds <- DESeq2::DESeqDataSetFromMatrix(countData = round(rawMatrix),
-                                        colData = sampleInfo,
-                                        design = as.formula(formula))
-  # Filtering
-  keep <- rowSums(counts(dds) >= filterThres) >= smallestGroupSize
-  dds <- dds[keep,]
-  
-  
-  # Perform statistical comparison for each of the selected comparison
-  top_table <- list()
-  for (i in comparisons){
     
-    # Change level
-    referenceLevel <- make.names(stringr::str_split(i," - ")[[1]][2])
-    dds$experimentFactor <- relevel(dds$experimentFactor, ref = referenceLevel)
-    dds <- DESeq2::DESeq(dds)
-    
-    contrastName <- paste("experimentFactor",
-                          make.names(stringr::str_split(i," - ")[[1]][1]),
-                          "vs",
-                          make.names(stringr::str_split(i," - ")[[1]][2]), sep = "_")
-    
-    if (shrinkage){
-      resLFC <- as.data.frame(DESeq2::lfcShrink(dds, coef=contrastName, type="apeglm"))
-      resLFC <- dplyr::arrange(resLFC,by = pvalue)
-    } else{
-      resLFC <- as.data.frame(DESeq2::results(dds, name=contrastName))
-      resLFC <- dplyr::arrange(resLFC,by = pvalue)
+    # Replace name(s) of biomaRt attributes
+    for (a in 1:length(biomart_attributes)){
+      biomart_attributes[a] <- tryCatch({
+        switch(biomart_attributes[a],
+               "SYMBOL" = "gene_name",
+               "ENTREZID" = "entrezgene_id",
+               "ENSEMBL" = "ensembl_gene_id",
+        )
+      }, error = function(cond){
+        return(biomart_attributes[a])
+      })
     }
     
-    top_table[[i]] <- resLFC[,c("baseMean",
-                                "log2FoldChange",
-                                "lfcSE",
-                                "pvalue",
-                                "padj")]
-    top_table[[i]] <- cbind(rownames(top_table[[i]]), top_table[[i]])
-    rownames(top_table[[i]]) <- NULL
-    colnames(top_table[[i]]) <- c("Gene ID", "Mean Expr", "log2FC", "log2FC SE",
-                                  "p-value", "adj. p-value")
-  }
-  
-  message <- "Nice! Statistical analysis has been performed. 
-    You can now download the results and view them in interactive plots."
-  
-  # Add annotations to table if this option is selected
-  if (addAnnotation == TRUE){
-    
-    # Change attribute and filter name
-    if (biomart_dataset == "hsapiens_gene_ensembl"){
-      biomart_attributes1 <- stringr::str_replace(biomart_attributes,
-                                                  "gene_name",
-                                                  "hgnc_symbol")
-      biomart_filters1 <- stringr::str_replace(biomart_filters,
-                                               "gene_name",
-                                               "hgnc_symbol")
+    # Get experiment factor
+    if(length(expFactor) > 1){
+      experimentFactor <- factor(make.names(apply(metaData[,expFactor], 1, paste, collapse = "_" )))
     } else{
-      biomart_attributes1 <- stringr::str_replace(biomart_attributes,
-                                                  "gene_name",
-                                                  "external_gene_name")
-      biomart_filters1 <- stringr::str_replace(biomart_filters,
-                                               "gene_name",
-                                               "external_gene_name")
+      experimentFactor <- factor(make.names(metaData[,expFactor]))
     }
     
+    # Get covariates
+    for (n in covGroups_num){
+      metaData[,n] <- as.numeric(metaData[,n])
+    }
+    for (c in covGroups_char){
+      metaData[,c] <- factor(metaData[,c])
+    }
+    covariates <- c(covGroups_num, covGroups_char)
     
-    # Do this for each top table in the list
-    for (t in 1:length(top_table)){
+    # Make formula
+    if (!is.null(covariates)){
+      formula <- paste0("~ ", "experimentFactor + ", paste0(covariates, collapse = " + "))
+    } else {
+      formula <- paste0("~ ", "experimentFactor")
+    }
+    
+    # make DESeqDataSet object
+    sampleInfo <- cbind.data.frame(experimentFactor, metaData[,covariates])
+    colnames(sampleInfo) <- c("experimentFactor", covariates)
+    rownames(sampleInfo) <- rownames(metaData)
+    dds <- DESeq2::DESeqDataSetFromMatrix(countData = round(rawMatrix),
+                                          colData = sampleInfo,
+                                          design = as.formula(formula))
+    # Filtering
+    keep <- rowSums(counts(dds) >= filterThres) >= smallestGroupSize
+    dds <- dds[keep,]
+    
+    
+    # Perform statistical comparison for each of the selected comparison
+    top_table <- list()
+    for (i in comparisons){
       
-      # Round numbers in top table
-      for (n in 2:6){
-        top_table[[t]][,n] <- signif(top_table[[t]][,n],3)
+      # Change level
+      referenceLevel <- make.names(stringr::str_split(i," - ")[[1]][2])
+      dds$experimentFactor <- relevel(dds$experimentFactor, ref = referenceLevel)
+      dds <- DESeq2::DESeq(dds)
+      
+      contrastName <- paste("experimentFactor",
+                            make.names(stringr::str_split(i," - ")[[1]][1]),
+                            "vs",
+                            make.names(stringr::str_split(i," - ")[[1]][2]), sep = "_")
+      
+      if (shrinkage){
+        resLFC <- as.data.frame(DESeq2::lfcShrink(dds, coef=contrastName, type="apeglm"))
+        resLFC <- dplyr::arrange(resLFC,by = pvalue)
+      } else{
+        resLFC <- as.data.frame(DESeq2::results(dds, name=contrastName))
+        resLFC <- dplyr::arrange(resLFC,by = pvalue)
       }
       
-      #Get annotations
-      annotation_list <- tryCatch({
-        ensembl <- biomaRt::useMart("ensembl")
-        ensembl <- biomaRt::useDataset(biomart_dataset, mart=ensembl)
-        annotations <- biomaRt::getBM(attributes=biomart_attributes1,
-                                      filters = biomart_filters1,
-                                      values = top_table[[t]]$`Gene ID`,
-                                      mart = ensembl)
+      top_table[[i]] <- resLFC[,c("baseMean",
+                                  "log2FoldChange",
+                                  "lfcSE",
+                                  "pvalue",
+                                  "padj")]
+      top_table[[i]] <- cbind(rownames(top_table[[i]]), top_table[[i]])
+      rownames(top_table[[i]]) <- NULL
+      colnames(top_table[[i]]) <- c("Gene ID", "Mean Expr", "log2FC", "log2FC SE",
+                                    "p-value", "adj. p-value")
+    }
+    
+    message <- "Nice! Statistical analysis has been performed. 
+    You can now download the results and view them in interactive plots."
+    
+    # Add annotations to table if this option is selected
+    if (addAnnotation == TRUE){
+      
+      # Change attribute and filter name
+      if (biomart_dataset == "hsapiens_gene_ensembl"){
+        biomart_attributes1 <- stringr::str_replace(biomart_attributes,
+                                                    "gene_name",
+                                                    "hgnc_symbol")
+        biomart_filters1 <- stringr::str_replace(biomart_filters,
+                                                 "gene_name",
+                                                 "hgnc_symbol")
+      } else{
+        biomart_attributes1 <- stringr::str_replace(biomart_attributes,
+                                                    "gene_name",
+                                                    "external_gene_name")
+        biomart_filters1 <- stringr::str_replace(biomart_filters,
+                                                 "gene_name",
+                                                 "external_gene_name")
+      }
+      
+      
+      # Do this for each top table in the list
+      for (t in 1:length(top_table)){
         
-        message <- "Nice! Statistical analysis has been performed. 
+        # Round numbers in top table
+        for (n in 2:6){
+          top_table[[t]][,n] <- signif(top_table[[t]][,n],3)
+        }
+        
+        #Get annotations
+        annotation_list <- tryCatch({
+          ensembl <- biomaRt::useMart("ensembl")
+          ensembl <- biomaRt::useDataset(biomart_dataset, mart=ensembl)
+          annotations <- biomaRt::getBM(attributes=biomart_attributes1,
+                                        filters = biomart_filters1,
+                                        values = top_table[[t]]$`Gene ID`,
+                                        mart = ensembl)
+          
+          message <- "Nice! Statistical analysis has been performed. 
           Gene annotation was performed with biomaRt. You can now download 
               the results and view them in interactive plots."
-        dataset <- paste0(biomart_dataset, " (", searchDatasets(mart = ensembl, pattern = "hsapiens")$version, ")")
-        list(annotations, message, dataset)
-      },
-      error = function(cond){
-        
-        # Load annotation package
-        pkg <- switch(biomart_dataset,
-                      "hsapiens_gene_ensembl" = "org.Hs.eg.db",
-                      "btaurus_gene_ensembl" = "org.Bt.eg.db",
-                      "celegans_gene_ensembl" = "org.Ce.eg.db",
-                      "mmusculus_gene_ensembl" = "org.Mm.eg.db",
-                      "rnorvegicus_gene_ensembl" = "org.Rn.eg.db"
-        )
-        
-        if (!requireNamespace(pkg, quietly = TRUE))
-          BiocManager::install(pkg, ask = FALSE)
-        require(as.character(pkg), character.only = TRUE)
-        
-        
-        # Change attribute names
-        biomart_attributes2 <- biomart_attributes
-        if (biomart_dataset == "hsapiens_gene_ensembl"){
-          biomart_attributes2[biomart_attributes2 == "gene_name"] <- "SYMBOL"
-        } else{
-          biomart_attributes2[biomart_attributes2 == "gene_name"] <- "GENENAME"
-        }
-        biomart_attributes2[biomart_attributes2 == "entrezgene_id"] <- "ENTREZID"
-        biomart_attributes2[biomart_attributes2 == "ensembl_gene_id"] <- "ENSEMBL"
-        
-        
-        # Change filter names
-        biomart_filters2 <- biomart_filters
-        if (biomart_dataset == "hsapiens_gene_ensembl"){
-          biomart_filters2[biomart_filters2 == "gene_name"] <- "SYMBOL"
-        } else{
-          biomart_filters2[biomart_filters2  == "gene_name"] <- "GENENAME"
-        }
-        biomart_filters2[biomart_filters2 == "entrezgene_id"] <- "ENTREZID"
-        biomart_filters2[biomart_filters2 == "ensembl_gene_id"] <- "ENSEMBL"
-        
-        # Get annotations
-        annotations <- AnnotationDbi::select(BiocGenerics::get(pkg), 
-                                             columns = biomart_attributes2, 
-                                             keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
-        
-        # Join with geneIDs
-        annotations <- left_join(data.frame(`Gene ID` = top_table[[t]]$`Gene ID`),
-                                 annotations,
-                                 by = c("Gene ID" = biomart_filters2))
-        
-        # Change column names back
-        temp_col <- colnames(annotations)
-        temp_col[temp_col == "Gene ID"] <- biomart_filters1
-        if (biomart_dataset == "hsapiens_gene_ensembl"){
-          temp_col[temp_col == "SYMBOL"] <- "Gene Symbol"
-        } else{
-          temp_col[temp_col == "SYMBOL"] <- "Gene Name"
-        }
-        temp_col[temp_col == "ENTREZID"] <- "Entrez Gene ID"
-        temp_col[temp_col == "ENSEMBL"] <- "Ensembl Gene ID"
-        colnames(annotations) <- temp_col
-        message <- "Nice! Statistical analysis has been performed. 
+          dataset <- paste0(biomart_dataset, " (", searchDatasets(mart = ensembl, pattern = "hsapiens")$version, ")")
+          list(annotations, message, dataset)
+        },
+        error = function(cond){
+          
+          # Load annotation package
+          pkg <- switch(biomart_dataset,
+                        "hsapiens_gene_ensembl" = "org.Hs.eg.db",
+                        "btaurus_gene_ensembl" = "org.Bt.eg.db",
+                        "celegans_gene_ensembl" = "org.Ce.eg.db",
+                        "mmusculus_gene_ensembl" = "org.Mm.eg.db",
+                        "rnorvegicus_gene_ensembl" = "org.Rn.eg.db"
+          )
+          
+          if (!requireNamespace(pkg, quietly = TRUE))
+            BiocManager::install(pkg, ask = FALSE)
+          require(as.character(pkg), character.only = TRUE)
+          
+          
+          # Change attribute names
+          biomart_attributes2 <- biomart_attributes
+          if (biomart_dataset == "hsapiens_gene_ensembl"){
+            biomart_attributes2[biomart_attributes2 == "gene_name"] <- "SYMBOL"
+          } else{
+            biomart_attributes2[biomart_attributes2 == "gene_name"] <- "GENENAME"
+          }
+          biomart_attributes2[biomart_attributes2 == "entrezgene_id"] <- "ENTREZID"
+          biomart_attributes2[biomart_attributes2 == "ensembl_gene_id"] <- "ENSEMBL"
+          
+          
+          # Change filter names
+          biomart_filters2 <- biomart_filters
+          if (biomart_dataset == "hsapiens_gene_ensembl"){
+            biomart_filters2[biomart_filters2 == "gene_name"] <- "SYMBOL"
+          } else{
+            biomart_filters2[biomart_filters2  == "gene_name"] <- "GENENAME"
+          }
+          biomart_filters2[biomart_filters2 == "entrezgene_id"] <- "ENTREZID"
+          biomart_filters2[biomart_filters2 == "ensembl_gene_id"] <- "ENSEMBL"
+          
+          # Get annotations
+          annotations <- AnnotationDbi::select(BiocGenerics::get(pkg), 
+                                               columns = biomart_attributes2, 
+                                               keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
+          
+          # Join with geneIDs
+          annotations <- left_join(data.frame(`Gene ID` = top_table[[t]]$`Gene ID`),
+                                   annotations,
+                                   by = c("Gene ID" = biomart_filters2))
+          
+          # Change column names back
+          temp_col <- colnames(annotations)
+          temp_col[temp_col == "Gene ID"] <- biomart_filters1
+          if (biomart_dataset == "hsapiens_gene_ensembl"){
+            temp_col[temp_col == "SYMBOL"] <- "Gene Symbol"
+          } else{
+            temp_col[temp_col == "SYMBOL"] <- "Gene Name"
+          }
+          temp_col[temp_col == "ENTREZID"] <- "Entrez Gene ID"
+          temp_col[temp_col == "ENSEMBL"] <- "Ensembl Gene ID"
+          colnames(annotations) <- temp_col
+          message <- "Nice! Statistical analysis has been performed. 
           The Ensembl database was not available.
           So, the gene annotation was performed with the bioconductor annotation package (Org.Xs.eg.db). 
           You can now download the results and view them in interactive plots."
-        dataset <- paste0(pkg, " (", packageVersion(pkg),")")
-        list(annotations, message, dataset)
-      })
-      annotations <- annotation_list[[1]]
-      message <- annotation_list[[2]]
-      dataset <- annotation_list[[3]]
-      
-      # Convert entrezgene id to character
-      if("entrezgene_id" %in% biomart_attributes){
-        annotations$entrezgene_id <- as.character(annotations$entrezgene_id)
-      }
-      annotations[annotations == ""] <- NA
-      annotations[annotations == " "] <- NA
-      
-      # Combine annotations with top table
-      #annotations[,biomart_filters] <- as.character(annotations[,biomart_filters1])
-      top_table_ann <- dplyr::left_join(top_table[[t]], annotations,
-                                        by = c("Gene ID" = biomart_filters1))
-      
-      colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "Gene Symbol"
-      colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "Gene Name"
-      colnames(top_table_ann)[colnames(top_table_ann) == "entrezgene_id"] <- "Entrez Gene ID"
-      colnames(top_table_ann)[colnames(top_table_ann) == "ensembl_gene_id"] <- "Ensembl Gene ID"
-      
-      # Make sure that there are no duplicate gene ids
-      for (a in 1:(ncol(top_table_ann)-6)){
-        temp1 <- unique(top_table_ann[,c(1,6+a)])
-        temp1 <- temp1[!is.na(temp1[,2]),]
-        temp_ann <- temp1 %>%
-          dplyr::group_by(`Gene ID`) %>%
-          dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = "; "))
+          dataset <- paste0(pkg, " (", packageVersion(pkg),")")
+          list(annotations, message, dataset)
+        })
+        annotations <- annotation_list[[1]]
+        message <- annotation_list[[2]]
+        dataset <- annotation_list[[3]]
         
-        top_table[[t]] <- dplyr::left_join(top_table[[t]], temp_ann,
-                                           by = c("Gene ID" = "Gene ID"))
+        # Convert entrezgene id to character
+        if("entrezgene_id" %in% biomart_attributes){
+          annotations$entrezgene_id <- as.character(annotations$entrezgene_id)
+        }
+        annotations[annotations == ""] <- NA
+        annotations[annotations == " "] <- NA
+        
+        # Combine annotations with top table
+        #annotations[,biomart_filters] <- as.character(annotations[,biomart_filters1])
+        top_table_ann <- dplyr::left_join(top_table[[t]], annotations,
+                                          by = c("Gene ID" = biomart_filters1))
+        
+        colnames(top_table_ann)[colnames(top_table_ann) == "hgnc_symbol"] <- "Gene Symbol"
+        colnames(top_table_ann)[colnames(top_table_ann) == "external_gene_name"] <- "Gene Name"
+        colnames(top_table_ann)[colnames(top_table_ann) == "entrezgene_id"] <- "Entrez Gene ID"
+        colnames(top_table_ann)[colnames(top_table_ann) == "ensembl_gene_id"] <- "Ensembl Gene ID"
+        
+        # Make sure that there are no duplicate gene ids
+        for (a in 1:(ncol(top_table_ann)-6)){
+          temp1 <- unique(top_table_ann[,c(1,6+a)])
+          temp1 <- temp1[!is.na(temp1[,2]),]
+          temp_ann <- temp1 %>%
+            dplyr::group_by(`Gene ID`) %>%
+            dplyr::summarise_at(colnames(top_table_ann)[6+a], function(x) paste(x,collapse = "; "))
+          
+          top_table[[t]] <- dplyr::left_join(top_table[[t]], temp_ann,
+                                             by = c("Gene ID" = "Gene ID"))
+        }
+        
       }
       
     }
-    
-  }
-  top_table_list <- list(top_table, message, dataset)
-  return(top_table_list)
+    top_table_list <- list(top_table, message, dataset)
+    return(top_table_list)
   }, error = function(cond){
     NULL
   })
@@ -4253,7 +4257,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
         },
         error = function(cond){
           
-        # Load annotation package
+          # Load annotation package
           pkg <- switch(biomart_dataset,
                         "hsapiens_gene_ensembl" = "org.Hs.eg.db",
                         "btaurus_gene_ensembl" = "org.Bt.eg.db",
@@ -4287,11 +4291,11 @@ getStatistics_RNASeq_processed <- function(normMatrix,
           }
           biomart_filters2[biomart_filters2 == "entrezgene_id"] <- "ENTREZID"
           biomart_filters2[biomart_filters2 == "ensembl_gene_id"] <- "ENSEMBL"
-        
+          
           # Get annotations
           annotations <- AnnotationDbi::select(BiocGenerics::get(pkg), 
-                                            columns = biomart_attributes2, 
-                                            keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
+                                               columns = biomart_attributes2, 
+                                               keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
           
           # Join with geneIDs
           annotations <- left_join(data.frame(`Gene ID` = top_table[[t]]$`Gene ID`),
@@ -4302,7 +4306,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
           temp_col <- colnames(annotations)
           temp_col[temp_col == "Gene ID"] <- biomart_filters1
           if (biomart_dataset == "hsapiens_gene_ensembl"){
-          temp_col[temp_col == "SYMBOL"] <- "Gene Symbol"
+            temp_col[temp_col == "SYMBOL"] <- "Gene Symbol"
           } else{
             temp_col[temp_col == "SYMBOL"] <- "Gene Name"
           }
@@ -4319,7 +4323,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
         annotations <- annotation_list[[1]]
         message <- annotation_list[[2]]
         dataset <- annotation_list[[3]]
-
+        
         # Convert entrezgene id to character
         if("entrezgene_id" %in% biomart_attributes){
           annotations$entrezgene_id <- as.character(annotations$entrezgene_id)
@@ -4355,7 +4359,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
     top_table_list <- list(top_table, message, dataset)
     return(top_table_list)
   }, error = function(cond){
-      NULL
+    NULL
   })
 }
 
