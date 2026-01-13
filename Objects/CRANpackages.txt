@@ -5,7 +5,6 @@ ggplot2	3.5.1	smaller
 stringr	1.5.1	smaller
 dplyr 1.1.4	smaller
 purrr	1.0.2	smaller
-fuzzyjoin	0.1.6	smaller
 plotly		4.10.4	smaller
 gplots	3.2.0	smaller
 heatmaply	1.5.0	smaller

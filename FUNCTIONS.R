@@ -56,23 +56,27 @@ getCELs <- function(zippath, shiny_upload = TRUE){
   tryCatch({
     if (shiny_upload){
       
+      cel_dir <- paste0(tempdir(), "/CELfiles/", make.names(Sys.time()))
+      
+      
       # Unzip
       unzip(zippath$datapath, 
-            exdir = paste0(tempdir(), "/CELfiles"))
+            exdir = cel_dir)
       
       # List CEL files
-      celfiles <- list.files(tail(list.dirs(paste0(tempdir(), "/CELfiles")),1),
+      celfiles <- list.files(tail(list.dirs(cel_dir),1),
                              pattern = "CEL", 
                              full.names = TRUE)
     }
     if (!shiny_upload){
       
+      cel_dir <- paste0(tempdir(), "/CELfiles/", make.names(Sys.time()))
       # Unzip
       unzip(zippath, 
-            exdir = paste0(tempdir(), "/CELfiles"))
+            exdir = cel_dir)
       
       # List CEL files
-      celfiles <- list.files(tail(list.dirs(paste0(tempdir(), "/CELfiles")),1),
+      celfiles <- list.files(tail(list.dirs(cel_dir),1),
                              pattern = "CEL", 
                              full.names = TRUE)
     }
@@ -99,9 +103,9 @@ readCELs <- function(celfiles, zippath, rm = FALSE){
     
     # List CEL files
     celfiles <- list.files(tail(list.dirs(paste0(tempdir(), "/CELfiles")),1),
-                           pattern = "CEL", 
+                           pattern = "CEL",
                            full.names = TRUE)
-    
+
     if(length(celfiles) < 1){
       # Unzip
       unzip(zippath$datapath, 
@@ -183,41 +187,55 @@ getMetaData <- function(path, celfiles, filetype){
   
   # If there are no common sample IDs, add them to the object (using fuzzy matching)
   if(max(sumIDs) == 0){
-    CELsamples_alt <- stringr::str_remove(CELsamples, "_.*")
+
+    matchScore <- rep(NA, ncol(metaData))
+    for (c in 1:ncol(metaData)){
+      metacol <- stringr::str_remove(as.character(metaData[,c]),"\\.CEL.*")
+      matchScore[c] <- mean(min(as.matrix(pwalign::stringDist(c(metacol, CELsamples)))[nrow(metaData),                                                                                              (nrow(metaData) + 1):(nrow(metaData) + length(CELsamples))]))
+    }
     
-    # # get column with samples IDs
-    # sumIDs <- rep(0, ncol(metaData))
-    # for (i in 1:ncol(metaData)){
-    #   if (length(unique(metaData[,i])) == nrow(metaData)){
-    #     sumIDs[i] <- sum(metaData[,i] %in% CELsamples_alt)
-    #   }
-    # }
-    
-    # Add additional column with CEL names
-    combineCELs <- data.frame(AltName = CELsamples_alt,
-                              CELName = CELsamples)
-    
-    metaData_copy <- metaData
-    metaData_copy[,which.max(sumIDs)] <- stringr::str_remove(as.character(metaData_copy[,which.max(sumIDs)]),"\\.CEL.*")
-    colnames(metaData_copy)[which.max(sumIDs)] <- "y"
-    
-    # Fuzzy join
-    metaData <- fuzzyjoin::stringdist_inner_join(metaData_copy,
-                                                 combineCELs,
-                                                 by = c("y" = "AltName"))
-    metaSamples <- metaData[,ncol(metaData)]
-    
-    # Get common samples
-    commonSamples <- intersect(CELsamples, metaSamples)
-    
-    # Filter meta data for common samples
-    metaData_fil <- metaData[metaSamples %in% commonSamples,]
-    
-    # Remove duplicate samples
-    metaData_fil <- metaData_fil[!duplicated(metaData_fil[,ncol(metaData)]),]
-    
-    # Set sample names as row names
-    rownames(metaData_fil) <- metaData_fil[,ncol(metaData)]
+    if (min(matchScore) < 3){
+      selCol <- which.min(matchScore)#which.max(sumIDs)
+      metaData[,selCol] <- stringr::str_remove(as.character(metaData[,selCol]),"\\.CEL.*")
+      
+      metaData_copy <- metaData
+      metaData_copy[,selCol] <- stringr::str_remove(as.character(metaData_copy[,selCol]),"\\.CEL.*")
+      selColname <- colnames(metaData_copy)[selCol]
+      colnames(metaData_copy)[selCol] <- "y"
+      
+      # Get the best matching sample
+      combineCELs <- NULL
+      for (i in CELsamples){
+        temp <- data.frame(AltName = metaData_copy[as.numeric(which.min(as.matrix(pwalign::stringDist(c(i, metaData_copy[,selCol])))[-1,1])),selCol],
+                           CELName = i)
+        combineCELs <- rbind.data.frame(combineCELs, temp)
+      }
+      
+      # Join
+      metaData <- dplyr::inner_join(metaData_copy,
+                                    combineCELs,
+                                    by = c("y" = "AltName"))
+      metaSamples <- metaData[,ncol(metaData)]
+      colnames(metaData)[colnames(metaData) == "y"] <- selColname
+      
+      # Get common samples
+      commonSamples <- intersect(CELsamples, metaSamples)
+      
+      # Filter meta data for common samples
+      metaData_fil <- metaData[metaSamples %in% commonSamples,]
+      
+      # Remove duplicate samples
+      metaData_fil <- metaData_fil[!duplicated(metaData_fil[,ncol(metaData)]),]
+      
+      # Set sample names as row names
+      rownames(metaData_fil) <- metaData_fil[,ncol(metaData)]
+      
+      colnames(metaData_fil) <- make.names(colnames(metaData_fil))
+      
+    }else{
+      
+      metaData_fil <- data.frame(NULL)
+    }
     
   } else {
     metaData[,which.max(sumIDs)] <- stringr::str_remove(as.character(metaData[,which.max(sumIDs)]),"\\.CEL.*")
@@ -234,8 +252,9 @@ getMetaData <- function(path, celfiles, filetype){
     
     # Set sample names as row names
     rownames(metaData_fil) <- metaData_fil[,which.max(sumIDs)]
+    
+    colnames(metaData_fil) <- make.names(colnames(metaData_fil))
   }
-  colnames(metaData_fil) <- make.names(colnames(metaData_fil))
   return(metaData_fil)
 }
 
