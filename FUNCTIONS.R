@@ -1502,7 +1502,7 @@ getHeatmap_static <- function(experimentFactor,
   
   # Create a layout with 2 columns: one for the heatmap, one for the legend
   grid::grid.newpage()
-  grid::pushViewport(viewport(layout = grid::grid.layout(nrow = 1, ncol = 2, 
+  grid::pushViewport(grid::viewport(layout = grid::grid.layout(nrow = 1, ncol = 2, 
                                                          widths = grid::unit.c(grid::unit(1, "npc") - unit(0.4, "npc"), 
                                                                                grid::unit(0.2, "npc")))))
   
@@ -1995,9 +1995,10 @@ getStatistics <- function(normMatrix,
                                                keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
           
           # Join with geneIDs
-          annotations <- left_join(data.frame(`Gene ID` = top_table[[t]]$`Gene ID`),
+          annotations <- left_join(data.frame(Gene_ID = top_table[[t]]$`Gene ID`),
                                    annotations,
-                                   by = c("Gene ID" = biomart_filters2))
+                                   by = c("Gene_ID" = biomart_filters2))
+          colnames(annotations)[1] <- "Gene ID"
           
           # Change column names back
           temp_col <- colnames(annotations)
@@ -4039,9 +4040,10 @@ getStatistics_RNASeq <- function(rawMatrix,
                                                keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
           
           # Join with geneIDs
-          annotations <- left_join(data.frame(`Gene ID` = top_table[[t]]$`Gene ID`),
+          annotations <- left_join(data.frame(Gene_ID = top_table[[t]]$`Gene ID`),
                                    annotations,
-                                   by = c("Gene ID" = biomart_filters2))
+                                   by = c("Gene_ID" = biomart_filters2))
+          colnames(annotations)[1] <- "Gene ID"
           
           # Change column names back
           temp_col <- colnames(annotations)
@@ -4317,9 +4319,10 @@ getStatistics_RNASeq_processed <- function(normMatrix,
                                                keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
           
           # Join with geneIDs
-          annotations <- left_join(data.frame(`Gene ID` = top_table[[t]]$`Gene ID`),
+          annotations <- left_join(data.frame(Gene_ID = top_table[[t]]$`Gene ID`),
                                    annotations,
-                                   by = c("Gene ID" = biomart_filters2))
+                                   by = c("Gene_ID" = biomart_filters2))
+          colnames(annotations)[1] <- "Gene ID"
           
           # Change column names back
           temp_col <- colnames(annotations)

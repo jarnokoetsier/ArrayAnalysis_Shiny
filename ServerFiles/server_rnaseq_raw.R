@@ -2545,7 +2545,6 @@ observe({
   output$UI_addAnnotations_rnaseq_raw <- renderUI({
     req(input$addAnnotation_rnaseq_raw)
     req(input$biomart_dataset_rnaseq_raw)
-    print(head(rownames(rv$normData)))
     tagList(
       
       selectInput(inputId = "biomart_filter_rnaseq_raw",
