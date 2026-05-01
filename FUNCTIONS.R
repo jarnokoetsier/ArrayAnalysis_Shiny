@@ -3364,7 +3364,8 @@ make_ORAgene_table <- function(ORA_data,
         # Get genes in GO/WP term
         termID <- ORA_data@result$ID[sel_row_ORA]
         termGenes <- ORA_data@geneSets[[termID]]
-        if ((ORA_data@keytype != geneID_type) & (ORA_data@keytype != "unknown")){
+        if ((ORA_data@keytype != geneID_type) & 
+            (ORA_data@keytype %in% c("ENTREZID", "ENSEMBL", "SYMBOL"))){
             pkg <- switch(organism,
                           "Homo sapiens" = "org.Hs.eg.db",
                           "Bos taurus" = "org.Bt.eg.db",

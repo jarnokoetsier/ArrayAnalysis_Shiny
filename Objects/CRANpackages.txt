@@ -23,4 +23,5 @@ colourpicker	1.3.0	smaller
 colorspace	2.1.1	smaller
 knitr	1.49	smaller
 rmarkdown	2.29	smaller
-circlize	0.4.16	smaller	
+circlize	0.4.16	smaller
+ggtangle	0.1.2	smaller	
