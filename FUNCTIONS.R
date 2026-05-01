@@ -2009,9 +2009,10 @@ getStatistics <- function(normMatrix,
                     } else{
                         temp_col[temp_col == "SYMBOL"] <- "Gene Name"
                     }
-                    temp_col[temp_col == "ENTREZID"] <- "Entrez Gene ID"
-                    temp_col[temp_col == "ENSEMBL"] <- "Ensembl Gene ID"
+                    temp_col[temp_col == "ENTREZID"] <- "entrezgene_id"
+                    temp_col[temp_col == "ENSEMBL"] <- "ensembl_gene_id"
                     colnames(annotations) <- temp_col
+                    
                     message <- "Nice! Statistical analysis has been performed. 
           The Ensembl database was not available.
           So, the gene annotation was performed with the Bioconductor annotation package (Org.Xx.eg.db). 
@@ -2025,7 +2026,7 @@ getStatistics <- function(normMatrix,
                 
                 # Convert entrezgene id to character
                 if("entrezgene_id" %in% biomart_attributes){
-                    annotations$`Entrez Gene ID` <- as.character(annotations$`Entrez Gene ID`)
+                    annotations$entrezgene_id <- as.character(annotations$entrezgene_id)
                 }
                 annotations[annotations == ""] <- NA
                 annotations[annotations == " "] <- NA
@@ -4101,9 +4102,10 @@ getStatistics_RNASeq <- function(rawMatrix,
                     } else{
                         temp_col[temp_col == "SYMBOL"] <- "Gene Name"
                     }
-                    temp_col[temp_col == "ENTREZID"] <- "Entrez Gene ID"
-                    temp_col[temp_col == "ENSEMBL"] <- "Ensembl Gene ID"
+                    temp_col[temp_col == "ENTREZID"] <- "entrezgene_id"
+                    temp_col[temp_col == "ENSEMBL"] <- "ensembl_gene_id"
                     colnames(annotations) <- temp_col
+                    
                     message <- "Nice! Statistical analysis has been performed. 
           The Ensembl database was not available.
           So, the gene annotation was performed with the bioconductor annotation package (Org.Xs.eg.db). 
@@ -4117,7 +4119,7 @@ getStatistics_RNASeq <- function(rawMatrix,
                 
                 # Convert entrezgene id to character
                 if("entrezgene_id" %in% biomart_attributes){
-                    annotations$`Entrez Gene ID` <- as.character(annotations$`Entrez Gene ID`)
+                    annotations$entrezgene_id <- as.character(annotations$entrezgene_id)
                 }
                 annotations[annotations == ""] <- NA
                 annotations[annotations == " "] <- NA
@@ -4381,9 +4383,10 @@ getStatistics_RNASeq_processed <- function(normMatrix,
                     } else{
                         temp_col[temp_col == "SYMBOL"] <- "Gene Name"
                     }
-                    temp_col[temp_col == "ENTREZID"] <- "Entrez Gene ID"
-                    temp_col[temp_col == "ENSEMBL"] <- "Ensembl Gene ID"
+                    temp_col[temp_col == "ENTREZID"] <- "entrezgene_id"
+                    temp_col[temp_col == "ENSEMBL"] <- "ensembl_gene_id"
                     colnames(annotations) <- temp_col
+                    
                     message <- "Nice! Statistical analysis has been performed. 
           The Ensembl database was not available.
           So, the gene annotation was performed with the bioconductor annotation package (Org.Xx.eg.db). 
@@ -4397,7 +4400,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
                 
                 # Convert entrezgene id to character
                 if("entrezgene_id" %in% biomart_attributes){
-                    annotations$`Entrez Gene ID` <- as.character(annotations$`Entrez Gene ID`)
+                    annotations$entrezgene_id <- as.character(annotations$entrezgene_id)
                 }
                 annotations[annotations == ""] <- NA
                 annotations[annotations == " "] <- NA
