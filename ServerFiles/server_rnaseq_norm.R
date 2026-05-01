@@ -4063,7 +4063,9 @@ observe({
             output <- make_ORAgene_table(ORA_data = rv$ORA_data,
                                          top_table = rv$top_table[[input$comparisons_view_ORA_rnaseq_norm]],
                                          geneID_col = input$geneID_ORA_rnaseq_norm,
-                                         sel_row_ORA = input$ORA_table_rnaseq_norm_rows_selected)
+                                         sel_row_ORA = input$ORA_table_rnaseq_norm_rows_selected,
+                                         geneID_type = input$selID_ORA_rnaseq_norm,
+                                         organism = input$organism_ORA_rnaseq_norm)
             
             output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
             output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
@@ -4737,7 +4739,9 @@ observe({
             output <- make_ORAgene_table(ORA_data = rv$GSEA_data,
                                          top_table = rv$top_table[[input$comparisons_view_ORA_rnaseq_norm]],
                                          geneID_col = input$geneID_ORA_rnaseq_norm,
-                                         sel_row_ORA = input$GSEA_table_rnaseq_norm_rows_selected)
+                                         sel_row_ORA = input$GSEA_table_rnaseq_norm_rows_selected,
+                                         geneID_type = input$selID_ORA_rnaseq_norm,
+                                         organism = input$organism_ORA_rnaseq_norm)
             
             output$`p-value` <- format(output$`p-value`, scientific=TRUE, digits = 3)
             output$`adj. p-value` <- format(output$`adj. p-value`, scientific=TRUE, digits = 3)
