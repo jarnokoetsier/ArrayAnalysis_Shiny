@@ -1992,7 +1992,8 @@ getStatistics <- function(normMatrix,
                     # Get annotations
                     annotations <- AnnotationDbi::select(BiocGenerics::get(pkg), 
                                                          columns = biomart_attributes2, 
-                                                         keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
+                                                         keys = top_table[[t]]$`Gene ID`,
+                                                         keytype = biomart_filters2)
                     
                     # Join with geneIDs
                     annotations <- left_join(data.frame(Gene_ID = top_table[[t]]$`Gene ID`),
@@ -2024,7 +2025,7 @@ getStatistics <- function(normMatrix,
                 
                 # Convert entrezgene id to character
                 if("entrezgene_id" %in% biomart_attributes){
-                    annotations$entrezgene_id <- as.character(annotations$entrezgene_id)
+                    annotations$`Entrez Gene ID` <- as.character(annotations$`Entrez Gene ID`)
                 }
                 annotations[annotations == ""] <- NA
                 annotations[annotations == " "] <- NA
@@ -4082,10 +4083,11 @@ getStatistics_RNASeq <- function(rawMatrix,
                     # Get annotations
                     annotations <- AnnotationDbi::select(BiocGenerics::get(pkg), 
                                                          columns = biomart_attributes2, 
-                                                         keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
+                                                         keys = top_table[[t]]$`Gene ID`,
+                                                         keytype = biomart_filters2)
                     
                     # Join with geneIDs
-                    annotations <- left_join(data.frame(Gene_ID = top_table[[t]]$`Gene ID`),
+                    annotations <- dplyr::left_join(data.frame(Gene_ID = top_table[[t]]$`Gene ID`),
                                              annotations,
                                              by = c("Gene_ID" = biomart_filters2))
                     colnames(annotations)[1] <- "Gene ID"
@@ -4114,7 +4116,7 @@ getStatistics_RNASeq <- function(rawMatrix,
                 
                 # Convert entrezgene id to character
                 if("entrezgene_id" %in% biomart_attributes){
-                    annotations$entrezgene_id <- as.character(annotations$entrezgene_id)
+                    annotations$`Entrez Gene ID` <- as.character(annotations$`Entrez Gene ID`)
                 }
                 annotations[annotations == ""] <- NA
                 annotations[annotations == " "] <- NA
@@ -4361,7 +4363,8 @@ getStatistics_RNASeq_processed <- function(normMatrix,
                     # Get annotations
                     annotations <- AnnotationDbi::select(BiocGenerics::get(pkg), 
                                                          columns = biomart_attributes2, 
-                                                         keys = AnnotationDbi::keys(BiocGenerics::get(pkg)))
+                                                         keys = top_table[[t]]$`Gene ID`,
+                                                         keytype = biomart_filters2)
                     
                     # Join with geneIDs
                     annotations <- left_join(data.frame(Gene_ID = top_table[[t]]$`Gene ID`),
@@ -4393,7 +4396,7 @@ getStatistics_RNASeq_processed <- function(normMatrix,
                 
                 # Convert entrezgene id to character
                 if("entrezgene_id" %in% biomart_attributes){
-                    annotations$entrezgene_id <- as.character(annotations$entrezgene_id)
+                    annotations$`Entrez Gene ID` <- as.character(annotations$`Entrez Gene ID`)
                 }
                 annotations[annotations == ""] <- NA
                 annotations[annotations == " "] <- NA
