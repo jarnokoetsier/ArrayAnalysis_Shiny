@@ -2093,14 +2093,16 @@ makelogFCHistogram <- function(logFC, color = "#d3d3d3", bins = 100, static = FA
     p <- ggplot2::ggplot(data = plotDF, ggplot2::aes(x = Value)) +
         ggplot2::geom_histogram(bins = bins, colour = color_edge, fill = color) +
         ggplot2::labs(title = "logFC histogram") +
-        ggplot2::xlab("logFC") +
+        ggplot2::xlab(expression(log[2]~"FC")) +
         ggplot2::ylab("Count") +
         ggplot2::theme_classic() +
         ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5))
     
     # Return plot
     if (!static){
-        return(plotly::ggplotly(p))
+        p <- plotly::ggplotly(p) %>%
+            layout(xaxis = list(title = 'log<sub>2</sub>FC'), 
+                   yaxis = list(title = 'Count'))
     } else{
         return(p)
     }
@@ -2143,7 +2145,10 @@ makePHistogram <- function(P, color = "#d3d3d3", bins = 100, static = FALSE){
     
     # Return plot
     if (!static){
-        return(plotly::ggplotly(p))
+        p <- plotly::ggplotly(p) %>%
+            layout(xaxis = list(title = 'p-value'), 
+                   yaxis = list(title = 'Count'))
+        return(p)
     } else{
         return(p)
     }
