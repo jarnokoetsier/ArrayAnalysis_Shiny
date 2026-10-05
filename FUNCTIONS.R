@@ -2971,7 +2971,7 @@ ORA <- function(top_table,
                     TERM2GENE = path2gene,
                     TERM2NAME = path2name
                 )
-                
+                ORA_data@keytype <- geneID_type
             }
             
             # KEGG
@@ -3007,6 +3007,7 @@ ORA <- function(top_table,
                     TERM2GENE = path2gene,
                     TERM2NAME = path2name
                 )
+                ORA_data@keytype <- geneID_type
             }
         }
         
@@ -3213,7 +3214,7 @@ performGSEA <- function(top_table,
                     TERM2GENE = path2gene,
                     TERM2NAME = path2name
                 )
-                
+                GSEA_data@keytype <- geneID_type
                 
             }
             
@@ -3254,6 +3255,7 @@ performGSEA <- function(top_table,
                     TERM2GENE = path2gene,
                     TERM2NAME = path2name
                 )
+                GSEA_data@keytype <- geneID_type
             }
         }
         
