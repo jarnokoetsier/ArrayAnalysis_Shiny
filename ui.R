@@ -569,8 +569,12 @@ ui <- tagList(
                         
                         sidebarPanel(
                           h2(strong("Statistical analysis")),
-                          h5("In the statistical analysis step, 
-                        you can select which groups to compare to each other and 
+                          h5("In the statistical analysis step, differential expression 
+                          analysis is performed using the ", 
+                             a("limma",
+                               href = "https://doi.org/10.1093/nar/gkv007",
+                               target="_blank"),
+                          " package. You can select which groups to compare to each other and 
                            which covariates to add to the statistical model. 
                              Moreover, you have the option to add additional gene IDs 
                              (Ensembl IDs, Entrez IDs, and Gene Symbols) to the output."),
@@ -764,7 +768,8 @@ ui <- tagList(
                                   name = "question-circle",
                                 ) 
                               ) |>
-                                prompter::add_prompt(message = "Select which genes are used in the analysis.", 
+                                prompter::add_prompt(message = "Select which genes are used in the analysis. 
+                                                     All genes that pass filtering are used as the background gene universe.", 
                                                      position = "right",
                                                      size = "large")
                             ))),
@@ -1235,8 +1240,12 @@ ui <- tagList(
                         sidebarPanel(
                           h2(strong("Statistical analysis")),
                           
-                          h5("In the statistical analysis step, 
-                        you can select which groups to compare to each other and 
+                          h5("In the statistical analysis step, differential expression 
+                          analysis is performed using the ", 
+                             a("limma",
+                               href = "https://doi.org/10.1093/nar/gkv007",
+                               target="_blank"),
+                             " package. You can select which groups to compare to each other and 
                            which covariates to add to the statistical model. 
                              Moreover, you have the option to add additional gene IDs 
                              (Ensembl IDs, Entrez IDs, and Gene Symbols) to the output."),
@@ -1415,7 +1424,8 @@ ui <- tagList(
                                   name = "question-circle",
                                 ) 
                               ) |>
-                                prompter::add_prompt(message = "Select which genes are used in the analysis.", 
+                                prompter::add_prompt(message = "Select which genes are used in the analysis. 
+                                                     All genes that pass filtering are used as the background gene universe.", 
                                                      position = "right",
                                                      size = "large")
                             ))),
@@ -1819,8 +1829,12 @@ ui <- tagList(
                         sidebarPanel(
                           h2(strong("Statistical analysis")),
                           
-                          h5("In the statistical analysis step, 
-                        you can select which groups to compare to each other and 
+                          h5("In the statistical analysis step, differential expression 
+                          analysis is performed using the ", 
+                             a("DESeq2",
+                               href = "https://doi.org/10.1186/s13059-014-0550-8",
+                               target="_blank"),
+                             " package. You can select which groups to compare to each other and 
                            which covariates to add to the statistical model. 
                              Moreover, you have the option to add additional gene IDs 
                              (Ensembl IDs, Entrez IDs, and Gene Symbols) to the output."),
@@ -2014,7 +2028,8 @@ ui <- tagList(
                                   name = "question-circle",
                                 ) 
                               ) |>
-                                prompter::add_prompt(message = "Select which genes are used in the analysis.", 
+                                prompter::add_prompt(message = "Select which genes are used in the analysis. 
+                                                     All genes that pass filtering are used as the background gene universe.", 
                                                      position = "right",
                                                      size = "large")
                             ))),
@@ -2467,11 +2482,16 @@ ui <- tagList(
                         sidebarPanel(
                           h2(strong("Statistical analysis")),
                           
-                          h5("In the statistical analysis step, 
-                        you can select which groups to compare to each other and 
+                          h5("In the statistical analysis step, differential expression 
+                          analysis is performed using the ", 
+                             a("limma",
+                               href = "https://doi.org/10.1093/nar/gkv007",
+                               target="_blank"),
+                             " package. You can select which groups to compare to each other and 
                            which covariates to add to the statistical model. 
                              Moreover, you have the option to add additional gene IDs 
                              (Ensembl IDs, Entrez IDs, and Gene Symbols) to the output."),
+                          br(),
                           
                           hr(),
                           h4(strong(tags$span(
@@ -2548,6 +2568,13 @@ ui <- tagList(
                                                    style = "simple",
                                                    color = "warning",
                                                    icon = icon("sync")),
+                          h5(strong("NOTE: "), "the ", em("limma-trend"), " method is 
+                          used for differential expression analysis. 
+                             This method only produces robust results if the sequencing 
+                             depth is reasonably consistent across the samples.  
+                             If the ratio of the largest library size to the smallest 
+                             is more than about 3-fold, it is better to 
+                             start the analysis from the raw counts."),
                           
                           br(),
                           
@@ -2645,7 +2672,8 @@ ui <- tagList(
                                   name = "question-circle",
                                 ) 
                               ) |>
-                                prompter::add_prompt(message = "Select which genes are used in the analysis.", 
+                                prompter::add_prompt(message = "Select which genes are used in the analysis. 
+                                                     All genes that pass filtering are used as the background gene universe.", 
                                                      position = "right",
                                                      size = "large")
                             ))),

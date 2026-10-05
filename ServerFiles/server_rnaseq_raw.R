@@ -609,7 +609,8 @@ observe({
           session = session,
           title = "Info",
           text = "Perfect! The data has been pre-processed. Please check the different 
-              QC plots on this page to assess pre-processing quality.",
+              QC plots on this page to assess pre-processing quality 
+          and identify potential outliers.",
           type = "info")
       } else{
         shinyWidgets::sendSweetAlert(
@@ -617,8 +618,9 @@ observe({
           title = "Warning",
           text = HTML(paste0("<p>The data has been pre-processed, but the following sample(s) 
           might be outliers:</p><br><p><b>", paste(rv$suggestedOutliers, collapse = ", "),
-                             "</b></p><br><p>Please review the QC plots on this page to assess pre-processing quality 
-          and determine whether these outliers should be removed.</p>")),
+                             "</b></p><br><p>Please review the QC plots on this page to 
+                             assess pre-processing quality 
+          and determine whether these or any other samples should be removed.</p>")),
           type = "warning",
           html = TRUE)
       }
@@ -2624,6 +2626,7 @@ observe({
           Option = c("Selected comparison",
                      "Continuous covariate(s)",
                      "Discrete covariate(s)",
+                     "Analysis package",
                      "logFC shrinkage",
                      "Gene annotation dataset",
                      "Gene annotation attribute(s)",
@@ -2633,6 +2636,7 @@ observe({
                               paste(input$covGroups_num_rnaseq_raw, collapse = "; ")),
                        ifelse(is.null(input$covGroups_char_rnaseq_raw), " ",
                               paste(input$covGroups_char_rnaseq_raw, collapse = "; ")),
+                       paste0("DESeq2 (", packageVersion("DESeq2"), ")"),
                        ifelse(input$shrinkage_rnaseq_raw, "'apeglm' for logFC shrinkage",
                               "No logFC shrinkage"),
                        ifelse(is.null(rv$top_table_list[[3]]), "N/A", rv$top_table_list[[3]]),
@@ -2666,12 +2670,14 @@ observe({
           Option = c("Comparison",
                      "Continuous covariate(s)",
                      "Discrete covariate(s)",
+                     "Analysis package",
                      "logFC shrinkage"),
           Selected = c(input$comparisons_rnaseq_raw[c],
                        ifelse(is.null(input$covGroups_num_rnaseq_raw), " ",
                               paste(input$covGroups_num_rnaseq_raw, collapse = "; ")),
                        ifelse(is.null(input$covGroups_char_rnaseq_raw), " ",
                               paste(input$covGroups_char_rnaseq_raw, collapse = "; ")),
+                       paste0("DESeq2 (", packageVersion("DESeq2"), ")"),
                        ifelse(input$shrinkage_rnaseq_raw, "'apeglm' for logFC shrinkage",
                               "No logFC shrinkage"))
         )

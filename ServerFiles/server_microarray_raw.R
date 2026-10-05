@@ -708,7 +708,8 @@ observe({
           session = session,
           title = "Info",
           text = "Perfect! The data has been pre-processed. Please check the different 
-              QC plots on this page to assess pre-processing quality.",
+              QC plots on this page to assess pre-processing quality 
+          and identify potential outliers.",
           type = "info")
       } else{
         shinyWidgets::sendSweetAlert(
@@ -716,8 +717,9 @@ observe({
           title = "Warning",
           text = HTML(paste0("<p>The data has been pre-processed, but the following sample(s) 
           might be outliers:</p><br><p><b>", paste(rv$suggestedOutliers, collapse = ", "),
-                             "</b></p><br><p>Please review the QC plots on this page to assess pre-processing quality 
-          and determine whether these outliers should be removed.</p>")),
+                             "</b></p><br><p>Please review the QC plots on this page to 
+                             assess pre-processing quality 
+          and determine whether these or any other samples should be removed.</p>")),
           type = "warning",
           html = TRUE)
       }
@@ -2516,6 +2518,7 @@ observe({
           Option = c("Selected comparison",
                      "Continuous covariate(s)",
                      "Discrete covariate(s)",
+                     "Analysis package",
                      "Gene annotation dataset",
                      "Gene annotation attribute(s)",
                      "Gene annotation filter"),
@@ -2524,6 +2527,7 @@ observe({
                               paste(input$covGroups_num_microarray_raw, collapse = "; ")),
                        ifelse(is.null(input$covGroups_char_microarray_raw), " ",
                               paste(input$covGroups_char_microarray_raw, collapse = "; ")),
+                       paste0("limma (", packageVersion("limma"), ")"),
                        ifelse(is.null(rv$top_table_list[[3]]), "N/A", rv$top_table_list[[3]]),
                        paste(input$biomart_attributes_microarray_raw, collapse = "; "),
                        input$biomart_filter_microarray_raw
@@ -2551,12 +2555,14 @@ observe({
         rv$statSettings[[c]] <- data.frame(
           Option = c("Comparison",
                      "Continuous covariate(s)",
-                     "Discrete covariate(s)"),
+                     "Discrete covariate(s)",
+                     "Analysis package"),
           Selected = c(input$comparisons_microarray_raw[c],
                        ifelse(is.null(input$covGroups_num_microarray_raw), " ",
                               paste(input$covGroups_num_microarray_raw, collapse = "; ")),
                        ifelse(is.null(input$covGroups_char_microarray_raw), " ",
-                              paste(input$covGroups_char_microarray_raw, collapse = "; ")))
+                              paste(input$covGroups_char_microarray_raw, collapse = "; ")),
+                       paste0("limma (", packageVersion("limma"), ")"))
         )
       }
       names(rv$statSettings) <- input$comparisons_microarray_raw
